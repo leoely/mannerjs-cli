@@ -1,3 +1,5 @@
+#!/usr/bin/env node
+
 import help from '~/lib/command/help';
 import dir from '~/lib/command/dir';
 import config from '~/lib/command/config';
