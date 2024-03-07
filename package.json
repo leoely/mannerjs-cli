@@ -1,6 +1,6 @@
 {
   "name": "mannerjs-cli",
-  "version": "0.0.2",
+  "version": "0.0.4",
   "description": "Manner.js command line project.",
   "main": "dist/bin/manner.js",
   "repository": "git@github.com:leoely/mannerjs-cli.git",
@@ -13,7 +13,7 @@
     "build": "gulp build"
   },
   "bin": {
-    "manner": "./dist/bin/index.js"
+    "manner": "./dist/bin/manner.js"
   },
   "devDependencies": {
     "@babel/cli": "^7.16.7",

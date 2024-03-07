@@ -1,16 +1,19 @@
-import { copyFileSync, } from 'fs';
+import { copyFileSync, existsSync, } from 'fs';
 import path from 'path';
 import askQuestion from '~/lib/util/askQuestion';
 
 async function addConfigFile(name, configPath, currentPath) {
-  let result = await askQuestion(
-    `Are you sure add ${name} in current directory`
-  );
-  if (result === true) {
-    copyFileSync(
-      path.join(configPath, name),
-      path.join(currentPath, name),
+  const destPath = path.join(currentPath, name);
+  if (!existsSync(destPath)) {
+    let result = await askQuestion(
+      `Are you sure add ${name} in current directory`
     );
+    if (result === true) {
+      copyFileSync(
+        path.join(configPath, name),
+        destPath,
+      );
+    }
   }
 }
 
