@@ -13,5 +13,7 @@ export default function help(...param) {
     '',
     commandTip('config', 'Add frontend project related configuration file'),
     '',
+    commandTip('deps', 'Add frontend project related package dependencies.'),
+    '',
   ].join('\n'));
 }

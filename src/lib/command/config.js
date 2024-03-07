@@ -1,5 +1,6 @@
 import { copyFileSync, existsSync, } from 'fs';
 import path from 'path';
+import chalk from 'chalk';
 import askQuestion from '~/lib/util/askQuestion';
 
 async function addConfigFile(name, configPath, currentPath) {
@@ -14,6 +15,12 @@ async function addConfigFile(name, configPath, currentPath) {
         destPath,
       );
     }
+  } else {
+    console.log([
+      '',
+      chalk.bold('The "' + chalk.yellow(name) + '" had already exist.'),
+      '',
+    ].join('\n'));
   }
 }
 
