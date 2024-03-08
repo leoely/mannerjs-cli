@@ -8,9 +8,10 @@ async function addDeps(deps) {
   );
   if (result === true) {
     execSync('yarn add --dev ' + deps, { stdio: 'inherit', });
-    console.log(
-      chalk.bold('The ' + chalk.green('"' + deps + '"') + ' dependence had be installed.'
-    ));
+    console.log([
+      chalk.bold('The ' + chalk.green('"' + deps + '"') + ' dependence had be installed.'),
+      '',
+    ].join('\n'));
   }
 }
 

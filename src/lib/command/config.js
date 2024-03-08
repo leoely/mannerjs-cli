@@ -29,6 +29,7 @@ export default async function config(...param) {
   await addConfigFile('webpack.config.pro.babel.js', configPath, currentPath);
   await addConfigFile('postcss.config.js', configPath, currentPath);
   await addConfigFile('babel.config.json', configPath, currentPath);
+  await addConfigFile('gulpfile.babel.js', configPath, currentPath);
   await addConfigFile('.editorconfig', configPath, currentPath);
   await addConfigFile('.eslintignore', configPath, currentPath);
   await addConfigFile('.eslintrc', configPath, currentPath);
