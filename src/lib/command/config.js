@@ -7,7 +7,7 @@ async function addConfigFile(name, configPath, currentPath) {
   const destPath = path.join(currentPath, name);
   if (!existsSync(destPath)) {
     let result = await askQuestion(
-      'Are you sure add ' + chalk.blue('"' + name + '"') + ' in current directory`
+      'Are you sure add ' + chalk.blue('"' + name + '"') + ' in current directory'
     );
     if (result === true) {
       copyFileSync(
