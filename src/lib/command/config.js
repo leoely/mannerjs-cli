@@ -16,11 +16,7 @@ async function addConfigFile(name, configPath, currentPath) {
       );
     }
   } else {
-    console.log([
-      '',
-      chalk.bold('The "' + chalk.yellow(name) + '" had already exist.'),
-      '',
-    ].join('\n'));
+    console.log(chalk.bold('The "' + chalk.yellow(name) + '" had already exist.'));
   }
 }
 

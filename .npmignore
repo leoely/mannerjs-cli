@@ -4,11 +4,5 @@ test/
 README.md
 LICENSE
 gulpfile.babel.js
-babel.config.json
 .nvmrc
-.gitignore
-.gitattributes
-.eslintrc
-.eslintignore
-.editorconfig
 yarn.lock
