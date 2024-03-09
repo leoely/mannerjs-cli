@@ -1,0 +1,6 @@
+.loading
+  display: inline-flex
+  transform-orign: center
+.loading:after
+  display: inline-block
+  content: '\f110'
