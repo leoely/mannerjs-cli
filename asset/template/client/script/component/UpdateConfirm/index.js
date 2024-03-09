@@ -1,8 +1,7 @@
 import React from 'react';
 import style from './index.module.css';
 import Dimmer from '~/client/script/class/Dimmer';
-import readCookie from '~/client/script/lib/readCookie';
-import filterNamespace from '~/client/script/lib/filterNamespace';
+import { readCookie, filterNamespace, } from 'manner.js/client';
 
 class UpdateConfirm extends React.Component {
   constructor(props) {

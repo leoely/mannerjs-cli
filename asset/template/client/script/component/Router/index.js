@@ -1,9 +1,10 @@
 import React from 'react';
 import style from './index.module.css';
 import UpdateConfirm from '~/client/script/component/UpdateConfirm';
+import Container from '~/client/script/component/Container'
 import NotFound from '~/client/script/page/NotFound';
 import WebApp from '~/client/script/component/WebApp';
-import readCookie from '~/client/script/lib/readCookie'
+import { readCookie, } from 'manner.js/client';
 import global from '~/client/script/obj/global';
 
 const {
