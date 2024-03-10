@@ -18,10 +18,8 @@ export default async function dir(...param) {
       });
     }
   } else {
-    console.log([
-      '',
-      chalk.bold('The source file directory ' + chalk.red('"src/"') + ' had already exist."'),
-      '',
-    ].join('\n'));
+    console.log(
+      chalk.bold('The source file directory ' + chalk.red('"src/"') + ' had already exist."')
+    );
   }
 }
