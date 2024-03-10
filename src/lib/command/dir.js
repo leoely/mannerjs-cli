@@ -7,7 +7,7 @@ export default async function dir(...param) {
   const currentPath = path.resolve('.');
   if (!existsSync(path.join(currentPath, 'src'))) {
     let result = await askQuestion(
-      'Are you sure add standard ' + chalk.blue('"src/"') + ' in current directory.'
+      'Are you sure add standard ' + chalk.yellow('"src/"') + ' in current directory.'
     );
     const templatePath = path.resolve(
       __dirname, '..', '..', '..', 'asset', 'template'
