@@ -15,6 +15,7 @@ export default async function script(...param) {
     packageConfig['scripts'] = {
       lint: "eslint ./src",
       build: "gulp build",
+      start: "yarn run build && node dist/index.js",
       dev: "webpack serve --config webpack.config.dev.js",
       pro: "webpack --config webpack.config.pro.js",
     };
