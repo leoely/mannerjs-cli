@@ -76,7 +76,7 @@ class Router extends WebApp {
       <Container>
         { update && <UpdateConfirm /> }
         <div id="page" className={style.page}>{this.getPage(location)}</div>
-      </Container>
+      </Container>;
     }
     return router;
   }
