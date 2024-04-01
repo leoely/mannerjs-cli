@@ -1,4 +1,5 @@
 import chalk from 'chalk';
+import '~/lib/util/checkVersion';
 import commandTip from '~/lib/util/commandTip';
 
 export default function help(...param) {

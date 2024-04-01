@@ -16,8 +16,8 @@ export default async function script(...param) {
       lint: "eslint ./src",
       build: "gulp build",
       start: "yarn run build && node dist/index.js",
-      dev: "webpack serve --config webpack.config.dev.js",
-      pro: "webpack --config webpack.config.pro.js",
+      dev: "webpack serve --config webpack.config.dev.babel.js",
+      pro: "webpack --config webpack.config.pro.babel.js",
     };
     const fd = fs.openSync(packageJsonPath, 'r+');
     fs.writeFileSync(fd, JSON.stringify(packageConfig, null, '  '));
