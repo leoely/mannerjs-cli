@@ -42,5 +42,6 @@ export default async function deps(...param) {
   await addDeps('react', false);
   await addDeps('react-dom', false);
   await addDeps('gulp', false);
+  await addDeps('glow.js', false);
   await addDeps('manner.js', false);
 }
