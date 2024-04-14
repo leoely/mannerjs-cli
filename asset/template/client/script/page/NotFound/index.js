@@ -1,6 +1,6 @@
 import React from 'react';
 import style from './index.module.css';
-import formateLocation from '~/client/script/lib/formateLocation';
+import formatLocation from '~/client/script/lib/formatLocation';
 
 class NotFound extends React.Component {
   render() {
@@ -9,7 +9,7 @@ class NotFound extends React.Component {
         <span className={style.earth}/>
         <span className={style.question}>?</span>
         Location
-        <span className={style.location}>{formateLocation(location.pathname)}</span>
+        <span className={style.location}>{formatLocation(location.pathname)}</span>
         don't exist.
       </div>
     );
