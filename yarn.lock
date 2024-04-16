@@ -4686,15 +4686,17 @@ micromatch@^4.0.4:
     braces "^3.0.2"
     picomatch "^2.3.1"
 
+mien@0.1.1:
+  version "0.1.1"
+  resolved "https://registry.yarnpkg.com/mien/-/mien-0.1.1.tgz#b61107dab014763a825ec37fdf717ee3e1957441"
+  integrity sha512-PNxl0jS+d/PutQYlxuZ5tEeXxTn0GGB/SXlGz7KksPSyEkMQjLRl8NIyYDkXUECAEvPqsl4mlb/zE2rLVrCncA==
+  dependencies:
+    chalk "2.4.2"
+
 mimic-fn@^2.1.0:
   version "2.1.0"
   resolved "https://registry.yarnpkg.com/mimic-fn/-/mimic-fn-2.1.0.tgz#7ed2c2ccccaf84d3ffcb7a69b57711fc2083401b"
   integrity sha512-OqbOk5oEQeAZ8WXWydlu9HJjz9WVdEIvamMCcXmuqUYjTknH/sqsWvhQ3vgwKFRR1HpjvNBKQ37nbJgYzGqGcg==
-
-mine@^0.0.2:
-  version "0.0.2"
-  resolved "https://registry.yarnpkg.com/mine/-/mine-0.0.2.tgz#77c2d327f8357352e69fc3e618f7476539fa0c40"
-  integrity sha512-0zKS8mq0yrPk3YPWJuFgqd7AskYQpWmh4GQBlLFw7gaYKSutIdAi7JOTWWg1dSqI52t9aY/ozS/x6NcpqToT2A==
 
 minimatch@^3.0.4, minimatch@^3.0.5, minimatch@^3.1.1, minimatch@^3.1.2:
   version "3.1.2"

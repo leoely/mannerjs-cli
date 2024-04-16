@@ -1,6 +1,6 @@
 import { execSync, } from 'child_process';
 import chalk from 'chalk';
-import { askQuestion, } from 'mine';
+import { askQuestion, } from 'mien';
 
 async function addDeps(deps, dev) {
   const result = await askQuestion(

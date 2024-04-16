@@ -1,7 +1,7 @@
 import { copyFileSync, existsSync, } from 'fs';
 import path from 'path';
 import chalk from 'chalk';
-import { askQuestion, } from 'mine';
+import { askQuestion, } from 'mien';
 
 async function addConfigFile(name, configPath, currentPath) {
   const destPath = path.join(currentPath, name);
