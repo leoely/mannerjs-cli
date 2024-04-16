@@ -1,7 +1,7 @@
 import { cpSync, existsSync, } from 'fs';
 import path from 'path';
 import chalk from 'chalk';
-import askQuestion from '~/lib/util/askQuestion';
+import { askQuestion, } from 'mine';
 
 export default async function dir(...param) {
   const currentPath = path.resolve('.');
