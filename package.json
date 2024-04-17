@@ -31,6 +31,6 @@
   },
   "dependencies": {
     "chalk": "2.4.2",
-    "mien": "0.1.1"
+    "mien": "0.1.3"
   }
 }

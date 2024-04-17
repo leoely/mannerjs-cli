@@ -4686,10 +4686,10 @@ micromatch@^4.0.4:
     braces "^3.0.2"
     picomatch "^2.3.1"
 
-mien@0.1.1:
-  version "0.1.1"
-  resolved "https://registry.yarnpkg.com/mien/-/mien-0.1.1.tgz#b61107dab014763a825ec37fdf717ee3e1957441"
-  integrity sha512-PNxl0jS+d/PutQYlxuZ5tEeXxTn0GGB/SXlGz7KksPSyEkMQjLRl8NIyYDkXUECAEvPqsl4mlb/zE2rLVrCncA==
+mien@0.1.3:
+  version "0.1.3"
+  resolved "https://registry.yarnpkg.com/mien/-/mien-0.1.3.tgz#0256c24008c4963908ce1690547a11a27fbb26cc"
+  integrity sha512-/Ig72+Gu0yt/9JmbRnH1MQQaOAK5rL+HcYnA1By4p1H2D5FRnMY5q/cKNB3kMbhoV61N4de8MIN2bNHCaESPyQ==
   dependencies:
     chalk "2.4.2"
 

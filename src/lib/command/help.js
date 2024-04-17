@@ -3,7 +3,7 @@ import { checkVersion, } from 'mien';
 import commandTip from '~/lib/util/commandTip';
 
 export default function help(...param) {
-  checkVersion();
+  checkVersion('v21.6.2');
   console.log([
     '',
     '  █▀▄▀█ ▄▀█ █▄░█ █▄░█ █▀▀ █▀█',
