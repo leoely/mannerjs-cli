@@ -1,7 +1,6 @@
 import React from 'react';
 import style from './index.module.css';
 import Dimmer from '~/client/script/class/Dimmer';
-import { readCookie, filterNamespace, } from 'manner.js/client';
 
 class UpdateConfirm extends React.Component {
   constructor(props) {
@@ -14,12 +13,6 @@ class UpdateConfirm extends React.Component {
   }
 
   update() {
-    fetch('/api/statistic/processUpdate/inc', {
-      method: 'POST',
-      body: JSON.stringify({
-        cookie: filterNamespace(cookies.user),
-      }),
-    });
     location.reload();
     this.dimmer.close();
   }
@@ -34,13 +27,6 @@ class UpdateConfirm extends React.Component {
   componentDidMount() {
     this.dimmer = new Dimmer();
     this.dimmer.show();
-    const cookies = readCookie();
-    fetch('/api/statistic/update/inc', {
-      method: 'POST',
-      body: JSON.stringify({
-        cookie: filterNamespace(cookies.user),
-      }),
-    });
   }
 
   componentWillUnmount() {

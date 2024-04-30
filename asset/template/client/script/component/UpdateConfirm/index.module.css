@@ -1,0 +1,40 @@
+.confirm
+  position: absolute
+  width: 680px
+  top: calc(50% - 100px)
+  left: calc(50% - 340px)
+  padding: 15px 0px 10px 0px
+  z-index: 2
+.title
+  color: rgb(255, 255, 255)
+  font-size: 17px
+  padding: 0 20px 30px 20px
+  border-bottom: 1px solid rgb(255, 255, 255)
+.title:before
+  font-size: 43px
+  content: '\f56d'
+  margin-right: 15px
+.btngrp
+  display: flex
+  margin-top: 25px
+  justify-content: center
+.btn
+  color: rgb(0, 0, 0, 0.6)
+  background-color: rgb(255, 255, 255)
+  display: inline-flex
+  font-size: 16px
+  padding: 6.5px 10px 6.5px 10px
+  margin: 0 100px 0 100px
+  border: 0px
+  border-radius: 2.5px
+  align-items: center
+.btn:before
+  border-right: 1px solid rgb(0, 0, 0, 0.6)
+  margin-right: 8px
+  padding-right: 8px
+.update:before
+  font-size: 15px
+  content: '\f252'
+.ignore:before
+  font-size: 16px
+  content: '\f5c8'

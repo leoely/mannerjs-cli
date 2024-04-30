@@ -4,7 +4,6 @@ import UpdateConfirm from '~/client/script/component/UpdateConfirm';
 import Container from '~/client/script/component/Container'
 import NotFound from '~/client/script/page/NotFound';
 import WebApp from '~/client/script/component/WebApp';
-import { readCookie, } from 'manner.js/client';
 import global from '~/client/script/obj/global';
 
 const {
@@ -23,7 +22,7 @@ class Router extends WebApp {
     };
   }
 
-  async componentDidMount() {
+  async ownComponentDidMount() {
     await this.bindEvent();
     emitter.send('page' + window.location.pathname);
   }
