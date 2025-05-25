@@ -1,0 +1,16 @@
+.slash
+  color: rgb(190, 43, 90)
+.namespace
+  color: rgb(45, 45, 173)
+.dot
+  color: rgb(183, 10, 10)
+.filename
+  color: rgb(210, 120, 20)
+.format
+  color: rgb(134, 30, 134)
+.colon
+  color: rgb(221, 23, 42)
+.ipv4Subnet
+  color: rgb(269, 155, 62)
+.ipv6Subnet
+  color: rgb(41, 43, 255)

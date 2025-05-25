@@ -1,0 +1,10 @@
+@import "normalize.css"
+
+html
+  height: 100%
+body
+  height: 100%
+  position: relative
+  font-family: 'Montserrat', Lato, 'Helvetica Neue', Arial, Helvetica, sans-serif
+#root
+  height: 100%

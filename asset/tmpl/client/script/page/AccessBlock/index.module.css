@@ -1,0 +1,21 @@
+.accessBlock
+  color: rgb(0, 0, 0)
+  display: flex
+  font-size: 22px
+  flex-wrap: wrap
+  min-height: 100%
+  align-items: center
+  justify-content: center
+.handIcon
+  font-size: 80px
+  color: rgb(0, 0, 0)
+  padding: 9px 20px 9px 20px
+  margin-right: 35px
+  background-color: rgb(250, 250, 40)
+.emphasis
+  color: rgb(0, 0, 0)
+  font-weight: bold
+.ip
+  text-decoration: solid underline rgb(143, 13, 243) 6px
+.time
+  text-decoration: solid underline rgb(255, 0, 0) 6px

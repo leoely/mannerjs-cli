@@ -1,23 +1,21 @@
-import chalk from 'chalk';
-import { checkVersion, } from 'mien';
-import commandTip from '~/lib/util/commandTip';
+import { commandTip, } from 'mien';
+import Fulmination from 'fulmination';
 
 export default function help(...param) {
-  checkVersion('v21.6.2');
-  console.log([
-    '',
-    '  █▀▄▀█ ▄▀█ █▄░█ █▄░█ █▀▀ █▀█',
-    '  █░▀░█ █▀█ █░▀█ █░▀█ ██▄ █▀▄',
-    '',
-    '  ' + chalk.bold('Manner.js command' + ':'),
-    '',
-    commandTip('dir', 'Initial frontend project directory structure.'),
-    '',
-    commandTip('config', 'Add frontend project related configuration file'),
-    '',
-    commandTip('deps', 'Add frontend project related package dependencies.'),
-    '',
-    commandTip('script', 'Add frontend project related scripts to package.json'),
-    '',
-  ].join('\n'));
+  const fulmination = new Fulmination();
+  fulmination.scanAll([
+    [`
+      [+]:
+      |
+      | ███╗░░░███╗░█████╗░███╗░░██╗███╗░░██╗███████╗██████╗░░░░░░░░░██╗░██████╗
+      | ████╗░████║██╔══██╗████╗░██║████╗░██║██╔════╝██╔══██╗░░░░░░░░██║██╔════╝
+      | ██╔████╔██║███████║██╔██╗██║██╔██╗██║█████╗░░██████╔╝░░░░░░░░██║╚█████╗░
+      | ██║╚██╔╝██║██╔══██║██║╚████║██║╚████║██╔══╝░░██╔══██╗░░░██╗░░██║░╚═══██╗
+      | ██║░╚═╝░██║██║░░██║██║░╚███║██║░╚███║███████╗██║░░██║██╗╚█████╔╝██████╔╝
+      | ╚═╝░░░░░╚═╝╚═╝░░╚═╝╚═╝░░╚══╝╚═╝░░╚══╝╚══════╝╚═╝░░╚═╝╚═╝░╚════╝░╚═════╝░
+      |
+    `, 0],
+    [commandTip('init', 'Initial the manner project skeleton.') + ' &', 0],
+    [commandTip('update', 'Update the manner project related configuration files.') + ' &', 0],
+  ]);
 }

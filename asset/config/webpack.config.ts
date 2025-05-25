@@ -1,23 +1,12 @@
-import path from 'path';
-import HtmlWebpackPlugin from 'html-webpack-plugin';
-
 export default {
-  mode: 'production',
   entry: {
     main: './src/client/index.js',
   },
   output: {
     filename: '[name].bundle.js',
     chunkFilename: '[id].chunk.js',
-    path: path.resolve(__dirname, 'static'),
+    path: './dist',
   },
-  plugins: [
-    new HtmlWebpackPlugin({
-      minify: true,
-      favicon: './asset/favicon-32x32.png',
-      template: './src/client/html/index.html',
-    }),
-  ],
   resolve: {
     extensions: ['.ts', '.tsx', '.js', '.jsx'],
   },
