@@ -1,8 +1,7 @@
 import path from 'path';
 import fs from 'fs';
 import zlib from 'zlib';
-import https from 'https';
-import http from 'http';
+import http2 from 'http2';
 import {
   emphasis,
   tick,
@@ -179,7 +178,7 @@ async function processLogic(req, res, development) {
           switch (method) {
             case 'GET':
               generateIndexHtml(req, res);
-              break;
+              return;
             default:
               if (blocks2.examine(ip)) {
                 generateNotFoundJSON(req, res);
@@ -193,7 +192,7 @@ async function processLogic(req, res, development) {
     }
     if (url.substring(0, 4) === '/api') {
       const { length, } = url;
-      const path = url.substring(3, length);
+      const path = url.substring(4, length);
       let { content: aheadBlocks, }= aheadObstruct.gain(path);
       if (aheadBlocks === undefined) {
         const newAheadBlocks = new Blocks(7500);
@@ -204,23 +203,40 @@ async function processLogic(req, res, development) {
         blockHttp(ip, res, aheadBlocks);
         return;
       }
-      const body = await new Promise((resolve, reject) => {
-        req.on('data', (data) => {
-          resolve(data.toString());
+      const { content: onward, } = await forward.gain(path);
+      if (onward !== undefined) {
+        const body = await new Promise((resolve, reject) => {
+          req.on('data', (data) => {
+            resolve(data.toString());
+          });
+          req.on('end', () => {
+            resolve('');
+          });
         });
-      });
-      const { content: onward, } = await foward.gain(path);
-      const response = await onward.fetch(path, {
-        method: 'POST',
-        body,
-      }, {
-        ip,
-      });
-      for (const k of response.headers.keys()) {
-        res.setHeader(formateHttpKey(k), response.headers.get(k));
+        let response;
+        if (body !== '') {
+          response = await onward.fetch(path, {
+            method: 'POST',
+            body,
+          }, {
+            ip,
+          });
+        } else {
+          response = await onward.fetch(path, {
+            method: 'POST',
+          }, {
+            ip,
+          });
+        }
+        for (const k of response.headers.keys()) {
+          res.statusCode = response.status;
+          res[formatHttpKey(k)] = response.headers.get(k);
+        }
+        const data = await response.text();
+        res.end(data);
+      } else {
+        generateNotFoundJSON(req, res);
       }
-      const data = await response.json();
-      res.end(JSON.stringify(data));
       return;
     }
     switch (method) {
@@ -247,7 +263,7 @@ async function processLogic(req, res, development) {
       }
       case 'GET': {
         generateIndexHtml(req, res);
-        break;
+        return;
       }
       default:
     }
@@ -272,7 +288,7 @@ const safe = options.s || options.safe || 'false';
 
 switch (safe) {
   case 'true':
-    https.createServer({
+    http2.createSecureServer({
       key: fs.readFileSync('asset/temporary-key.pem'),
       cert: fs.readFileSync('asset/temporary-cert.pem'),
     }, async (req, res) => {
@@ -280,7 +296,7 @@ switch (safe) {
     }).listen(port);
     break;
   default:
-    http.createServer({
+    http2.createServer({
     }, async (req, res) => {
       await processLogic(req, res, development);
     }).listen(port);

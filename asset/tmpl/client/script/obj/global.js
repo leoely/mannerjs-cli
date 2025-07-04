@@ -4,23 +4,20 @@ import {
 import Emitter from '~/client/script/class/Emitter';
 import Location from '~/client/script/class/Location';
 
-const emitter: Emitter = new Emitter();
-const location: Location = new Location();
-const clientFetch: ClientFetch = new ClientFetch();
+const emitter = new Emitter();
+const location = new Location();
+const clientFetch = new ClientFetch();
 
-clientFetch.addFilter(429, async (response: Response) => {
+clientFetch.addFilter(429, async (response) => {
   const { time, ip  } = await response.json();
   localStorage.setItem('time', String(time));
   localStorage.setItem('ip', ip);
   emitter.send('block:true');
 });
-
-
-clientFetch.addFilter(500, async (response: Response) => {
+clientFetch.addFilter(500, async (response) => {
   emitter.send('error:true');
 });
-
-clientFetch.addFilter(512, async (response: Response) => {
+clientFetch.addFilter(512, async (response) => {
   const { consume, } = await response.json();
 });
 

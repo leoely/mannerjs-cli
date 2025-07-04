@@ -14,41 +14,38 @@ const {
   location,
 } = global;
 
-type UpdateConfirmProps = {}
-type UpdateConfirmStates = { display: boolean }
-
-class UpdateConfirm extends React.Component<UpdateConfirmProps, UpdateConfirmStates> {
-  dimmer: Dimmer | null;
-  constructor(props: {}) {
+class UpdateConfirm extends React.Component {
+  constructor(props) {
     super(props);
     this.state = {
       display: true,
     };
+    this.close = this.close.bind(this);
   }
 
-  update(): void {
+  update(){
     location.reload();
     this.dimmer.close();
   }
 
-  close(): void {
+  close(){
     this.setState({
       display: false,
     });
     this.dimmer.hidden();
   }
 
-  componentDidMount(): void {
+  componentDidMount() {
     this.dimmer = new Dimmer();
     this.dimmer.show();
   }
 
-  componentWillUnmount(): void {
+  componentWillUnmount() {
     this.close();
   }
 
-  render(): null | React.Element {
-    const { display, }: UpdateConfirmStates = this.state;
+  render() {
+    const { display, } = this.state;
     if (display === false) {
       return null;
     }

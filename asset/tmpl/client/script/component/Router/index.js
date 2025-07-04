@@ -2,6 +2,7 @@ import React from 'react';
 import style from './index.module.css';
 import UpdateConfirm from '~/client/script/component/UpdateConfirm';
 import Container from '~/client/script/component/Container'
+import NotFound from '~/client/script/page/NotFound';
 import WebApp from '~/client/script/component/WebApp';
 import global from '~/client/script/obj/global';
 
@@ -21,7 +22,6 @@ class Router extends WebApp {
       location: '/',
       loading: true,
       block: false,
-      unexist: false,
       error: false,
       ...state,
     };
@@ -113,19 +113,13 @@ class Router extends WebApp {
   getPage(path) {
     const { component, } = this;
     if (component[path] === undefined) {
-      if (this.system.notFound === undefined) {
-        import('~/client/script/page/NotFound').then((module) => {
-          const NotFound = module.default;
-          this.system.notFound = <NotFound />;
-          this.setState({ unexist: true, });
-        });
-      }
+      return <NotFound />;
     }
     return component[path];
   }
 
   render() {
-    const { location, update, loading, block, unexist, error, } = this.state;
+    const { location, update, loading, block, error, } = this.state;
     if (loading === true) {
       return null;
     }
@@ -134,9 +128,6 @@ class Router extends WebApp {
     }
     if (block === true) {
       return this.system.accessBlock;
-    }
-    if (unexist === true) {
-      return this.system.notFound;
     }
     return (
       <>
