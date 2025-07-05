@@ -1,8 +1,8 @@
 import React from 'react';
 import style from './index.module.css';
+import Loading from '~/client/script/page/Loading';
 import UpdateConfirm from '~/client/script/component/UpdateConfirm';
 import Container from '~/client/script/component/Container'
-import NotFound from '~/client/script/page/NotFound';
 import WebApp from '~/client/script/component/WebApp';
 import global from '~/client/script/obj/global';
 
@@ -21,6 +21,7 @@ class Router extends WebApp {
     this.state = {
       location: '/',
       loading: true,
+      unexist: false,
       block: false,
       error: false,
       ...state,
@@ -38,10 +39,11 @@ class Router extends WebApp {
         break;
     }
     if (localStorage.getItem('ip') !== null && localStorage.getItem('time') !== null) {
+      this.setState({ loading: true, });
       await this.loadAccessBlock();
       this.setState({
-        loading: false,
         block: true,
+        loading: false,
       });
     }
   }
@@ -70,15 +72,17 @@ class Router extends WebApp {
       });
     });
     emitter.on('block:true', async () => {
+      this.setState({ loading: true, });
       await this.loadAccessBlock();
-      this.setState({ block: true, });
+      this.setState({ block: true, loading: false, });
     });
     emitter.on('block:false', () => {
       this.setState({ block: false, });
     });
     emitter.on('error:true', async () => {
+      this.setState({ loading: true, });
       await this.loadInternalServerError();
-      this.setState({ error: true, });
+      this.setState({ error: true, loading: false, });
     });
     emitter.on('error:false', () => {
       this.setState({ error: false, });
@@ -113,21 +117,36 @@ class Router extends WebApp {
   getPage(path) {
     const { component, } = this;
     if (component[path] === undefined) {
-      return <NotFound />;
+      this.setState({ loading: true, });
+      import('~/client/script/page/NotFound').then((module) => {
+        const NotFound = module.default;
+        this.system.notFound = <NotFound />;
+        this.setState({ unexist: true, loading: false, });
+      });
     }
     return component[path];
   }
 
   render() {
-    const { location, update, loading, block, error, } = this.state;
+    const { location, update, loading, unexist, block, error, } = this.state;
     if (loading === true) {
-      return null;
+      return <Loading />;
     }
     if (error === true) {
       return this.system.internalServerError;
     }
     if (block === true) {
       return this.system.accessBlock;
+    }
+    if (unexist === true) {
+      return (
+        <>
+          { update && <UpdateConfirm /> }
+          <div id="page" className={style.page}>
+            <Container>{this.system.notFound}</Container>
+          </div>
+        </>
+      );
     }
     return (
       <>

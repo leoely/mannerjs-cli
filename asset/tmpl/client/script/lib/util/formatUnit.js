@@ -1,5 +1,5 @@
 export default function formatUnit(val, unit) {
-  if (val !== undefined && val !== null && isNaN(val) !== true) {
+  if (val === undefined || val === null || isNaN(val) === true) {
     throw new Error('[Error] The parameter val should make sense.');
   }
   if (typeof unit !== 'string') {

@@ -1,0 +1,9 @@
+.loading
+  display: flex
+  min-height: 100%
+  align-items: center
+  justify-content: center
+.loadingIcon
+  color: rgb(195, 195, 195)
+  font-size: 47px
+  transform-origin: center
