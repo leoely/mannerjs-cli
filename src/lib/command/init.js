@@ -152,7 +152,7 @@ export default async function init(...param) {
   childProcess.execSync('openssl x509 -req -in ' + name + '-csr.pem -signkey ' + name + '-key.pem -out ' + name + '-cert.pem ' , { stdio: 'inherit', });
   fulmination.scan(tick() + '(+) bold: The ' + emphasis('certificate') + '(+) bold: *  successfully created. &');
   const imgPath = path.join(assetPath, 'img');
-  const imgName = 'favicon-32x32.png';
+  const imgName = 'favicon.png';
   fs.copyFileSync(path.join(imgPath, imgName), path.join(currentPath, imgName));
   fulmination.scan(tick() + '(+) bold: The ' + emphasis('favico') + '(+) bold: *  file was copied successfully. &');
   currentPath = path.resolve(currentPath, '..');

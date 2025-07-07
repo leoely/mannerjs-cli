@@ -24,6 +24,7 @@ class Router extends WebApp {
       unexist: false,
       block: false,
       error: false,
+      buzy: false,
       ...state,
     };
   }
@@ -52,7 +53,7 @@ class Router extends WebApp {
     if (this.system.accessBlock === undefined) {
       const module = await import('~/client/script/page/AccessBlock');
       const AccessBlock = module.default;
-      this.system.accessBlock = <AccessBlock />;
+      this.system.accessBlock = <AccessBlock/>;
     }
   }
 
@@ -61,6 +62,14 @@ class Router extends WebApp {
       const module = await import('~/client/script/page/InternalServerError');
       const InternalServerError = module.default;
       this.system.internalServerError = <InternalServerError/>;
+    }
+  }
+
+  async loadLatencyTooHigh() {
+    if (this.system.latencyTooHigh === undefined) {
+      const module = await import('~/client/script/page/LatencyTooHigh');
+      const LatencyTooHigh = module.default;
+      this.system.latencyTooHigh = <LatencyTooHigh/>;
     }
   }
 
@@ -86,6 +95,14 @@ class Router extends WebApp {
     });
     emitter.on('error:false', () => {
       this.setState({ error: false, });
+    });
+    emitter.on('busy:true', async () => {
+      this.setState({ loading: true, });
+      await this.loadLatencyTooHigh();
+      this.setState({ busy: true, loading: false, })
+    });
+    emitter.on('busy:false', () => {
+      this.setState({ busy: false, });
     });
     emitter.on('page/', async () => {
       if (this.checkRoute('/') === false) {
@@ -120,7 +137,7 @@ class Router extends WebApp {
       this.setState({ loading: true, });
       import('~/client/script/page/NotFound').then((module) => {
         const NotFound = module.default;
-        this.system.notFound = <NotFound />;
+        this.system.notFound = <NotFound/>;
         this.setState({ unexist: true, loading: false, });
       });
     }
@@ -128,7 +145,9 @@ class Router extends WebApp {
   }
 
   render() {
-    const { location, update, loading, unexist, block, error, } = this.state;
+    const {
+      location, update, loading, unexist, block, error, busy,
+    } = this.state;
     if (loading === true) {
       return <Loading />;
     }
@@ -137,6 +156,9 @@ class Router extends WebApp {
     }
     if (block === true) {
       return this.system.accessBlock;
+    }
+    if (busy === true) {
+      return this.system.latencyTooHigh;
     }
     if (unexist === true) {
       return (

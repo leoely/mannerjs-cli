@@ -113,6 +113,20 @@ function generateIndexHtml(req, res) {
   cacheOutput(req, res, '/index.html', data, ms);
 }
 
+async function timeoutHandle(res, request) {
+  try {
+    await request();
+  } catch (error) {
+    const { name, } = error;
+    switch (name) {
+      case 'AbortError':
+        res.writeHead(512);
+        res.end('');
+        break;
+    }
+  }
+}
+
 function generateNotFoundJSON(req, res) {
   const { url, } = req;
   res.end(JSON.stringify({ status: -2, message: 'The current route ' + url + ' does not exist.', }));
@@ -132,6 +146,12 @@ const blocks1 = new Blocks(7500);
 const blocks2 = new Blocks(7500);
 
 async function processLogic(req, res, development) {
+  let isEnd = false;
+  req.connection.on('close', () => {
+    if (isEnd === false) {
+      throw new Error('[Error] The request was blocked by the client.');
+    }
+  });
   const ip = req.socket.remoteAddress;
   try {
     const { method, } = req;
@@ -146,7 +166,7 @@ async function processLogic(req, res, development) {
         } else {
           blockHttp(ip, res, blocks1);
         }
-        return;
+        return (isEnd = true);
     }
     const { url, } = req;
     const extname = path.extname(url);
@@ -172,13 +192,13 @@ async function processLogic(req, res, development) {
           const data = fs.readFileSync(filePath);
           const ms = parseInt(fs.statSync(filePath).mtimeMs);
           cacheOutput(req, res, restUrl, data, ms);
-          return;
+          return (isEnd = true);
         } else {
           const { method, } = req;
           switch (method) {
             case 'GET':
               generateIndexHtml(req, res);
-              return;
+              return (isEnd = true);
             default:
               if (blocks2.examine(ip)) {
                 generateNotFoundJSON(req, res);
@@ -186,7 +206,7 @@ async function processLogic(req, res, development) {
                 blockHttp(ip, res, blocks2);
               }
           }
-          return;
+          return (isEnd = true);
         }
       }
     }
@@ -201,7 +221,7 @@ async function processLogic(req, res, development) {
       }
       if (aheadBlocks.examine(ip) === false) {
         blockHttp(ip, res, aheadBlocks);
-        return;
+        return (isEnd = true);
       }
       const { content: onward, } = await forward.gain(path);
       if (onward !== undefined) {
@@ -215,29 +235,33 @@ async function processLogic(req, res, development) {
         });
         let response;
         if (body !== '') {
-          response = await onward.fetch(path, {
-            method: 'POST',
-            body,
-          }, {
-            ip,
+          await timeoutHandle(res, async () => {
+            response = await onward.fetch(path, {
+              method: 'POST',
+              signal: AbortSignal.timeout(9000),
+              body,
+            });
           });
         } else {
-          response = await onward.fetch(path, {
-            method: 'POST',
-          }, {
-            ip,
+          await timeoutHandle(res, async () => {
+            response = await onward.fetch(path, {
+              method: 'POST',
+              signal: AbortSignal.timeout(9000),
+            });
           });
         }
-        for (const k of response.headers.keys()) {
-          res.statusCode = response.status;
-          res[formatHttpKey(k)] = response.headers.get(k);
+        if (response !== undefined) {
+          for (const k of response.headers.keys()) {
+            res.statusCode = response.status;
+            res[formatHttpKey(k)] = response.headers.get(k);
+          }
+          const data = await response.text();
+          res.end(data);
         }
-        const data = await response.text();
-        res.end(data);
       } else {
         generateNotFoundJSON(req, res);
       }
-      return;
+      return (isEnd = true);
     }
     switch (method) {
       case 'POST': {
@@ -249,21 +273,21 @@ async function processLogic(req, res, development) {
         }
         if (ownBlocks.examine(ip) === false) {
           blockHttp(ip, res, ownBlocks);
-          return;
+          return (isEnd = true);
         }
         const { content: router, } = webRouter.gain(url);
         if (router !== undefined) {
           await router(req, res);
-          return;
+          return (isEnd = true);
         } else {
           generateNotFoundJSON(req, res);
-          return;
+          return (isEnd = true);
         }
         break;
       }
       case 'GET': {
         generateIndexHtml(req, res);
-        return;
+        return (isEnd = true);
       }
       default:
     }

@@ -14,7 +14,7 @@ export default {
   plugins: [
     new HtmlWebpackPlugin({
       minify: true,
-      favicon: './asset/favicon-32x32.png',
+      favicon: './asset/favicon.png',
       template: './src/client/html/index.html',
     }),
   ],
@@ -62,11 +62,10 @@ export default {
       },
       {
         test: /\.(png|jpe?g|gif|svg)$/,
-        use: [
-          {
-            loader: 'file-loader',
-          }
-        ]
+        loader: 'file-loader',
+        options: {
+          name: '[name].[ext]',
+        }
       },
     ],
   },

@@ -18,7 +18,7 @@ clientFetch.addFilter(500, async (response) => {
   emitter.send('error:true');
 });
 clientFetch.addFilter(512, async (response) => {
-  const { consume, } = await response.json();
+  emitter.send('busy:true');
 });
 
 export default {
