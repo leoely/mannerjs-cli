@@ -5,6 +5,7 @@ import {
 import {
   faFaceMehBlank,
 } from '@fortawesome/free-solid-svg-icons';
+import Page from '~/client/script/component/Page';
 import global from '~/client/script/obj/global';
 import style from './index.module.css';
 
@@ -13,7 +14,7 @@ const {
   location,
 } = global;
 
-class InternalServerError extends React.Component {
+class InternalServerError extends Page {
   constructor(props) {
     super(props);
   }

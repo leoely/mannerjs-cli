@@ -3245,7 +3245,7 @@ fsevents@^2.3.2, fsevents@~2.3.2:
   resolved "https://registry.yarnpkg.com/fsevents/-/fsevents-2.3.3.tgz#cac6407785d03675a2a5e1a5305c697b347d90d6"
   integrity sha512-5xoDfX+fL7faATnagmWPpbFtwh/R77WmMMqqHGS65C3vvB0YHrgF+B1YmZ3441tMj5n63k0212XNoJwzlhffQw==
 
-fulmination@^1.0.6, fulmination@^1.1.13, fulmination@^1.1.3:
+fulmination@^1.0.6, fulmination@^1.1.13:
   version "1.1.13"
   resolved "https://registry.yarnpkg.com/fulmination/-/fulmination-1.1.13.tgz#a6e35d1265407951d8e5d11ce1784166b595facc"
   integrity sha512-Ul3j0XANNit6gxBozC5lboxXZkL9Jjqe7fLS6RuiXzZ4UMB1jUb6NxjcJyMsvrLbehcOr1vs9rz6VeA8qeyqUQ==
@@ -4779,10 +4779,17 @@ micromatch@^4.0.4:
     braces "^3.0.3"
     picomatch "^2.3.1"
 
-mien@^1.0.15, mien@^1.0.20:
+mien@^1.0.15:
   version "1.0.20"
   resolved "https://registry.yarnpkg.com/mien/-/mien-1.0.20.tgz#3f6360ab007cd444ad1cf19cd3db72a1496721ed"
   integrity sha512-DixXpHah5//oBCUl0jFmpBiPMGmFuOn4UNoD6qvUg6B3gIuQMjEV4U2YygdB55zV1jLSIG3iV4km2RkQ1TR0Hg==
+  dependencies:
+    fulmination "^1.1.13"
+
+mien@^1.0.23:
+  version "1.0.23"
+  resolved "https://registry.yarnpkg.com/mien/-/mien-1.0.23.tgz#1934e1f53006fe88cb49241edb138056048fb2d7"
+  integrity sha512-rrJtOdzYSKfsAQhSFQiYHHvs+eghHwKZtQH+uN/SJmfRyII5P5A9eKxWbq43zrDcPuKJR3XhPfY8Kb2GoVqbiQ==
   dependencies:
     fulmination "^1.1.13"
 

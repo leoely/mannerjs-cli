@@ -7,6 +7,6 @@ const {
 
 const time: number = new Date().getTime();
 
-webRouter.attach('/update/message', (req: http.ClientRequest, res: http.ServerResponse) => {
+webRouter.attach('/update/message', async (req: http.ClientRequest, res: http.ServerResponse) => {
   res.end(JSON.stringify({ startUpTime: time, }));
 });

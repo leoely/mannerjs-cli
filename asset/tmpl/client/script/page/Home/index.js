@@ -1,6 +1,7 @@
 import React from 'react';
+import Page from '~/client/script/component/Page';
 
-class Home extends React.Component {
+class Home extends Page {
   render() {
     return (
       <div>index</div>
