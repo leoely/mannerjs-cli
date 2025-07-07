@@ -1,10 +1,10 @@
 import childProcess from 'child_process';
 import fs from 'fs';
 import path from 'path';
+import inquirer from 'inquirer';
 import Fulmination from 'fulmination';
 import {
   checkVersion,
-  askQuestion,
   emphasis,
   checkDependencies,
   tick,
@@ -64,8 +64,8 @@ export default async function init(...param) {
       'glow.js': '^1.0.9',
       'gulp': '^5.0.0',
       'gulp-typescript': '^6.0.0-alpha.1',
-      'manner.js': '^1.0.17',
-      'mien': '^1.0.20',
+      'manner.js': '^1.0.27',
+      'mien': '^1.0.24',
       'normalize.css': '^8.0.1',
       'postcss': '^8.5.3',
       'react': '^19.1.0',
@@ -73,9 +73,34 @@ export default async function init(...param) {
     }
   });
   const { name, } = projectPackageData;
-  const needEslint = await askQuestion('(+) bold: Does the current project need to ' + emphasis('eslint') + '(+) bold: .');
-  const needTailwind = await askQuestion('(+) bold: Does the current project need to ' + emphasis('tailwind') + '(+) bold: .');
-  const needGit= await askQuestion('(+) bold: Does the current project need to be initialize as ' + emphasis('git') + '(+) bold: * project.');
+  const { dependencies, } = await inquirer.prompt({
+    name: 'dependencies',
+    message: 'Select the depnendencies required by the project.',
+    type:'checkbox',
+    choices: ['eslint', 'tailwind', 'git', 'mui'],
+  });
+  let needEslint = false;
+  let needTailwind = false;
+  let needGit = false;
+  let needMui = false;
+  dependencies.forEach((dependence) => {
+    switch (dependence) {
+      case 'eslint':
+        needEslint = true;
+        break;
+      case 'tailwind':
+        needTailwind = true;
+        break;
+      case 'git':
+        needGit = true;
+        break;
+      case 'mui':
+        needMui = true;
+        break;
+      default:
+        throw new Error('[Error] Encountered unknown dependency.');
+    }
+  });
   currentPath = path.join(currentPath, name);
   fs.mkdirSync(currentPath);
   process.chdir(currentPath);
@@ -96,6 +121,11 @@ export default async function init(...param) {
     projectPackageData.dependencies['tailwindcss'] = '^4.1.7';
     projectPackageData.dependencies['fulmination'] = '^1.1.3';
     projectPackageData.dependencies['mien'] = '^1.0.5';
+  }
+  if (needMui === true) {
+    projectPackageData.dependencies['@emotion/react'] = '^11.14.0';
+    projectPackageData.dependencies['@emotion/styled'] = '^11.14.1';
+    projectPackageData.dependencies['@mui/material'] = '^7.2.0';
   }
   const modulePath = path.resolve(__dirname, '..', '..', '..')
   const assetPath = path.join(modulePath, 'asset');

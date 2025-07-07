@@ -12,6 +12,7 @@ import {
   parseHttpDate,
   formatHttpKey,
   formatHttpDate,
+  disconnectHandle,
 } from 'manner.js/server'
 import global from '~/server/obj/global';
 import '~/server/lib/forward/users';
@@ -109,22 +110,8 @@ function cacheOutput(req, res, url, data, ms) {
 
 function generateIndexHtml(req, res) {
   const data = fs.readFileSync(path.resolve('static', 'index.html'));
-  const ms = parseInt(fs.statSync(path.resolve('static', 'index.html')).mtimeMs);
+  const ms = fs.statSync(path.resolve('static', 'index.html')).mtimeMs;
   cacheOutput(req, res, '/index.html', data, ms);
-}
-
-async function timeoutHandle(res, request) {
-  try {
-    await request();
-  } catch (error) {
-    const { name, } = error;
-    switch (name) {
-      case 'AbortError':
-        res.writeHead(512);
-        res.end('');
-        break;
-    }
-  }
 }
 
 function generateNotFoundJSON(req, res) {
@@ -132,7 +119,26 @@ function generateNotFoundJSON(req, res) {
   res.end(JSON.stringify({ status: -2, message: 'The current route ' + url + ' does not exist.', }));
 }
 
-function blockHttp(ip, res, blocks) {
+async function timeoutHandle(res, process) {
+  let ans = true;
+  try {
+    await process();
+  } catch (error) {
+    const { name, } = error;
+    switch (name) {
+      case 'AbortError':
+        res.writeHead(512);
+        res.end('');
+        ans = false;
+        break;
+      default:
+        throw new Error('[Error] Unexpected exception occurred.');
+    }
+  }
+  return ans;
+}
+
+function blockRequest(ip, res, blocks) {
   const count = blocks.getCount();
   if (count === 2) {
     res.writeHead(429);
@@ -146,27 +152,29 @@ const blocks1 = new Blocks(7500);
 const blocks2 = new Blocks(7500);
 
 async function processLogic(req, res, development) {
-  let isEnd = false;
-  req.connection.on('close', () => {
-    if (isEnd === false) {
-      throw new Error('[Error] The request was blocked by the client.');
-    }
-  });
-  const ip = req.socket.remoteAddress;
   try {
+    let disconnect = false;
+    req.connection.on('close', () => {
+      disconnect = true;
+    });
+    const ip = req.socket.remoteAddress;
     const { method, } = req;
     switch (method) {
       case 'PUT':
       case 'DELETE':
         if (blocks1.examine(ip)) {
-          res.end(JSON.stringify({
-            status: -1,
-            message: 'The static server currently does not support this method ' + method + '.',
-          }));
+          await disconnectHandle(disconnect, () => {
+            res.end(JSON.stringify({
+              status: -1,
+              message: 'The static server currently does not support this method ' + method + '.',
+            }));
+          });
         } else {
-          blockHttp(ip, res, blocks1);
+          await disconnectHandle(disconnect, () => {
+            blockRequest(ip, res, blocks1);
+          });
         }
-        return (isEnd = true);
+        return;
     }
     const { url, } = req;
     const extname = path.extname(url);
@@ -189,105 +197,139 @@ async function processLogic(req, res, development) {
         const restUrl = path.basename(url);
         const filePath = path.resolve('static', restUrl);
         if (fs.existsSync(filePath)) {
-          const data = fs.readFileSync(filePath);
-          const ms = parseInt(fs.statSync(filePath).mtimeMs);
-          cacheOutput(req, res, restUrl, data, ms);
-          return (isEnd = true);
+          await disconnectHandle(disconnect, () => {
+            const data = fs.readFileSync(filePath);
+            const ms = fs.statSync(filePath).mtimeMs;
+            cacheOutput(req, res, restUrl, data, ms);
+          });
+          return;
         } else {
-          const { method, } = req;
-          switch (method) {
-            case 'GET':
-              generateIndexHtml(req, res);
-              return (isEnd = true);
-            default:
-              if (blocks2.examine(ip)) {
-                generateNotFoundJSON(req, res);
-              } else {
-                blockHttp(ip, res, blocks2);
-              }
-          }
-          return (isEnd = true);
+            const { method, } = req;
+            switch (method) {
+              case 'GET':
+                await disconnectHandle(disconnect, () => {
+                  generateIndexHtml(req, res);
+                });
+              default:
+                if (blocks2.examine(ip)) {
+                  await disconnectHandle(disconnect, () => {
+                    generateNotFoundJSON(req, res);
+                  });
+                } else {
+                  await disconnectHandle(disconnect, () => {
+                    blockRequest(ip, res, blocks2);
+                  });
+                }
+            }
+          return;
         }
       }
     }
     if (url.substring(0, 4) === '/api') {
-      const { length, } = url;
-      const path = url.substring(4, length);
-      let { content: aheadBlocks, }= aheadObstruct.gain(path);
-      if (aheadBlocks === undefined) {
-        const newAheadBlocks = new Blocks(7500);
-        aheadObstruct.attach(path, newAheadBlocks);
-        aheadBlocks = newAheadBlocks;
-      }
-      if (aheadBlocks.examine(ip) === false) {
-        blockHttp(ip, res, aheadBlocks);
-        return (isEnd = true);
-      }
-      const { content: onward, } = await forward.gain(path);
-      if (onward !== undefined) {
-        const body = await new Promise((resolve, reject) => {
-          req.on('data', (data) => {
-            resolve(data.toString());
-          });
-          req.on('end', () => {
-            resolve('');
-          });
-        });
-        let response;
-        if (body !== '') {
-          await timeoutHandle(res, async () => {
-            response = await onward.fetch(path, {
-              method: 'POST',
-              signal: AbortSignal.timeout(9000),
-              body,
-            });
-          });
-        } else {
-          await timeoutHandle(res, async () => {
-            response = await onward.fetch(path, {
-              method: 'POST',
-              signal: AbortSignal.timeout(9000),
-            });
-          });
+      await disconnectHandle(disconnect, async () => {
+        const { length, } = url;
+        const path = url.substring(4, length);
+        let { content: aheadBlocks, }= aheadObstruct.gain(path);
+        if (aheadBlocks === undefined) {
+          const newAheadBlocks = new Blocks(7500);
+          aheadObstruct.attach(path, newAheadBlocks);
+          aheadBlocks = newAheadBlocks;
         }
-        if (response !== undefined) {
-          for (const k of response.headers.keys()) {
-            res.statusCode = response.status;
-            res[formatHttpKey(k)] = response.headers.get(k);
+        if (aheadBlocks.examine(ip) === false) {
+          blockRequest(ip, res, aheadBlocks);
+          return;
+        }
+        await disconnectHandle(disconnect, async () => {
+          const { content: onward, } = await forward.gain(path);
+          if (onward !== undefined) {
+            const body = await new Promise((resolve, reject) => {
+              req.on('data', (data) => {
+                resolve(data.toString());
+              });
+              req.on('end', () => {
+                resolve('');
+              });
+            });
+            let response;
+            if (body !== '') {
+              if (req.headers['has-timeout'] === 'false') {
+                response = await onward.fetch(path, {
+                  method: 'POST',
+                  body,
+                });
+              } else {
+                const result = await timeoutHandle(res, async () => {
+                  response = await onward.fetch(path, {
+                    method: 'POST',
+                    signal: AbortSignal.timeout(8000),
+                    body,
+                  });
+                });
+                if (result === false) {
+                  return;
+                }
+              }
+            } else {
+              if (req.headers['has-timeout'] === 'false') {
+                response = await onward.fetch(path, {
+                  method: 'POST',
+                });
+              } else {
+                const result = await timeoutHandle(res, async () => {
+                  response = await onward.fetch(path, {
+                    method: 'POST',
+                    signal: AbortSignal.timeout(8000),
+                  });
+                });
+                if (result === false) {
+                  return;
+                }
+              }
+            }
+            if (response !== undefined) {
+              for (const k of response.headers.keys()) {
+                res.statusCode = response.status;
+                res[formatHttpKey(k)] = response.headers.get(k);
+              }
+              const data = await response.text();
+              res.end(data);
+            }
+          } else {
+            generateNotFoundJSON(req, res);
           }
-          const data = await response.text();
-          res.end(data);
-        }
-      } else {
-        generateNotFoundJSON(req, res);
-      }
-      return (isEnd = true);
+        });
+      });
+      return;
     }
     switch (method) {
       case 'POST': {
-        let { content: ownBlocks }= ownObstruct.gain(url);
-        if (ownBlocks === undefined) {
-          const newOwnBlocks = new Blocks(7500);
-          ownObstruct.attach(url, newOwnBlocks);
-          ownBlocks = newOwnBlocks;
-        }
-        if (ownBlocks.examine(ip) === false) {
-          blockHttp(ip, res, ownBlocks);
-          return (isEnd = true);
-        }
-        const { content: router, } = webRouter.gain(url);
-        if (router !== undefined) {
-          await router(req, res);
-          return (isEnd = true);
-        } else {
-          generateNotFoundJSON(req, res);
-          return (isEnd = true);
-        }
-        break;
+        await disconnectHandle(disconnect, async () => {
+          let { content: ownBlocks }= ownObstruct.gain(url);
+          if (ownBlocks === undefined) {
+            const newOwnBlocks = new Blocks(7500);
+            ownObstruct.attach(url, newOwnBlocks);
+            ownBlocks = newOwnBlocks;
+          }
+          if (ownBlocks.examine(ip) === false) {
+            blockRequest(ip, res, ownBlocks);
+            return;
+          }
+          await disconnectHandle(disconnect, async () => {
+            const { content: router, } = webRouter.gain(url);
+            if (router !== undefined) {
+              await router(req, res);
+            } else {
+              generateNotFoundJSON(req, res);
+            }
+          });
+        });
+        return;
       }
       case 'GET': {
-        generateIndexHtml(req, res);
-        return (isEnd = true);
+        disconnectHandle(disconnect, () => {
+          generateIndexHtml(req, res);
+        });
+        return;
       }
       default:
     }

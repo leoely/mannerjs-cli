@@ -5,6 +5,7 @@ import {
 import {
   faEyeSlash,
 } from '@fortawesome/free-solid-svg-icons';
+import Page from '~/client/script/component/Page';
 import formatNumber from '~/client/script/lib/util/formatNumber';
 import formatLocation from '~/client/script/lib/util/formatLocation';
 import global from '~/client/script/obj/global';
@@ -14,7 +15,7 @@ const {
   emitter,
 } = global;
 
-class AccessBlock extends React.Component {
+class AccessBlock extends Page {
   constructor(props) {
     super(props);
     this.state = {

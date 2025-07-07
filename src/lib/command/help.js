@@ -15,7 +15,7 @@ export default function help(...param) {
       | ╚═╝░░░░░╚═╝╚═╝░░╚═╝╚═╝░░╚══╝╚═╝░░╚══╝╚══════╝╚═╝░░╚═╝╚═╝░╚════╝░╚═════╝░
       |
     `, 0],
-    [commandTip('init', 'Initial the manner project skeleton.') + ' &', 0],
-    [commandTip('update', 'Update the manner project related configuration files.') + ' &', 0],
+    [commandTip('init', 'Initial the manner project skeleton.'), 0],
+    [commandTip('update', 'Update the manner project related configuration files.'), 0],
   ]);
 }

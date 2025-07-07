@@ -71,6 +71,13 @@ export default {
           name: '[name].[ext]',
         },
       },
+      {
+        test: /\.(woff|woff2|ttf|eot)$/,
+        loader: 'file-loader',
+        options: {
+          name: '[name].[ext]',
+        },
+      },
     ],
   },
 };

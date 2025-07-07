@@ -20,13 +20,15 @@ class WebApp extends React.Component {
     const response = await clientFetch.fetch('/update/message', {
       method: 'POST',
     });
-    const message = await response.json();
-    const { startUpTime, } = this;
-    this.setState({ update: message.startUpTime > startUpTime, });
+    if (response !== undefined && response.ok) {
+      const message = await response.json();
+      const { startUpTime, } = this;
+      this.setState({ update: message.startUpTime > startUpTime, });
+    }
   }
 
   async componentDidMount() {
-    this.id = setInterval(this.checkUpdate, 1000 * 60 * 30);
+    this.id = setInterval(this.checkUpdate, 1000 * 60 * 20);
     window.addEventListener('popstate', (event) => {
       location.to(event.currentTarget.location.pathname);
     });
