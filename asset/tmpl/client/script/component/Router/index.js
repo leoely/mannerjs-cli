@@ -21,10 +21,10 @@ class Router extends WebApp {
     this.state = {
       location: '/',
       loading: true,
-      unexist: false,
       block: false,
       error: false,
       buzy: false,
+      unexist: false,
       ...state,
     };
   }

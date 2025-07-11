@@ -8,6 +8,7 @@
 .logoIcon
   display: flex
   width: 130px
+  height: 130px
 .status
   position: relative
   top: 40px

@@ -20,6 +20,10 @@ class Image extends React.Component {
     this.setState({
       src: URL.createObjectURL(blob),
     });
+    const { onLoad, } = this.props;
+    if (typeof onLoad === 'function') {
+      this.props.onLoad();
+    }
   }
 
   render() {

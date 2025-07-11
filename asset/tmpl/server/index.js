@@ -1,6 +1,7 @@
 import path from 'path';
 import fs from 'fs';
 import zlib from 'zlib';
+import http from 'http';
 import http2 from 'http2';
 import {
   emphasis,
@@ -9,6 +10,7 @@ import {
 } from 'mien';
 import {
   Blocks,
+  Prevents,
   parseHttpDate,
   formatHttpKey,
   formatHttpDate,
@@ -30,6 +32,7 @@ const {
   fulmination,
   ownObstruct,
   aheadObstruct,
+  staticStop,
 } = global;
 
 function dealCompress(data, address, res) {
@@ -138,8 +141,13 @@ async function timeoutHandle(res, process) {
   return ans;
 }
 
+function preventStaticFile(res) {
+  res.writeHead(304);
+  res.end();
+}
+
 function blockRequest(ip, res, blocks) {
-  const count = blocks.getCount();
+  const count = blocks.getCount(ip);
   if (count === 2) {
     res.writeHead(429);
     res.end(JSON.stringify({ ip, time: 7500, }));
@@ -197,6 +205,16 @@ async function processLogic(req, res, development) {
         const restUrl = path.basename(url);
         const filePath = path.resolve('static', restUrl);
         if (fs.existsSync(filePath)) {
+          let prevents = staticStop.gain(filePath);
+          if (prevents === undefined) {
+            const newPrevents = new Prevents(3, 20000);
+            staticStop.attach(filePath, newPrevents);
+            prevents = newPrevents;
+          }
+          if (prevents.inspect(ip, req) === false) {
+            preventStaticFile(res);
+            return;
+          }
           await disconnectHandle(disconnect, () => {
             const data = fs.readFileSync(filePath);
             const ms = fs.statSync(filePath).mtimeMs;
@@ -362,7 +380,7 @@ switch (safe) {
     }).listen(port);
     break;
   default:
-    http2.createServer({
+    http.createServer({
     }, async (req, res) => {
       await processLogic(req, res, development);
     }).listen(port);
