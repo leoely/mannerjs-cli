@@ -104,6 +104,9 @@ class Router extends WebApp {
     emitter.on('busy:false', () => {
       this.setState({ busy: false, });
     });
+    emitter.on('update:false', () => {
+      this.setState({ update: false, });
+    });
     emitter.on('page/', async () => {
       if (this.checkRoute('/') === false) {
         const module = await import('~/client/script/page/Home');
@@ -145,9 +148,7 @@ class Router extends WebApp {
   }
 
   render() {
-    const {
-      location, update, loading, unexist, block, error, busy,
-    } = this.state;
+    const { location, update, loading, unexist, block, error, busy, } = this.state;
     if (loading === true) {
       return <Loading />;
     }

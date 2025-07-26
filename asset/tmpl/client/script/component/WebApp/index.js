@@ -13,7 +13,7 @@ class WebApp extends React.Component {
       update: false,
     };
     this.checkUpdate = this.checkUpdate.bind(this);
-    this.startUpTime = new Date().getTime();
+    this.time = new Date().getTime();
   }
 
   async checkUpdate() {
@@ -22,8 +22,8 @@ class WebApp extends React.Component {
     });
     if (response !== undefined && response.ok) {
       const message = await response.json();
-      const { startUpTime, } = this;
-      this.setState({ update: message.startUpTime > startUpTime, });
+      const { time, } = this;
+      this.setState({ update: message.updateTime > time, });
     }
   }
 

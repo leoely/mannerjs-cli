@@ -64,8 +64,8 @@ export default async function init(...param) {
       'glow.js': '^1.0.9',
       'gulp': '^5.0.0',
       'gulp-typescript': '^6.0.0-alpha.1',
-      'manner.js': '^1.0.29',
-      'mien': '^1.0.24',
+      'manner.js': '^1.0.39',
+      'mien': '^1.0.25',
       'normalize.css': '^8.0.1',
       'postcss': '^8.5.3',
       'react': '^19.1.0',
@@ -119,8 +119,6 @@ export default async function init(...param) {
     projectPackageData.dependencies['@tailwindcss/postcss'] = '^4.1.7';
     projectPackageData.dependencies['postcss'] = '^8.5.3';
     projectPackageData.dependencies['tailwindcss'] = '^4.1.7';
-    projectPackageData.dependencies['fulmination'] = '^1.1.3';
-    projectPackageData.dependencies['mien'] = '^1.0.5';
   }
   if (needMui === true) {
     projectPackageData.dependencies['@emotion/react'] = '^11.14.0';
@@ -137,9 +135,9 @@ export default async function init(...param) {
   const tmplPath = path.join(assetPath, 'tmpl');
   fs.mkdirSync(path.join(currentPath, 'src'));
   fs.cpSync(tmplPath, path.join(currentPath, 'src'), { recursive: true, });
-  const serverIndexPath = path.join(currentPath, 'src', 'server', 'index.js');
-  const serverIndexString = fs.readFileSync(serverIndexPath).toString();
-  fs.writeFileSync(serverIndexPath, serverIndexString.replaceAll('temporary', name));
+  const HttpHandlePath = path.join(currentPath, 'src', 'server', 'class', 'HttpHandle.js');
+  const HttpHandleString = fs.readFileSync(HttpHandlePath).toString();
+  fs.writeFileSync(HttpHandlePath, HttpHandleString.replaceAll('temporary', name));
   fulmination.scan(tick() + '(+) bold: The ' + emphasis('src') + '(+) bold: *  was copied successfully. &');
   const configPath = path.join(assetPath, 'config');
   copyFile('.editorconfig', configPath, currentPath);;

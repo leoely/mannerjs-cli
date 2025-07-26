@@ -9,17 +9,16 @@ import {
 } from '@fortawesome/free-solid-svg-icons';
 import style from './index.module.css';
 import Dimmer from '~/client/script/class/Dimmer';
+import global from '~/client/script/obj/global';
 
 const {
   location,
+  emitter,
 } = global;
 
 class UpdateConfirm extends React.Component {
   constructor(props) {
     super(props);
-    this.state = {
-      display: true,
-    };
     this.close = this.close.bind(this);
   }
 
@@ -29,9 +28,7 @@ class UpdateConfirm extends React.Component {
   }
 
   close(){
-    this.setState({
-      display: false,
-    });
+    emitter.send('update:false');
     this.dimmer.hidden();
   }
 
@@ -45,10 +42,6 @@ class UpdateConfirm extends React.Component {
   }
 
   render() {
-    const { display, } = this.state;
-    if (display === false) {
-      return null;
-    }
     return (
       <div className={style.confirm}>
         <div className={style.title}>
