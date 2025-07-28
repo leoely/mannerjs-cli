@@ -253,7 +253,7 @@ class HttpHandle {
         case 'obtain static resource':
         case 'foward':
         case 'processing':
-          fulmination.scan(tick() + '(+) bold: URL":' + emphasis(url) + ' * (+) bold: IP":' + emphasis(ip) + '* (+) bold: Situation":' + emphasis(situation) + '* (+) bold: Method":' + emphasis(method) + '(+) bold: . &');
+          fulmination.scan('(+) bold: "*"* Status"; (+) dim: "[SUCCESS"] * (+) bold: @@ Url": (+) dim: "[' + url + '"] * (+) bold: ++ Ip": (+) dim: "[' + ip + '"] * (+) bold: ^^ Situation": (+) dim:"[' + situation + '"] * (+) bold: "&"& Method": (+) dim: "[' + method + '"] &');
           break;
         case 'method not supported':
         case 'block request':
@@ -261,7 +261,7 @@ class HttpHandle {
         case 'timeout':
         case 'interface does not exist':
         case 'server internal error':
-          fulmination.scan(cross() + '(+) bold: URL":' + emphasis(url) + ' * (+) bold: IP":' + emphasis(ip) + '* (+) bold: Situation:' + emphasis(situation) + '* (+) bold: Method":' + emphasis(method) + '(+) bold: . &');
+          fulmination.scan('(+) bold: !! Status"; (+) dim: "[FAIL"] * (+) bold: @@ Url": (+) dim: "[' + url + '"] * (+) bold: ++ Ip": (+) dim: "[' + ip + '"] * (+) bold: ^^ Situation": (+) dim:"[' + situation + '"] * (+) bold: "&"& Method": (+) dim: "[' + method + '"] &');
           break;
         default:
           throw new Error('[Error] Encountering unexpected situations.');
@@ -608,7 +608,7 @@ class HttpHandle {
         |
         ` + tick() + `(+) bold: The project ` + emphasis(name) + `(+) bold: * was successfully started on port ` + emphasis(port) + `(+) bold: . &
         ` + tick() + `(+) bold: Project ` + emphasis('development mode') + `(+) bold: * is` + emphasis(development) + `(+) bold: . &
-        ` + tick() + `(+) bold: Project ` + emphasis('safe mode') + `(+) bold: * is` + emphasis(safe) + `(+) bold: . &
+        ` + tick() + `(+) bold: Project ` + emphasis('safe mode') + `(+) bold: * is` + emphasis(safe) + `(+) bold: . 2&
       `);
     }
     this.checkMemory();
