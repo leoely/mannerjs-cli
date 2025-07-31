@@ -209,6 +209,7 @@ class HttpHandle {
       debug: false,
       logLevel: 0,
       logPath: '/var/log/manner.js/',
+      onlyLogFail: true,
       staticFilePrevents: {
         count: 3,
         interval: 20000,
@@ -278,6 +279,7 @@ class HttpHandle {
         debug,
         logLevel,
         logPath,
+        onlyLogFail,
         staticFilePrevents,
         methodNotSupportBlocks,
         interfaceDontExistBlocks,
@@ -297,6 +299,9 @@ class HttpHandle {
     }
     if (typeof logPath !== 'string') {
       throw new Error('[Error] The option logPath should be of string type.');
+    }
+    if (typeof onlyLogFail !== 'boolean') {
+      throw new Error('[Error] Option onlyLogFail should be of type boolean.');
     }
     if (!Number.isInteger(aheadTimeout)) {
       throw new Error('[Error] The option aheadTimeout should be of integer type.');
@@ -329,31 +334,43 @@ class HttpHandle {
         debug,
       },
     } = this;
+    let type;
+    switch (situation) {
+      case 'obtain static resource':
+      case 'forward':
+      case 'processing':
+        type = 1;
+        break;
+      case 'method not supported':
+      case 'block request':
+      case 'prevent obtain':
+      case 'timeout':
+      case 'interface does not exist':
+      case 'server internal error':
+        type = 0;
+        break;
+      default:
+        throw new Error('[Error] Encountering unexpected situations.');
+    }
     if (debug === true) {
       const {
         fulmination,
       } = this;
-      switch (situation) {
-        case 'obtain static resource':
-        case 'forward':
-        case 'processing':
-          fulmination.scan('(+) bold: "*"* Status"; (+) dim: "[SUCCESS"] * (+) bold: @@ Url": (+) dim: "[' + url + '"] * (+) bold: ++ Ip": (+) dim: "["b' + ip + '""] * (+) bold: ^^ Situation": (+) dim:"[' + situation + '"] * (+) bold: "&"& Method": (+) dim: "[' + method + '"] &');
-          break;
-        case 'method not supported':
-        case 'block request':
-        case 'prevent obtain':
-        case 'timeout':
-        case 'interface does not exist':
-        case 'server internal error':
+      switch (type) {
+        case 0:
           fulmination.scan('(+) bold: !! Status"; (+) dim: "[FAIL"] * (+) bold: @@ Url": (+) dim: "[' + url + '"] * (+) bold: ++ Ip": (+) dim: "["b' + ip + '""] * (+) bold: ^^ Situation": (+) dim:"[' + situation + '"] * (+) bold: "&"& Method": (+) dim: "[' + method + '"] &');
           break;
+        case 1:
+          fulmination.scan('(+) bold: "*"* Status"; (+) dim: "[SUCCESS"] * (+) bold: @@ Url": (+) dim: "[' + url + '"] * (+) bold: ++ Ip": (+) dim: "["b' + ip + '""] * (+) bold: ^^ Situation": (+) dim:"[' + situation + '"] * (+) bold: "&"& Method": (+) dim: "[' + method + '"] &');
+          break;
         default:
-          throw new Error('[Error] Encountering unexpected situations.');
+          throw new Error('[Error] The value of the type does not match the expected value.');
       }
     }
     const {
       options: {
         logPath,
+        onlyLogFail,
       },
     } = this;
     if (typeof logPath === 'string') {
@@ -362,6 +379,11 @@ class HttpHandle {
           logLevel,
         },
       } = this;
+      if (onlyLogFail === true) {
+        if (type === 1) {
+          return;
+        }
+      }
       switch (logLevel) {
         case 0:
           break;
