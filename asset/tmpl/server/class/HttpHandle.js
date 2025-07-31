@@ -8,7 +8,6 @@ import Fulmination from 'fulmination';
 import {
   emphasis,
   tick,
-  cross,
   isIntOpt,
   isBoolOpt,
   parseOptions,
@@ -113,13 +112,13 @@ function cacheOutput(req, res, url, data, ms) {
   }
 }
 
-function generateIndexHtml(req, res) {
+function genIdxHtml(req, res) {
   const data = fs.readFileSync(path.resolve('static', 'index.html'));
   const ms = fs.statSync(path.resolve('static', 'index.html')).mtimeMs;
   cacheOutput(req, res, '/index.html', data, ms);
 }
 
-function generateNotFoundJSON(req, res) {
+function genNotFoundJSON(req, res) {
   const { url, } = req;
   res.end(JSON.stringify({
     status: -2, message: 'The current route ' + url + ' does not exist.',
@@ -160,6 +159,47 @@ function blkReq(ip, res, blocks) {
   }
 }
 
+function validatePreventsOption(preventsOption) {
+  if (preventsOption !== undefined) {
+    if (typeof preventsOption !== 'object') {
+      throw new Error('[Error] Option prevents should be of type object.');
+    }
+    const {
+      count,
+      interval,
+    } = preventsOption;
+    if (!Number.isInteger(count)) {
+      throw new Error('[Error] Option prevents their count attribute should be of integer type.');
+    }
+    if (!(count > 0)) {
+      throw new Error('[Error] The count attribute of the option prevents should be a positive integer type.');
+    }
+    if (!Number.isInteger(interval)) {
+      throw new Error('[Error] Option prevents their interval attribute should be of integer type.');
+    }
+    if (!(interval > 0)) {
+      throw new Error('[Error] The interval attribute of the option prevents should be a positive integer type.');
+    }
+  }
+}
+
+function validateBlocksOption(blocksOption) {
+  if (blocksOption !== undefined) {
+    if (typeof blocksOption !== 'object') {
+      throw new Error('[Error] Option blocks should be of type object.');
+    }
+    const {
+      interval,
+    } = blocksOption;
+    if (!Number.isInteger(interval)) {
+      throw new Error('[Error] Option blocks their interval attribute should be of integer type.');
+    }
+    if (!(interval > 0)) {
+      throw new Error('[Error] The interval attribute of the option blocks should be a positive integer type.');
+    }
+  }
+}
+
 class HttpHandle {
   constructor(options) {
     const [_, ...rest] = process.argv;
@@ -168,7 +208,24 @@ class HttpHandle {
     const defaultOptions = {
       debug: false,
       logLevel: 0,
-      logPath: '/var/log/manner.js/'
+      logPath: '/var/log/manner.js/',
+      staticFilePrevents: {
+        count: 3,
+        interval: 20000,
+      },
+      methodNotSupportBlocks: {
+        interval: 7500,
+      },
+      interfaceDontExistBlocks: {
+        interval: 7500,
+      },
+      aheadBlocks: {
+        interval: 7500,
+      },
+      selfBlocks: {
+        interval: 7500,
+      },
+      aheadTimeout: 8000,
     };
     this.options = Object.assign(defaultOptions, options);
     this.dealOptions();
@@ -182,8 +239,18 @@ class HttpHandle {
     if (debug === true) {
       this.fulmination = new Fulmination();
     }
-    this.blocks1 = new Blocks(7500);
-    this.blocks2 = new Blocks(7500);
+    const {
+      options: {
+        methodNotSupportBlocks: {
+          interval: interval1,
+        },
+        interfaceDontExistBlocks: {
+          interval: interval2,
+        },
+      },
+    } = this;
+    this.blocks1 = new Blocks(interval1);
+    this.blocks2 = new Blocks(interval2);
     this.checkMemory();
   }
 
@@ -211,6 +278,12 @@ class HttpHandle {
         debug,
         logLevel,
         logPath,
+        staticFilePrevents,
+        methodNotSupportBlocks,
+        interfaceDontExistBlocks,
+        aheadBlocks,
+        aheadTimeout,
+        selfBlocks,
       },
     } = this;
     if (typeof debug !== 'boolean') {
@@ -225,6 +298,17 @@ class HttpHandle {
     if (typeof logPath !== 'string') {
       throw new Error('[Error] The option logPath should be of string type.');
     }
+    if (!Number.isInteger(aheadTimeout)) {
+      throw new Error('[Error] The option aheadTimeout should be of integer type.');
+    }
+    if (!(aheadTimeout > 0)) {
+      throw new Error('[Error] The option aheadTimeout should be a positive integer.');
+    }
+    validatePreventsOption(staticFilePrevents);
+    validateBlocksOption(methodNotSupportBlocks);
+    validateBlocksOption(interfaceDontExistBlocks);
+    validateBlocksOption(aheadBlocks);
+    validateBlocksOption(selfBlocks);
   }
 
   outputSituation(situation, ip, url, method) {
@@ -251,9 +335,9 @@ class HttpHandle {
       } = this;
       switch (situation) {
         case 'obtain static resource':
-        case 'foward':
+        case 'forward':
         case 'processing':
-          fulmination.scan('(+) bold: "*"* Status"; (+) dim: "[SUCCESS"] * (+) bold: @@ Url": (+) dim: "[' + url + '"] * (+) bold: ++ Ip": (+) dim: "[' + ip + '"] * (+) bold: ^^ Situation": (+) dim:"[' + situation + '"] * (+) bold: "&"& Method": (+) dim: "[' + method + '"] &');
+          fulmination.scan('(+) bold: "*"* Status"; (+) dim: "[SUCCESS"] * (+) bold: @@ Url": (+) dim: "[' + url + '"] * (+) bold: ++ Ip": (+) dim: "["b' + ip + '""] * (+) bold: ^^ Situation": (+) dim:"[' + situation + '"] * (+) bold: "&"& Method": (+) dim: "[' + method + '"] &');
           break;
         case 'method not supported':
         case 'block request':
@@ -261,7 +345,7 @@ class HttpHandle {
         case 'timeout':
         case 'interface does not exist':
         case 'server internal error':
-          fulmination.scan('(+) bold: !! Status"; (+) dim: "[FAIL"] * (+) bold: @@ Url": (+) dim: "[' + url + '"] * (+) bold: ++ Ip": (+) dim: "[' + ip + '"] * (+) bold: ^^ Situation": (+) dim:"[' + situation + '"] * (+) bold: "&"& Method": (+) dim: "[' + method + '"] &');
+          fulmination.scan('(+) bold: !! Status"; (+) dim: "[FAIL"] * (+) bold: @@ Url": (+) dim: "[' + url + '"] * (+) bold: ++ Ip": (+) dim: "["b' + ip + '""] * (+) bold: ^^ Situation": (+) dim:"[' + situation + '"] * (+) bold: "&"& Method": (+) dim: "[' + method + '"] &');
           break;
         default:
           throw new Error('[Error] Encountering unexpected situations.');
@@ -390,7 +474,15 @@ class HttpHandle {
           if (fs.existsSync(filePath)) {
             let prevents = staticStop.gain(filePath);
             if (prevents === undefined) {
-              const newPrevents = new Prevents(3, 20000);
+              const {
+                options: {
+                  staticFilePrevents: {
+                    count,
+                    interval,
+                  },
+                },
+              } = this;
+              const newPrevents = new Prevents(count, interval);
               staticStop.attach(filePath, newPrevents);
               prevents = newPrevents;
             }
@@ -410,14 +502,14 @@ class HttpHandle {
               switch (method) {
                 case 'GET':
                   await discHndl(disc, () => {
-                    generateIndexHtml(req, res);
+                    genIdxHtml(req, res);
                     this.outputSituation('obtain static resource', ip, url, method);
                   });
                 default: {
                   const { blocks2, } = this;
                   if (blocks2.examine(ip)) {
                     await discHndl(disc, () => {
-                      generateNotFoundJSON(req, res);
+                      genNotFoundJSON(req, res);
                       this.outputSituation('interface does not exist', ip, url, method);
                     });
                   } else {
@@ -438,7 +530,14 @@ class HttpHandle {
           const path = url.substring(4, length);
           let { content: aheadBlocks, }= aheadObstruct.gain(path);
           if (aheadBlocks === undefined) {
-            const newAheadBlocks = new Blocks(7500);
+            const {
+              options: {
+                aheadBlocks: {
+                  interval,
+                },
+              }
+            } = this;
+            const newAheadBlocks = new Blocks(interval);
             aheadObstruct.attach(path, newAheadBlocks);
             aheadBlocks = newAheadBlocks;
           }
@@ -466,10 +565,15 @@ class HttpHandle {
                     body,
                   });
                 } else {
+                  const {
+                    options: {
+                      aheadTimeout,
+                    },
+                  } = this;
                   const result = await tmoHndl(res, async () => {
                     response = await onward.fetch(path, {
                       method: 'POST',
-                      signal: AbortSignal.timeout(8000),
+                      signal: AbortSignal.timeout(aheadTimeout),
                       body,
                     });
                   });
@@ -484,10 +588,15 @@ class HttpHandle {
                     method: 'POST',
                   });
                 } else {
+                  const {
+                    options: {
+                      aheadTimeout,
+                    },
+                  } = this;
                   const result = await tmoHndl(res, async () => {
                     response = await onward.fetch(path, {
                       method: 'POST',
-                      signal: AbortSignal.timeout(8000),
+                      signal: AbortSignal.timeout(aheadTimeout),
                     });
                   });
                   if (result === false) {
@@ -506,7 +615,7 @@ class HttpHandle {
                 this.outputSituation('forward', ip, url, method);
               }
             } else {
-              generateNotFoundJSON(req, res);
+              genNotFoundJSON(req, res);
               this.outputSituation('interface does not exist', ip, url, method);
             }
           });
@@ -518,7 +627,14 @@ class HttpHandle {
           await discHndl(disc, async () => {
             let { content: ownBlocks }= ownObstruct.gain(url);
             if (ownBlocks === undefined) {
-              const newOwnBlocks = new Blocks(7500);
+              const {
+                options: {
+                  selfBlocks: {
+                    interval,
+                  },
+                },
+              } = this;
+              const newOwnBlocks = new Blocks(interval);
               ownObstruct.attach(url, newOwnBlocks);
               ownBlocks = newOwnBlocks;
             }
@@ -533,7 +649,7 @@ class HttpHandle {
                 await router(req, res);
                 this.outputSituation('processing', ip, url, method);
               } else {
-                generateNotFoundJSON(req, res);
+                genNotFoundJSON(req, res);
                 this.outputSituation('interface does not exist', ip, url, method);
               }
             });
@@ -542,7 +658,7 @@ class HttpHandle {
         }
         case 'GET': {
           discHndl(disc, () => {
-            generateIndexHtml(req, res);
+            genIdxHtml(req, res);
             this.outputSituation('obtain static resource', ip, url, method);
           });
           return;

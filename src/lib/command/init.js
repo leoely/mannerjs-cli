@@ -64,7 +64,7 @@ export default async function init(...param) {
       'glow.js': '^1.0.9',
       'gulp': '^5.0.0',
       'gulp-typescript': '^6.0.0-alpha.1',
-      'manner.js': '^1.0.39',
+      'manner.js': '^1.0.42',
       'mien': '^1.0.25',
       'normalize.css': '^8.0.1',
       'postcss': '^8.5.3',

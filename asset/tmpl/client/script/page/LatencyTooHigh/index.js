@@ -1,7 +1,5 @@
 import React from 'react';
-import latencyTooHighImg from './latencyTooHigh.png';
 import Page from '~/client/script/component/Page';
-import Image from '~/client/script/component/Image';
 import global from '~/client/script/obj/global';
 import style from './index.module.css';
 

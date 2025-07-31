@@ -1,0 +1,7 @@
+.home
+  display: flex
+  min-height: 100%
+  align-items: center
+  justify-content: center
+.welcome
+  width: 53%
