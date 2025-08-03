@@ -1,21 +1,29 @@
 import React from 'react';
-import style from './index.module.css';
+import {
+  WebRouter,
+} from 'browser-advising';
 import Loading from '~/client/script/page/Loading';
 import UpdateConfirm from '~/client/script/component/UpdateConfirm';
 import Container from '~/client/script/component/Container'
 import WebApp from '~/client/script/component/WebApp';
 import global from '~/client/script/obj/global';
+import style from './index.module.css';
 
 const {
   emitter,
   location,
 } = global;
 
+function dealPath(path) {
+  if (path === '/') {
+    return '/index';
+  }
+}
+
 class Router extends WebApp {
   constructor(props) {
     super(props);
     this.system = {};
-    this.component = {};
     this.jump = true;
     const { state, } = this;
     this.state = {
@@ -27,6 +35,14 @@ class Router extends WebApp {
       unexist: false,
       ...state,
     };
+    this.component = new WebRouter({
+      threshold: 0.05,
+      number: 8,
+      bond: 5,
+      dutyCycle: 10,
+      interception: undefined,
+      hideError: true,
+    });
   }
 
   async ownComponentDidMount() {
@@ -119,24 +135,28 @@ class Router extends WebApp {
   }
 
   addRoute(path, Class) {
+    path = dealPath(path);
     const { component, } = this;
-    if (component[path] === undefined) {
-      component[path] = <Class />;
+    if (component.gain(path).content === undefined) {
+      component.attach(path, <Class />);
     }
   }
 
   checkRoute(path) {
+    path = dealPath(path);
     const { component, } = this;
     let ans = true;
-    if (component[path] === undefined) {
+    if (component.gain(path).content === undefined) {
       ans = false;
     }
     return ans;
   }
 
   getPage(path) {
+    path = dealPath(path);
     const { component, } = this;
-    if (component[path] === undefined) {
+    const { content: page, } = component.gain(path);
+    if (page  === undefined) {
       this.setState({ loading: true, });
       import('~/client/script/page/NotFound').then((module) => {
         const NotFound = module.default;
@@ -144,7 +164,7 @@ class Router extends WebApp {
         this.setState({ unexist: true, loading: false, });
       });
     }
-    return component[path];
+    return page;
   }
 
   render() {
