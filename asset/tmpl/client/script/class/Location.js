@@ -27,7 +27,7 @@ class Location {
       throw new Error('[Error] The parameter l should be of string type.');
     }
     this.historys.push(l);
-    history.pushState({}, "", window.location.href);
+    history.pushState({}, '', window.location.href);
     history.replaceState({}, "", l);
     this.callbacks.forEach((cb) => cb(l));
   }

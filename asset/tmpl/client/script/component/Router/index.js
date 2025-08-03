@@ -15,8 +15,12 @@ const {
 } = global;
 
 function dealPath(path) {
-  if (path === '/') {
-    return '/index';
+  if (/^\/$/.test(path)) {
+    return  path.replace('/', '/index');
+  } else if (/^\/\?/.test(path)) {
+    return  path.replace('/', '/index');
+  } else {
+    return path;
   }
 }
 
@@ -46,12 +50,18 @@ class Router extends WebApp {
   }
 
   async ownComponentDidMount() {
+    const {
+      pathname,
+      search,
+      hash,
+    } = window.location;
+    const path = pathname + search + hash;
     await this.bindEvent();
-    await emitter.send('page' + window.location.pathname);
+    await emitter.send('page' + pathname);
     const { jump, } = this;
     switch (jump) {
       case true:
-        location.to(window.location.pathname);
+        location.to(path);
         this.jump = false;
         break;
     }
@@ -155,16 +165,23 @@ class Router extends WebApp {
   getPage(path) {
     path = dealPath(path);
     const { component, } = this;
-    const { content: page, } = component.gain(path);
-    if (page  === undefined) {
+    const {
+      content,
+      queryParams,
+      pathVariables,
+    } = component.gain(path);
+    if (content === undefined) {
       this.setState({ loading: true, });
       import('~/client/script/page/NotFound').then((module) => {
         const NotFound = module.default;
         this.system.notFound = <NotFound/>;
         this.setState({ unexist: true, loading: false, });
       });
+    } else {
+      global.queryParams = queryParams;
+      global.pathVariables = pathVariables;
     }
-    return page;
+    return content;
   }
 
   render() {

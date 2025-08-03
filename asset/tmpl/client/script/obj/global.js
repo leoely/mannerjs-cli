@@ -25,4 +25,6 @@ export default {
   emitter,
   location,
   clientFetch,
+  queryParams: null,
+  pathVariables: null,
 };
