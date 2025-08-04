@@ -19,10 +19,33 @@ function dealPath(path) {
     return  path.replace('/', '/index');
   } else if (/^\/\?/.test(path)) {
     return  path.replace('/', '/index');
+  } else if (/^\/\/\//.test(path)) {
+    return  path.replace('/', '/index');
   } else {
     return path;
   }
 }
+
+function removePathVariables(pathname) {
+  let i;
+  outer: for (i = pathname.length - 1; i >= 1; i -= 1) {
+    const char = pathname.charAt(i);
+    switch (char) {
+      case '/': {
+        const prevChar = pathname.charAt(i - 1);
+        if (prevChar === '/') {
+          break outer;
+        }
+      }
+    }
+  }
+  if (i <= 1) {
+    return pathname;
+  } else {
+    return pathname.substring(0, i - 2 + 1);
+  }
+}
+
 
 class Router extends WebApp {
   constructor(props) {
@@ -57,7 +80,7 @@ class Router extends WebApp {
     } = window.location;
     const path = pathname + search + hash;
     await this.bindEvent();
-    await emitter.send('page' + pathname);
+    await emitter.send('page' + removePathVariables(pathname), { path, });
     const { jump, } = this;
     switch (jump) {
       case true:
@@ -133,13 +156,13 @@ class Router extends WebApp {
     emitter.on('update:false', () => {
       this.setState({ update: false, });
     });
-    emitter.on('page/', async () => {
+    emitter.on('page/', async ({ path, }) => {
       if (this.checkRoute('/') === false) {
         const module = await import('~/client/script/page/Home');
         const Home = module.default;
-        this.addRoute('/', Home);
+        this.addRoute('///{name}', Home);
       }
-      location.to('/');
+      location.to(path);
       this.jump = true;
     });
   }
@@ -149,6 +172,7 @@ class Router extends WebApp {
     const { component, } = this;
     if (component.gain(path).content === undefined) {
       component.attach(path, <Class />);
+      component.setPathKeys(path);
     }
   }
 

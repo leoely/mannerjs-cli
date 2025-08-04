@@ -60,7 +60,7 @@ export default async function init(...param) {
     dependencies: {
       '@fortawesome/react-fontawesome': '^0.2.2',
       'advising.js': '^1.0.26',
-      'browser-advising': '^0.0.5',
+      'browser-advising': '^0.0.6',
       'fulmination': '^1.1.13',
       'glow.js': '^1.0.9',
       'gulp': '^5.0.0',

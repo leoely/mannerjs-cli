@@ -28,7 +28,24 @@ class Location {
     }
     this.historys.push(l);
     history.pushState({}, '', window.location.href);
-    history.replaceState({}, "", l);
+    if (l.includes('//')) {
+      const {
+        pathname,
+        search,
+        hash,
+      } = window.location;
+      const location = pathname + search + hash;
+      if (location !== l) {
+        const {
+          protocol,
+          hostname,
+          port,
+        } = window.location;
+        window.location.href = protocol + '//' + hostname + ':' + port + l;
+      }
+    } else {
+      history.replaceState({}, "", l);
+    }
     this.callbacks.forEach((cb) => cb(l));
   }
 }
