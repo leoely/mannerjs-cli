@@ -1,6 +1,7 @@
 import childProcess from 'child_process';
 import fs from 'fs';
 import path from 'path';
+import inquirer from 'inquirer';
 import Fulmination from 'fulmination';
 import {
   checkVersion,
@@ -9,6 +10,7 @@ import {
   tick,
   cross,
   greaterOrEqualVersion,
+  checkDependencies,
 } from 'mien';
 
 const fulmination = new Fulmination();
@@ -51,8 +53,19 @@ async function replaceFile(originPath, laterPath, name, rename) {
   }
 }
 
+function installDevDep(dep) {
+  childProcess.execSync('yarn add --dev ' + dep, { stdio: 'inherit', });
+  fulmination.scan(tick() + '(+) bold: Development dependency ' + emphasis(dep) + '(+) bold: * installation is successful. &');
+}
+
+function installDep(dep) {
+  childProcess.execSync('yarn add ' + dep, { stdio: 'inherit', });
+  fulmination.scan(tick() + '(+) bold: Dependency ' + emphasis(dep) + '(+) bold: * installation is successful. &');
+}
+
 export default async function update(...param) {
   checkVersion('v21.6.2');
+  await checkDependencies(['yarn', 'git']);
   const currentPath = path.resolve('.');
   const mannerPath = path.join(currentPath, '.manner');
   const versionPath = path.join(mannerPath, 'version');
@@ -69,9 +82,51 @@ export default async function update(...param) {
     fulmination.scan(cross() + '(+) bold: The current ' + emphasis('version') + ' (+) bold: * is already the latest and does not to be updated. &');
     return;
   }
-  const needEslint = await askQuestion('(+) bold: Does the current project need to ' + emphasis('eslint') + '(+): .');
-  const needTailwind = await askQuestion('(+) bold: Does the current project need to ' + emphasis('tailwind') + '(+): .');
-  const needGit= await askQuestion('(+) bold: Does the current project need to be initialize as ' + emphasis('git') + '(+) bold: * project (+): .');
+  const { dependencies, } = await inquirer.prompt({
+    name: 'dependencies',
+    message: 'Select the depnendencies required by the project.',
+    type:'checkbox',
+    choices: ['eslint', 'tailwind', 'git', 'mui'],
+  });
+  let needEslint = false;
+  let needTailwind = false;
+  let needGit = false;
+  let needMui = false;
+  dependencies.forEach((dependence) => {
+    switch (dependence) {
+      case 'eslint':
+        needEslint = true;
+        break;
+      case 'tailwind':
+        needTailwind = true;
+        break;
+      case 'git':
+        needGit = true;
+        break;
+      case 'mui':
+        needMui = true;
+        break;
+      default:
+        throw new Error('[Error] Encountered unknown dependency.');
+    }
+  });
+  if (needEslint === true) {
+    installDevDep('@eslint/css');
+    installDevDep('@eslint/js');
+    installDevDep('@eslint/json');
+    installDevDep('@eslint/markdown');
+    installDevDep('eslint');
+    installDevDep('eslint-plugin-react');
+  }
+  if (needTailwind === true) {
+    installDep('@tailwindcss/postcss');
+    installDep('tailwindcss')
+  }
+  if (needMui === true) {
+    installDep('@emotion/react');
+    installDep('@emotion/styled');
+    installDep('@mui/material');
+  }
   const assetPath = path.join(modulePath, 'asset');
   const configPath = path.join(assetPath, 'config');
   const nodes = fs.readdirSync(configPath);
@@ -128,7 +183,7 @@ export default async function update(...param) {
     }
   }
   const imgPath = path.join(assetPath, 'img');
-  await replaceFile(path.join(currentPath, 'asset'), imgPath, 'favicon-32x32.png');
+  await replaceFile(path.join(currentPath, 'asset'), imgPath, 'favicon.png');
   const tmplPath = path.join(assetPath, 'tmpl');
   const srcPath = path.join(currentPath, 'src');
   await replaceRecursion('.', srcPath, tmplPath);

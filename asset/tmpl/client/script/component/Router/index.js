@@ -46,7 +46,6 @@ function removePathVariables(pathname) {
   }
 }
 
-
 class Router extends WebApp {
   constructor(props) {
     super(props);
@@ -160,7 +159,7 @@ class Router extends WebApp {
       if (this.checkRoute('/') === false) {
         const module = await import('~/client/script/page/Home');
         const Home = module.default;
-        this.addRoute('///{name}', Home);
+        this.addRoute('/', Home);
       }
       location.to(path);
       this.jump = true;
