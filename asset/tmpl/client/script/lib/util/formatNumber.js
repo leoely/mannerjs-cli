@@ -2,7 +2,7 @@ import {
   HighLight,
   NumberLexer,
 } from 'glow.js';
-import NumberTemplate from '~/client/script/lib/template/NumberTemplate';
+import numberTemplate from '~/client/script/lib/template/numberTemplate';
 
 function splitNumber(number) {
   const chars = [];

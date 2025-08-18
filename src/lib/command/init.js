@@ -59,10 +59,10 @@ export default async function init(...param) {
     },
     dependencies: {
       '@fortawesome/react-fontawesome': '^0.2.2',
-      'advising.js': '^1.0.26',
+      'advising.js': '^1.0.28',
       'browser-advising': '^0.0.7',
       'fulmination': '^1.1.13',
-      'glow.js': '^1.0.9',
+      'glow.js': '^1.0.16',
       'gulp': '^5.0.0',
       'gulp-typescript': '^6.0.0-alpha.1',
       'manner.js': '^1.0.43',
@@ -109,22 +109,21 @@ export default async function init(...param) {
   fulmination.scan(tick() + '(+) bold: The ' + emphasis('project') + '(+) bold: * successfully created. &');
   if (needEslint === true) {
     projectPackageData.scripts['lint'] = 'eslint ./src';
-    projectPackageData.devDependencies['@eslint/css'] = '^0.8.1';
-    projectPackageData.devDependencies['@eslint/js'] = '^9.27.0';
-    projectPackageData.devDependencies['@eslint/json'] = '^0.12.0';
-    projectPackageData.devDependencies['@eslint/markdown'] = '^6.4.0';
+    projectPackageData.devDependencies['@eslint/css'] = '^0.10.0';
+    projectPackageData.devDependencies['@eslint/js'] = '^9.33.0';
+    projectPackageData.devDependencies['@eslint/json'] = '^0.13.1';
+    projectPackageData.devDependencies['@eslint/markdown'] = '^7.1.0';
     projectPackageData.devDependencies['eslint'] = '^9.27.0';
     projectPackageData.devDependencies['eslint-plugin-react'] = '^7.37.5';
   }
   if (needTailwind === true) {
-    projectPackageData.dependencies['@tailwindcss/postcss'] = '^4.1.7';
-    projectPackageData.dependencies['postcss'] = '^8.5.3';
-    projectPackageData.dependencies['tailwindcss'] = '^4.1.7';
+    projectPackageData.dependencies['@tailwindcss/postcss'] = '^4.1.12';
+    projectPackageData.dependencies['tailwindcss'] = '^4.1.12';
   }
   if (needMui === true) {
     projectPackageData.dependencies['@emotion/react'] = '^11.14.0';
     projectPackageData.dependencies['@emotion/styled'] = '^11.14.1';
-    projectPackageData.dependencies['@mui/material'] = '^7.2.0';
+    projectPackageData.dependencies['@mui/material'] = '^7.3.1';
   }
   const modulePath = path.resolve(__dirname, '..', '..', '..')
   const assetPath = path.join(modulePath, 'asset');

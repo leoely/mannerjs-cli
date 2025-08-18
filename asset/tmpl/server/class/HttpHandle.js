@@ -406,7 +406,7 @@ class HttpHandle {
           this.appendToLog('Situation:' + situation + ' ████ & ████ Url:' + url + '████ & ████ Method:' + method);
           break;
         case 7:
-          this.appendToLog('Situation:' + situation + ' ████ & ████ Url:' + url + '████ & ████ Url:' + url + '████ & ████ Method:' + method);
+          this.appendToLog('Situation:' + situation + ' ████ & ████ Url:' + url + '████ & ████ Url:' + url + '████ & ████ Method:' + method + '████ & ████ Ip:' + ip);
           break;
         default:
           throw new Error('[Error] The log should be in the interval [0, 7].');
