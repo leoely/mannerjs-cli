@@ -441,18 +441,18 @@ class HttpHandle {
   }
 
   async handle(req, res) {
+    const {
+      method,
+      url,
+      socket: {
+        remoteAddress: ip,
+      },
+    } = req;
     try {
       let disc = false;
       req.connection.on('close', () => {
         disc = true;
       });
-      const {
-        method,
-        url,
-        socket: {
-          remoteAddress: ip,
-        },
-      } = req;
       switch (method) {
         case 'PUT':
         case 'DELETE': {
@@ -696,7 +696,7 @@ class HttpHandle {
         case 'false':
           res.writeHead(500);
           res.end();
-          this.outputSituation('server internal error', ip, url);
+          this.outputSituation('server internal error', ip, url, method);
           break;
         default:
           throw new Error('[Error] Parameter development should be character boolean type');
