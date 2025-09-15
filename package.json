@@ -1,6 +1,6 @@
 {
   "name": "mannerjs-cli",
-  "version": "1.1.11",
+  "version": "1.1.12",
   "description": "Manner.js command line project.",
   "main": "dist/bin/manner.js",
   "repository": "git@github.com:leoely/mannerjs-cli.git",
