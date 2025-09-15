@@ -17,6 +17,7 @@ import {
   Prevents,
   discHndl,
   checkLogPath,
+  addToLog,
   appendToLog,
   logOutOfMemory,
   parseHttpDate,
@@ -316,6 +317,34 @@ class HttpHandle {
     validateBlocksOption(selfBlocks);
   }
 
+  outputError(error) {
+    if (!(error instanceof Error)) {
+      throw new Error('Parameter error should be of error type.');
+    }
+    const {
+      options: {
+        debug,
+      },
+    } = this;
+    if (debug === true) {
+      const {
+        fulmination,
+      } = this;
+      fulmination.scan(`
+        [+] dim:
+        |
+      ` + error.stack.replaceAll('\n', '|').replaceAll('(', '"(').replaceAll(')', '")').replaceAll(' ', '*'));
+    }
+    const {
+      options: {
+        logPath,
+      },
+    } = this;
+    if (typeof logPath === 'string') {
+      this.addToLog(error.stack);
+    }
+  }
+
   outputSituation(situation, ip, url, method) {
     if (typeof situation !== 'string') {
       throw new Error('[Error] The parameter situation should be of string type.');
@@ -358,10 +387,10 @@ class HttpHandle {
       } = this;
       switch (type) {
         case 0:
-          fulmination.scan('(+) bold: !! Status"; (+) dim: "[FAIL"] * (+) bold: @@ Url": (+) dim: "[' + url + '"] * (+) bold: ++ Ip": (+) dim: "["b' + ip + '""] * (+) bold: ^^ Situation": (+) dim:"[' + situation + '"] * (+) bold: "&"& Method": (+) dim: "[' + method + '"] &');
+          fulmination.scan('(+) bold: !! Status": (+) dim: "[FAIL"] * (+) bold: @@ Url": (+) dim: "[' + url + '"] * (+) bold: ++ Ip": (+) dim: "["b' + ip + '""] * (+) bold: ^^ Situation": (+) dim:"[' + situation + '"] * (+) bold: "&"& Method": (+) dim: "[' + method + '"] &');
           break;
         case 1:
-          fulmination.scan('(+) bold: "*"* Status"; (+) dim: "[SUCCESS"] * (+) bold: @@ Url": (+) dim: "[' + url + '"] * (+) bold: ++ Ip": (+) dim: "["b' + ip + '""] * (+) bold: ^^ Situation": (+) dim:"[' + situation + '"] * (+) bold: "&"& Method": (+) dim: "[' + method + '"] &');
+          fulmination.scan('(+) bold: "*"* Status": (+) dim: "[SUCCESS"] * (+) bold: @@ Url": (+) dim: "[' + url + '"] * (+) bold: ++ Ip": (+) dim: "["b' + ip + '""] * (+) bold: ^^ Situation": (+) dim:"[' + situation + '"] * (+) bold: "&"& Method": (+) dim: "[' + method + '"] &');
           break;
         default:
           throw new Error('[Error] The value of the type does not match the expected value.');
@@ -438,6 +467,18 @@ class HttpHandle {
       },
     } = this;
     appendToLog(logPath, ' || ████ ' + content + ' ████ ||\n');
+  }
+
+  addToLog(content) {
+    if (typeof content !== 'string') {
+      throw new Error('[Error] The parameter content must be of string type.');
+    }
+    const {
+      options: {
+        logPath,
+      },
+    } = this;
+    addToLog(logPath, content);
   }
 
   async handle(req, res) {
@@ -697,6 +738,7 @@ class HttpHandle {
           res.writeHead(500);
           res.end();
           this.outputSituation('server internal error', ip, url, method);
+          this.outputError(error);
           break;
         default:
           throw new Error('[Error] Parameter development should be character boolean type');
