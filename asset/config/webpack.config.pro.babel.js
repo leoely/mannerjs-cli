@@ -1,5 +1,6 @@
 import path from 'path';
 import HtmlWebpackPlugin from 'html-webpack-plugin';
+import TerserPlugin from 'terser-webpack-plugin';
 
 export default {
   mode: 'production',
@@ -10,6 +11,16 @@ export default {
     filename: '[name].bundle.js',
     chunkFilename: '[id].chunk.js',
     path: path.resolve(__dirname, 'static'),
+  },
+   optimization: {
+    minimize: true,
+    minimizer: [
+      new TerserPlugin({
+        terserOptions: {
+          keep_classnames: true,
+        },
+      }),
+    ],
   },
   plugins: [
     new HtmlWebpackPlugin({

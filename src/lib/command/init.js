@@ -51,6 +51,7 @@ export default async function init(...param) {
       'postcss-loader': '^8.1.1',
       'style-loader': '^3.3.4',
       'sugarss': '^4.0.1',
+      'terser-webpack-plugin': '^5.3.14',
       'ts-loader': '^9.5.2',
       'typescript': '^5.8.3',
       'webpack': '^5.91.0',
