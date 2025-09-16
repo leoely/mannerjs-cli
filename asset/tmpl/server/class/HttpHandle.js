@@ -330,10 +330,8 @@ class HttpHandle {
       const {
         fulmination,
       } = this;
-      fulmination.scan(`
-        [+] dim:
-        |
-      ` + error.stack.replaceAll('\n', '|').replaceAll('(', '"(').replaceAll(')', '")').replaceAll(' ', '*'));
+      const content = Fulmination.processOriginalContent(error.stack);
+      fulmination.scan(`<+> dim: ${content}`);
     }
     const {
       options: {
