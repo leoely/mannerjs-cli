@@ -160,47 +160,6 @@ function blkReq(ip, res, blocks) {
   }
 }
 
-function validatePreventsOption(preventsOption) {
-  if (preventsOption !== undefined) {
-    if (typeof preventsOption !== 'object') {
-      throw new Error('[Error] Option prevents should be of type object.');
-    }
-    const {
-      count,
-      interval,
-    } = preventsOption;
-    if (!Number.isInteger(count)) {
-      throw new Error('[Error] Option prevents their count attribute should be of integer type.');
-    }
-    if (!(count > 0)) {
-      throw new Error('[Error] The count attribute of the option prevents should be a positive integer type.');
-    }
-    if (!Number.isInteger(interval)) {
-      throw new Error('[Error] Option prevents their interval attribute should be of integer type.');
-    }
-    if (!(interval > 0)) {
-      throw new Error('[Error] The interval attribute of the option prevents should be a positive integer type.');
-    }
-  }
-}
-
-function validateBlocksOption(blocksOption) {
-  if (blocksOption !== undefined) {
-    if (typeof blocksOption !== 'object') {
-      throw new Error('[Error] Option blocks should be of type object.');
-    }
-    const {
-      interval,
-    } = blocksOption;
-    if (!Number.isInteger(interval)) {
-      throw new Error('[Error] Option blocks their interval attribute should be of integer type.');
-    }
-    if (!(interval > 0)) {
-      throw new Error('[Error] The interval attribute of the option blocks should be a positive integer type.');
-    }
-  }
-}
-
 class HttpHandle {
   constructor(options) {
     const [_, ...rest] = process.argv;
@@ -310,11 +269,6 @@ class HttpHandle {
     if (!(aheadTimeout > 0)) {
       throw new Error('[Error] The option aheadTimeout should be a positive integer.');
     }
-    validatePreventsOption(staticFilePrevents);
-    validateBlocksOption(methodNotSupportBlocks);
-    validateBlocksOption(interfaceDontExistBlocks);
-    validateBlocksOption(aheadBlocks);
-    validateBlocksOption(selfBlocks);
   }
 
   outputError(error) {
@@ -330,8 +284,8 @@ class HttpHandle {
       const {
         fulmination,
       } = this;
-      const content = Fulmination.processOriginalContent(error.stack);
-      fulmination.scan(`<+> dim: ${content}`);
++      const content = Fulmination.processOriginalContent(error.stack);
++      fulmination.scan(`<+> dim: ${content}`);
     }
     const {
       options: {
