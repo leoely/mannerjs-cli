@@ -3,9 +3,9 @@ import {
   WebRouter,
 } from 'browser-advising';
 import Loading from '~/client/script/page/Loading';
-import UpdateConfirm from '~/client/script/component/UpdateConfirm';
 import Container from '~/client/script/component/Container'
 import WebApp from '~/client/script/component/WebApp';
+import UpdateConfirm from '~/client/script/component/UpdateConfirm';
 import global from '~/client/script/obj/global';
 import style from './index.module.css';
 
@@ -28,14 +28,12 @@ function dealPath(path) {
 
 function removePathVariables(pathname) {
   let i;
-  outer: for (i = pathname.length - 1; i >= 1; i -= 1) {
+  for (i = pathname.length - 1; i >= 1; i -= 1) {
     const char = pathname.charAt(i);
-    switch (char) {
-      case '/': {
-        const prevChar = pathname.charAt(i - 1);
-        if (prevChar === '/') {
-          break outer;
-        }
+    if (char === '/') {
+      const prevChar = pathname.charAt(i - 1);
+      if (prevChar === '/') {
+        break;
       }
     }
   }
@@ -49,23 +47,22 @@ function removePathVariables(pathname) {
 class Router extends WebApp {
   constructor(props) {
     super(props);
-    this.system = {};
-    this.jump = true;
-    const { state, } = this;
-    this.state = {
-      location: '/',
-      status: 0,
-      loading: true,
-      ...state,
-    };
-    this.component = new WebRouter({
+    this.sys = {};
+    this.jmp = true;
+    this.comp = new WebRouter({
       threshold: 0.05,
       number: 8,
       bond: 5,
       dutyCycle: 10,
-      interception: undefined,
       hideError: true,
+      interception: undefined,
     });
+    const { state, } = this;
+    this.state = Object.assign({
+      location: '/',
+      status: 0,
+      loading: true,
+    }, state);
   }
 
   async ownComponentDidMount() {
@@ -77,11 +74,11 @@ class Router extends WebApp {
     const path = pathname + search + hash;
     await this.bindEvent();
     await emitter.send('page' + removePathVariables(pathname), { path, });
-    const { jump, } = this;
-    switch (jump) {
+    const { jmp, } = this;
+    switch (jmp) {
       case true:
         location.to(path);
-        this.jump = false;
+        this.jmp = false;
         break;
     }
     if (localStorage.getItem('ip') !== null && localStorage.getItem('time') !== null) {
@@ -95,26 +92,26 @@ class Router extends WebApp {
   }
 
   async loadAccessBlock() {
-    if (this.system.accessBlock === undefined) {
+    if (this.sys === undefined) {
       const module = await import('~/client/script/page/AccessBlock');
       const AccessBlock = module.default;
-      this.system.accessBlock = <AccessBlock/>;
+      this.sys.accessBlock = <AccessBlock/>;
     }
   }
 
   async loadInternalServerError() {
-    if (this.system.internalServerError === undefined) {
+    if (this.sys.internalServerError === undefined) {
       const module = await import('~/client/script/page/InternalServerError');
       const InternalServerError = module.default;
-      this.system.internalServerError = <InternalServerError/>;
+      this.sys.internalServerError = <InternalServerError/>;
     }
   }
 
   async loadLatencyTooHigh() {
-    if (this.system.latencyTooHigh === undefined) {
+    if (this.sys.latencyTooHigh === undefined) {
       const module = await import('~/client/script/page/LatencyTooHigh');
       const LatencyTooHigh = module.default;
-      this.system.latencyTooHigh = <LatencyTooHigh/>;
+      this.sys.latencyTooHigh = <LatencyTooHigh/>;
     }
   }
 
@@ -159,24 +156,24 @@ class Router extends WebApp {
         this.addRoute('/', Home);
       }
       location.to(path);
-      this.jump = true;
+      this.jmp = true;
     });
   }
 
   addRoute(path, Class) {
     path = dealPath(path);
-    const { component, } = this;
-    if (component.gain(path).content === undefined) {
-      component.attach(path, <Class />);
-      component.setPathKeys(path);
+    const { comp, } = this;
+    if (comp.gain(path).content === undefined) {
+      comp.attach(path, <Class />);
+      comp.setPathKeys(path);
     }
   }
 
   checkRoute(path) {
     path = dealPath(path);
-    const { component, } = this;
+    const { comp, } = this;
     let ans = true;
-    if (component.gain(path).content === undefined) {
+    if (comp(path).content === undefined) {
       ans = false;
     }
     return ans;
@@ -184,17 +181,17 @@ class Router extends WebApp {
 
   getPage(path) {
     path = dealPath(path);
-    const { component, } = this;
+    const { comp, } = this;
     const {
       content,
       queryParams,
       pathVariables,
-    } = component.gain(path);
+    } = comp.gain(path);
     if (content === undefined) {
       this.setState({ loading: true, });
       import('~/client/script/page/NotFound').then((module) => {
         const NotFound = module.default;
-        this.system.notFound = <NotFound/>;
+        this.sys.notFound = <NotFound/>;
         this.setState({ status: 4, loading: false, });
       });
     } else {
@@ -211,17 +208,17 @@ class Router extends WebApp {
     }
     switch (status) {
       case 1:
-        return this.system.internalServerError;
+        return this.sys.internalServerError;
       case 2:
-        return this.system.accessBlock;
+        return this.sys.accessBlock;
       case 3:
-        return this.system.latencyTooHigh;
+        return this.sys.latencyTooHigh;
       case 4:
         return (
           <>
             { update && <UpdateConfirm /> }
             <div id="page" className={style.page}>
-              <Container>{this.system.notFound}</Container>
+              <Container>{this.sys.notFound}</Container>
             </div>
           </>
         );
