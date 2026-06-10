@@ -32,14 +32,12 @@ export default async function init(...param) {
       '@babel/core': '^7.24.3',
       '@babel/preset-env': '^7.24.3',
       '@babel/preset-react': '^7.24.1',
-      '@babel/preset-typescript': '^7.27.1',
       '@babel/register': '^7.23.7',
       '@fortawesome/fontawesome-svg-core': '^6.7.2',
       '@fortawesome/free-brands-svg-icons': '^6.7.2',
       '@fortawesome/free-regular-svg-icons': '^6.7.2',
       '@fortawesome/free-solid-svg-icons': '^6.7.2',
       '@playwright/test': '^1.53.1',
-      '@types/node': '^24.0.3',
       'autoprefixer': '^10.4.19',
       'babel-loader': '^9.1.3',
       'babel-plugin-root-import': '^6.6.0',
@@ -53,7 +51,6 @@ export default async function init(...param) {
       'sugarss': '^4.0.1',
       'terser-webpack-plugin': '^5.3.14',
       'ts-loader': '^9.5.2',
-      'typescript': '^5.8.3',
       'webpack': '^5.91.0',
       'webpack-cli': '^5.1.4',
       'webpack-dev-server': '^5.0.4'
@@ -65,7 +62,6 @@ export default async function init(...param) {
       'fulmination': '^1.1.26',
       'glow.js': '^1.0.16',
       'gulp': '^5.0.0',
-      'gulp-typescript': '^6.0.0-alpha.1',
       'manner.js': '^1.0.46',
       'mien': '^1.0.25',
       'normalize.css': '^8.0.1',
@@ -133,9 +129,9 @@ export default async function init(...param) {
   fulmination.scan(tick() + '(+) bold: File ' + emphasis('package.json') + '(+) bold: * created successful. &');
   childProcess.execSync('yarn install', { stdio: 'inherit', });
   fulmination.scan(tick() + '(+) bold: The ' + emphasis('yarn') + '(+) bold: * installation related dependencies. &');
-  const tmplPath = path.join(assetPath, 'tmpl');
+  const templatePath = path.join(assetPath, 'template');
   fs.mkdirSync(path.join(currentPath, 'src'));
-  fs.cpSync(tmplPath, path.join(currentPath, 'src'), { recursive: true, });
+  fs.cpSync(templatePath, path.join(currentPath, 'src'), { recursive: true, });
   const HttpHandlePath = path.join(currentPath, 'src', 'server', 'class', 'HttpHandle.js');
   const HttpHandleString = fs.readFileSync(HttpHandlePath).toString();
   fs.writeFileSync(HttpHandlePath, HttpHandleString.replaceAll('temporary', name));
@@ -143,7 +139,6 @@ export default async function init(...param) {
   const configPath = path.join(assetPath, 'config');
   copyFile('.editorconfig', configPath, currentPath);;
   copyFile('babel.config.json', configPath, currentPath);;
-  copyFile('tsconfig.json', configPath, currentPath);;
   if (needEslint === true) {
     copyFile('.eslintignore', configPath, currentPath);;
     copyFile('.eslintrc', configPath, currentPath);
@@ -180,9 +175,8 @@ export default async function init(...param) {
   childProcess.execSync('openssl req -new -sha256 -key ' + name + '-key.pem -out ' + name + '-csr.pem' , { stdio: 'inherit', });
   childProcess.execSync('openssl x509 -req -in ' + name + '-csr.pem -signkey ' + name + '-key.pem -out ' + name + '-cert.pem ' , { stdio: 'inherit', });
   fulmination.scan(tick() + '(+) bold: The ' + emphasis('certificate') + '(+) bold: *  successfully created. &');
-  const imgPath = path.join(assetPath, 'img');
-  const imgName = 'favicon.png';
-  fs.copyFileSync(path.join(imgPath, imgName), path.join(currentPath, imgName));
+  const imagePath = path.join(assetPath, 'image');
+  const imageName = 'favicon.png'; fs.copyFileSync(path.join(imagePath, imageName), path.join(currentPath, imageName));
   fulmination.scan(tick() + '(+) bold: The ' + emphasis('favico') + '(+) bold: *  file was copied successfully. &');
   currentPath = path.resolve(currentPath, '..');
   const mannerPath = path.join(currentPath, '.manner');

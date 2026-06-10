@@ -33,37 +33,4 @@ function buildJs() {
     .pipe(dest('dist'));
 }
 
-function buildTs() {
-  return src('src/server/**/*.ts')
-    .pipe(babel({
-      presets: [
-        [
-          '@babel/preset-env',
-          {
-            'targets': {
-              'node': 'current'
-            }
-          },
-        ],
-        '@babel/preset-typescript',
-        'minify'
-      ],
-      plugins: [
-        [
-          'babel-plugin-root-import',
-          {
-            'paths': [
-              {
-                'rootPathSuffix': './src',
-                'rootPathPrefix': '~/'
-              },
-            ]
-          }
-        ]
-      ],
-    }))
-    .pipe(dest('dist'));
-}
-
-
 exports.build = series(buildJs, buildTs);

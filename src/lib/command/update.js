@@ -15,17 +15,17 @@ import {
 
 const fulmination = new Fulmination();
 
-async function replaceRecursion(relativePath, srcPath, tmplPath) {
-  const dir = fs.opendirSync(path.resolve(tmplPath, relativePath));
+async function replaceRecursion(relativePath, srcPath, templatePath) {
+  const dir = fs.opendirSync(path.resolve(templatePath, relativePath));
   for await (let dirent of dir) {
     const { name, } = dirent;
     if (name === '.gitkeep') {
       break;
     }
     if (dirent.isDirectory()) {
-      await replaceRecursion(path.join(relativePath, name), srcPath, tmplPath);
+      await replaceRecursion(path.join(relativePath, name), srcPath, templatePath);
     } else {
-      await replaceFile(path.join(srcPath, relativePath), path.join(tmplPath, relativePath), name);
+      await replaceFile(path.join(srcPath, relativePath), path.join(templatePath, relativePath), name);
     }
   }
 }
@@ -182,11 +182,11 @@ export default async function update(...param) {
         await replaceFile(currentPath, configPath, node);
     }
   }
-  const imgPath = path.join(assetPath, 'img');
-  await replaceFile(path.join(currentPath, 'asset'), imgPath, 'favicon.png');
-  const tmplPath = path.join(assetPath, 'tmpl');
+  const imagePath = path.join(assetPath, 'image');
+  await replaceFile(path.join(currentPath, 'asset'), imagePath, 'favicon.png');
+  const templatePath = path.join(assetPath, 'template');
   const srcPath = path.join(currentPath, 'src');
-  await replaceRecursion('.', srcPath, tmplPath);
+  await replaceRecursion('.', srcPath, templatePath);
   fs.writeFileSync(versionPath, version2);
   fulmination.scan(tick() + '(+) bold: The' + emphasis('version') + '(+) bold: * information updated completed. &');
   fulmination.scan(tick() + '(+) bold: The overall project' + emphasis('manner') + '(+) bold: * updated was successfully. &');

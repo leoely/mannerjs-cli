@@ -54,11 +54,8 @@ class Router extends WebApp {
     const { state, } = this;
     this.state = {
       location: '/',
+      status: 0,
       loading: true,
-      block: false,
-      error: false,
-      buzy: false,
-      unexist: false,
       ...state,
     };
     this.component = new WebRouter({
@@ -91,7 +88,7 @@ class Router extends WebApp {
       this.setState({ loading: true, });
       await this.loadAccessBlock();
       this.setState({
-        block: true,
+        status: 2,
         loading: false,
       });
     }
@@ -131,26 +128,26 @@ class Router extends WebApp {
     emitter.on('block:true', async () => {
       this.setState({ loading: true, });
       await this.loadAccessBlock();
-      this.setState({ block: true, loading: false, });
+      this.setState({ status: 2, loading: false, });
     });
     emitter.on('block:false', () => {
-      this.setState({ block: false, });
+      this.setState({ status: 0, });
     });
     emitter.on('error:true', async () => {
       this.setState({ loading: true, });
       await this.loadInternalServerError();
-      this.setState({ error: true, loading: false, });
+      this.setState({ status: 1, loading: false, });
     });
     emitter.on('error:false', () => {
-      this.setState({ error: false, });
+      this.setState({ status: 0, });
     });
     emitter.on('busy:true', async () => {
       this.setState({ loading: true, });
       await this.loadLatencyTooHigh();
-      this.setState({ busy: true, loading: false, })
+      this.setState({ status: 3, loading: false, })
     });
     emitter.on('busy:false', () => {
-      this.setState({ busy: false, });
+      this.setState({ status: 0, });
     });
     emitter.on('update:false', () => {
       this.setState({ update: false, });
@@ -198,7 +195,7 @@ class Router extends WebApp {
       import('~/client/script/page/NotFound').then((module) => {
         const NotFound = module.default;
         this.system.notFound = <NotFound/>;
-        this.setState({ unexist: true, loading: false, });
+        this.setState({ status: 4, loading: false, });
       });
     } else {
       global.queryParams = queryParams;
@@ -208,28 +205,26 @@ class Router extends WebApp {
   }
 
   render() {
-    const { location, update, loading, unexist, block, error, busy, } = this.state;
+    const { location, update, loading, } = this.state;
     if (loading === true) {
       return <Loading />;
     }
-    if (error === true) {
-      return this.system.internalServerError;
-    }
-    if (block === true) {
-      return this.system.accessBlock;
-    }
-    if (busy === true) {
-      return this.system.latencyTooHigh;
-    }
-    if (unexist === true) {
-      return (
-        <>
-          { update && <UpdateConfirm /> }
-          <div id="page" className={style.page}>
-            <Container>{this.system.notFound}</Container>
-          </div>
-        </>
-      );
+    switch (status) {
+      case 1:
+        return this.system.internalServerError;
+      case 2:
+        return this.system.accessBlock;
+      case 3:
+        return this.system.latencyTooHigh;
+      case 4:
+        return (
+          <>
+            { update && <UpdateConfirm /> }
+            <div id="page" className={style.page}>
+              <Container>{this.system.notFound}</Container>
+            </div>
+          </>
+        );
     }
     return (
       <>

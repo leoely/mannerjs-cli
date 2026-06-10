@@ -17,13 +17,13 @@ class WebApp extends React.Component {
   }
 
   async checkUpdate() {
-    const response = await clientFetch.fetch('/update/message', {
+    const response = await clientFetch.fetch('/get/system/main', {
       method: 'POST',
     });
-    if (response !== undefined && response.ok) {
-      const message = await response.json();
+    if (response.ok) {
+      const result = await response.json();
       const { time, } = this;
-      this.setState({ update: message.updateTime > time, });
+      this.setState({ update: mtimeMs > time, });
     }
   }
 
