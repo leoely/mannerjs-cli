@@ -15,7 +15,6 @@ import {
 import {
   Blocks,
   Prevents,
-  discHndl,
   checkLogPath,
   addToLog,
   appendToLog,
@@ -113,7 +112,7 @@ function cacheOutput(req, res, url, data, ms) {
   }
 }
 
-function genIdxHtml(req, res) {
+function outputIndexHtml(req, res) {
   const data = fs.readFileSync(path.resolve('static', 'index.html'));
   const ms = fs.statSync(path.resolve('static', 'index.html')).mtimeMs;
   cacheOutput(req, res, '/index.html', data, ms);
@@ -442,27 +441,19 @@ class HttpHandle {
       },
     } = req;
     try {
-      let disc = false;
-      req.connection.on('close', () => {
-        disc = true;
-      });
       switch (method) {
         case 'PUT':
         case 'DELETE': {
           const { blocks1, } = this;
           if (blocks1.examine(ip)) {
-            await discHndl(disc, () => {
-              res.end(JSON.stringify({
-                status: -1,
-                message: 'The static server currently does not support this method ' + method + '.',
-              }));
-              this.outputSituation('method not supported', ip, url, method);
-            });
+            res.end(JSON.stringify({
+              status: -1,
+              message: 'The static server currently does not support this method ' + method + '.',
+            }));
+            this.outputSituation('method not supported', ip, url, method);
           } else {
-            await discHndl(disc, () => {
-              blkReq(ip, res, blocks1);
-              this.outputSituation('block request', ip, url, method);
-            });
+            blkReq(ip, res, blocks1);
+            this.outputSituation('block request', ip, url, method);
           }
           return;
         }
@@ -506,32 +497,24 @@ class HttpHandle {
               this.outputSituation('prevent obtain', ip, url, method);
               return;
             }
-            await discHndl(disc, () => {
-              const data = fs.readFileSync(filePath);
-              const ms = fs.statSync(filePath).mtimeMs;
-              cacheOutput(req, res, restUrl, data, ms);
-              this.outputSituation('obtain static resource', ip, url, method);
-            });
+            const data = fs.readFileSync(filePath);
+            const ms = fs.statSync(filePath).mtimeMs;
+            cacheOutput(req, res, restUrl, data, ms);
+            this.outputSituation('obtain static resource', ip, url, method);
             return;
           } else {
               switch (method) {
                 case 'GET':
-                  await discHndl(disc, () => {
-                    genIdxHtml(req, res);
-                    this.outputSituation('obtain static resource', ip, url, method);
-                  });
+                  outputIndexHtml(req, res);
+                  this.outputSituation('obtain static resource', ip, url, method);
                 default: {
                   const { blocks2, } = this;
                   if (blocks2.examine(ip)) {
-                    await discHndl(disc, () => {
-                      genNotFoundJSON(req, res);
-                      this.outputSituation('interface does not exist', ip, url, method);
-                    });
+                    genNotFoundJSON(req, res);
+                    this.outputSituation('interface does not exist', ip, url, method);
                   } else {
-                    await discHndl(disc, () => {
-                      blkReq(ip, res, blocks2);
-                      this.outputSituation('block request', ip, url, method);
-                    });
+                    blkReq(ip, res, blocks2);
+                    this.outputSituation('block request', ip, url, method);
                   }
                 }
               }
@@ -540,142 +523,132 @@ class HttpHandle {
         }
       }
       if (url.substring(0, 4) === '/api') {
-        await discHndl(disc, async () => {
-          const { length, } = url;
-          const path = url.substring(4, length);
-          let { content: aheadBlocks, }= aheadObstruct.gain(path);
-          if (aheadBlocks === undefined) {
-            const {
-              options: {
-                aheadBlocks: {
-                  interval,
+        const { length, } = url;
+        const path = url.substring(4, length);
+        let { content: aheadBlocks, }= aheadObstruct.gain(path);
+        if (aheadBlocks === undefined) {
+          const {
+            options: {
+              aheadBlocks: {
+                interval,
+              },
+            }
+          } = this;
+          const newAheadBlocks = new Blocks(interval);
+          aheadObstruct.attach(path, newAheadBlocks);
+          aheadBlocks = newAheadBlocks;
+        }
+        if (aheadBlocks.examine(ip) === false) {
+          blkReq(ip, res, aheadBlocks);
+          this.outputSituation('block request', ip, url, method);
+          return;
+        }
+        const { content: onward, } = await forward.gain(path);
+        if (onward !== undefined) {
+          const body = await new Promise((resolve, reject) => {
+            req.on('data', (data) => {
+              resolve(data.toString());
+            });
+            req.on('end', () => {
+              resolve('');
+            });
+          });
+          let response;
+          if (body !== '') {
+            if (req.headers['has-timeout'] === 'false') {
+              response = await onward.fetch(path, {
+                method: 'POST',
+                body,
+              });
+            } else {
+              const {
+                options: {
+                  aheadTimeout,
                 },
-              }
-            } = this;
-            const newAheadBlocks = new Blocks(interval);
-            aheadObstruct.attach(path, newAheadBlocks);
-            aheadBlocks = newAheadBlocks;
-          }
-          if (aheadBlocks.examine(ip) === false) {
-            blkReq(ip, res, aheadBlocks);
-            this.outputSituation('block request', ip, url, method);
-            return;
-          }
-          await discHndl(disc, async () => {
-            const { content: onward, } = await forward.gain(path);
-            if (onward !== undefined) {
-              const body = await new Promise((resolve, reject) => {
-                req.on('data', (data) => {
-                  resolve(data.toString());
-                });
-                req.on('end', () => {
-                  resolve('');
+              } = this;
+              const result = await tmoHndl(res, async () => {
+                response = await onward.fetch(path, {
+                  method: 'POST',
+                  signal: AbortSignal.timeout(aheadTimeout),
+                  body,
                 });
               });
-              let response;
-              if (body !== '') {
-                if (req.headers['has-timeout'] === 'false') {
-                  response = await onward.fetch(path, {
-                    method: 'POST',
-                    body,
-                  });
-                } else {
-                  const {
-                    options: {
-                      aheadTimeout,
-                    },
-                  } = this;
-                  const result = await tmoHndl(res, async () => {
-                    response = await onward.fetch(path, {
-                      method: 'POST',
-                      signal: AbortSignal.timeout(aheadTimeout),
-                      body,
-                    });
-                  });
-                  if (result === false) {
-                    this.outputSituation('timeout', ip, url, method);
-                    return;
-                  }
-                }
-              } else {
-                if (req.headers['has-timeout'] === 'false') {
-                  response = await onward.fetch(path, {
-                    method: 'POST',
-                  });
-                } else {
-                  const {
-                    options: {
-                      aheadTimeout,
-                    },
-                  } = this;
-                  const result = await tmoHndl(res, async () => {
-                    response = await onward.fetch(path, {
-                      method: 'POST',
-                      signal: AbortSignal.timeout(aheadTimeout),
-                    });
-                  });
-                  if (result === false) {
-                    this.outputSituation('timeout', ip, url, method);
-                    return;
-                  }
-                }
+              if (result === false) {
+                this.outputSituation('timeout', ip, url, method);
+                return;
               }
-              if (response !== undefined) {
-                for (const k of response.headers.keys()) {
-                  res.statusCode = response.status;
-                  res[formatHttpKey(k)] = response.headers.get(k);
-                }
-                const data = await response.text();
-                res.end(data);
-                this.outputSituation('forward', ip, url, method);
-              }
-            } else {
-              genNotFoundJSON(req, res);
-              this.outputSituation('interface does not exist', ip, url, method);
             }
-          });
-        });
+          } else {
+            if (req.headers['has-timeout'] === 'false') {
+              response = await onward.fetch(path, {
+                method: 'POST',
+              });
+            } else {
+              const {
+                options: {
+                  aheadTimeout,
+                },
+              } = this;
+              const result = await tmoHndl(res, async () => {
+                response = await onward.fetch(path, {
+                  method: 'POST',
+                  signal: AbortSignal.timeout(aheadTimeout),
+                });
+              });
+              if (result === false) {
+                this.outputSituation('timeout', ip, url, method);
+                return;
+              }
+            }
+          }
+          if (response !== undefined) {
+            for (const k of response.headers.keys()) {
+              res.statusCode = response.status;
+              res[formatHttpKey(k)] = response.headers.get(k);
+            }
+            const data = await response.text();
+            res.end(data);
+            this.outputSituation('forward', ip, url, method);
+          }
+        } else {
+          genNotFoundJSON(req, res);
+          this.outputSituation('interface does not exist', ip, url, method);
+        }
         return;
       }
       switch (method) {
         case 'POST': {
-          await discHndl(disc, async () => {
-            let { content: ownBlocks }= ownObstruct.gain(url);
-            if (ownBlocks === undefined) {
-              const {
-                options: {
-                  selfBlocks: {
-                    interval,
-                  },
+          let { content: ownBlocks }= ownObstruct.gain(url);
+          if (ownBlocks === undefined) {
+            const {
+              options: {
+                selfBlocks: {
+                  interval,
                 },
-              } = this;
-              const newOwnBlocks = new Blocks(interval);
-              ownObstruct.attach(url, newOwnBlocks);
-              ownBlocks = newOwnBlocks;
-            }
-            if (ownBlocks.examine(ip) === false) {
-              blkReq(ip, res, ownBlocks);
-              this.outputSituation('block request', ip, url, method);
-              return;
-            }
-            await discHndl(disc, async () => {
-              const { content: router, } = webRouter.gain(url);
-              if (router !== undefined) {
-                await router(req, res);
-                this.outputSituation('processing', ip, url, method);
-              } else {
-                genNotFoundJSON(req, res);
-                this.outputSituation('interface does not exist', ip, url, method);
-              }
-            });
-          });
+              },
+            } = this;
+            const newOwnBlocks = new Blocks(interval);
+            ownObstruct.attach(url, newOwnBlocks);
+            ownBlocks = newOwnBlocks;
+          }
+          if (ownBlocks.examine(ip) === false) {
+            blkReq(ip, res, ownBlocks);
+            this.outputSituation('block request', ip, url, method);
+            return;
+          }
+          const { content: router, } = webRouter.gain(url);
+          if (router !== undefined) {
+            await router(req, res);
+            this.outputSituation('processing', ip, url, method);
+          } else {
+            genNotFoundJSON(req, res);
+            this.outputSituation('interface does not exist', ip, url, method);
+          }
           return;
         }
         case 'GET': {
-          discHndl(disc, () => {
-            genIdxHtml(req, res);
-            this.outputSituation('obtain static resource', ip, url, method);
-          });
+          outputIndexHtml(req, res);
+          this.outputSituation('obtain static resource', ip, url, method);
           return;
         }
         default:

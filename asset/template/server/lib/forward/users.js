@@ -5,7 +5,7 @@ const {
   forward,
 } = global;
 
-const multiFetch1: MultiFetch = new MultiFetch([
+const multiFetch1 = new MultiFetch([
   'http://localhost:8001',
   'http://localhost:8002',
   'http://localhost:8003',
