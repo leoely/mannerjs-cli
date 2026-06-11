@@ -47,8 +47,18 @@ function removePathVariables(pathname) {
 class Router extends WebApp {
   constructor(props) {
     super(props);
+    this.initData();
+    this.state = {
+      location: '/',
+      update: false,
+      status: 0,
+      loading: true,
+    };
+  }
+
+  initData() {
     this.sys = {};
-    const wr = new WebRouter({
+    this.comp = new WebRouter({
       threshold: 0.05,
       number: 8,
       bond: 5,
@@ -56,13 +66,6 @@ class Router extends WebApp {
       hideError: true,
       interception: undefined,
     });
-    this.comp = wr;
-    this.state = {
-      location: '/',
-      update: false,
-      status: 0,
-      loading: true,
-    };
   }
 
   async ownComponentDidMount() {

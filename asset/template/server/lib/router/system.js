@@ -6,6 +6,9 @@ import global from '~/server/obj/global';
 const { wr, sys, } = global;
 
 wr.attach('/get/system/main', async (req, res) => {
+  if (sys.main === undefined) {
+    sys.main = {};
+  }
   const { main, } = sys;
   if (main.mtimeMs == undefined) {
     const mainBundlePath = path.resolve('static', 'main.bundle.js')

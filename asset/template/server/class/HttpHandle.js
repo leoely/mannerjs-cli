@@ -26,8 +26,8 @@ import {
 import global from '~/server/obj/global';
 
 const {
-  webRouter,
-  forward,
+  wr,
+  fwd,
   compress,
   file,
   modify,
@@ -112,23 +112,23 @@ function cacheOutput(req, res, url, data, ms) {
   }
 }
 
-function outputIndexHtml(req, res) {
+function returnIndexHtml(req, res) {
   const data = fs.readFileSync(path.resolve('static', 'index.html'));
   const ms = fs.statSync(path.resolve('static', 'index.html')).mtimeMs;
   cacheOutput(req, res, '/index.html', data, ms);
 }
 
-function genNotFoundJSON(req, res) {
+function returnNotFoundJSON(req, res) {
   const { url, } = req;
   res.end(JSON.stringify({
     status: -2, message: 'The current route ' + url + ' does not exist.',
   }));
 }
 
-async function tmoHndl(res, process) {
+async function dealTimeout(res, method) {
   let ans = true;
   try {
-    await process();
+    await method();
   } catch (error) {
     const { name, } = error;
     switch (name) {
@@ -505,12 +505,12 @@ class HttpHandle {
           } else {
               switch (method) {
                 case 'GET':
-                  outputIndexHtml(req, res);
+                  returnIndexHtml(req, res);
                   this.outputSituation('obtain static resource', ip, url, method);
                 default: {
                   const { blocks2, } = this;
                   if (blocks2.examine(ip)) {
-                    genNotFoundJSON(req, res);
+                    returnNotFoundJSON(req, res);
                     this.outputSituation('interface does not exist', ip, url, method);
                   } else {
                     blkReq(ip, res, blocks2);
@@ -543,7 +543,7 @@ class HttpHandle {
           this.outputSituation('block request', ip, url, method);
           return;
         }
-        const { content: onward, } = await forward.gain(path);
+        const { content: onward, } = await fwd.gain(path);
         if (onward !== undefined) {
           const body = await new Promise((resolve, reject) => {
             req.on('data', (data) => {
@@ -566,7 +566,7 @@ class HttpHandle {
                   aheadTimeout,
                 },
               } = this;
-              const result = await tmoHndl(res, async () => {
+              const result = await dealTimeout(res, async () => {
                 response = await onward.fetch(path, {
                   method: 'POST',
                   signal: AbortSignal.timeout(aheadTimeout),
@@ -589,7 +589,7 @@ class HttpHandle {
                   aheadTimeout,
                 },
               } = this;
-              const result = await tmoHndl(res, async () => {
+              const result = await dealTimeout(res, async () => {
                 response = await onward.fetch(path, {
                   method: 'POST',
                   signal: AbortSignal.timeout(aheadTimeout),
@@ -611,7 +611,7 @@ class HttpHandle {
             this.outputSituation('forward', ip, url, method);
           }
         } else {
-          genNotFoundJSON(req, res);
+          returnNotFoundJSON(req, res);
           this.outputSituation('interface does not exist', ip, url, method);
         }
         return;
@@ -636,18 +636,18 @@ class HttpHandle {
             this.outputSituation('block request', ip, url, method);
             return;
           }
-          const { content: router, } = webRouter.gain(url);
+          const { content: router, } = wr.gain(url);
           if (router !== undefined) {
             await router(req, res);
             this.outputSituation('processing', ip, url, method);
           } else {
-            genNotFoundJSON(req, res);
+            returnNotFoundJSON(req, res);
             this.outputSituation('interface does not exist', ip, url, method);
           }
           return;
         }
         case 'GET': {
-          outputIndexHtml(req, res);
+          returnIndexHtml(req, res);
           this.outputSituation('obtain static resource', ip, url, method);
           return;
         }

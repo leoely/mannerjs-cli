@@ -1,9 +1,7 @@
 import { MultiFetch, } from 'manner.js/server';
 import global from '~/server/obj/global';
 
-const {
-  forward,
-} = global;
+const { fwd, } = global;
 
 const multiFetch1 = new MultiFetch([
   'http://localhost:8001',
@@ -12,4 +10,4 @@ const multiFetch1 = new MultiFetch([
   'http://localhost:8004',
 ]);
 
-forward.attach('/login', multiFetch1);
+fwd.attach('/login', multiFetch1);
