@@ -28,18 +28,18 @@ import global from '~/server/obj/global';
 const {
   wr,
   fwd,
-  compress,
-  file,
-  modify,
-  ownObstruct,
-  aheadObstruct,
-  staticStop,
+  fr1,
+  fr2,
+  fr3,
+  fr4,
+  wr1,
+  wr2,
 } = global;
 
 function dealCompress(data, address, res) {
-  let mini = compress.gain(address);
+  let mini = fr3.gain(address);
   if (mini === undefined) {
-    compress.attach(address, data);
+    fr3.attach(address, data);
     mini = data;
   }
   res.end(mini);
@@ -62,29 +62,29 @@ function compressOutput(req, res, data, url) {
     dealCompress(zlib.zstdCompressSync(data), url, res);
   } else {
     res.writeHead(200, {});
-    let raw = file.gain(url);
+    let raw = fr2.gain(url);
     if (raw === undefined) {
-      file.attach(url, data);
-      raw = file.gain(url);
+      fr2.attach(url, data);
+      raw = fr2.gain(url);
     }
     res.end(raw);
   }
 }
 
-function dealFile(file, address, data) {
-  let raw = file.gain(address);
+function dealFile(address, data) {
+  let raw = fr2.gain(address);
   if (raw === undefined) {
-    file.attach(address, data);
+    fr2.attach(address, data);
     raw = data;
   }
   return raw;
 }
 
-function dealModify(modify, address, ms) {
-  let change = modify.gain(address);
+function dealModify(fr, address, ms) {
+  let change = fr.gain(address);
   if (change  === undefined) {
     const time = new Date(ms).getTime();
-    modify.attach(address, time);
+    fr.attach(address, time);
     change = time;
   }
   return change;
@@ -93,16 +93,16 @@ function dealModify(modify, address, ms) {
 function cacheOutput(req, res, url, data, ms) {
   let ifModifiedSince = req.headers['if-modified-since'];
   if (ifModifiedSince === undefined) {
-    const raw = dealFile(file, url, data);
-    const change = dealModify(modify, url, ms);
+    const raw = dealFile(fr2, url, data);
+    const change = dealModify(fr1, url, ms);
     res.setHeader('Last-Modified', formatHttpDate(change));
     compressOutput(req, res, raw, url);
   } else {
-    const change = dealModify(modify, url, ms);
-    const raw = dealFile(file, url, data);
+    const change = dealModify(fr1, url, ms);
+    const raw = dealFile(fr2, url, data);
     const since = parseHttpDate(ifModifiedSince).getTime();
     if (since < change) {
-      const raw = dealFile(file, url, data);
+      const raw = dealFile(fr2, url, data);
       res.setHeader('Last-Modified', formatHttpDate(change));
       compressOutput(req, res, raw, url);
     } else {
@@ -125,7 +125,7 @@ function returnNotFoundJSON(req, res) {
   }));
 }
 
-async function dealTimeout(res, method) {
+async function treatTimeout(res, method) {
   let ans = true;
   try {
     await method();
@@ -144,18 +144,20 @@ async function dealTimeout(res, method) {
   return ans;
 }
 
-function pvntObt(res) {
+function deterObtainFile(res) {
   res.writeHead(304);
   res.end();
 }
 
-function blkReq(ip, res, blocks) {
+function stemRequest(ip, res, blocks) {
   const count = blocks.getCount(ip);
-  if (count === 2) {
-    res.writeHead(429);
-    res.end(JSON.stringify({ ip, time: 7500, }));
-  } else {
-    res.end();
+  switch (count) {
+    case 2:
+      res.writeHead(429);
+      res.end(JSON.stringify({ ip, time: 7500, }));
+      break;
+    default:
+      res.end();
   }
 }
 
@@ -169,24 +171,16 @@ class HttpHandle {
       logLevel: 0,
       logPath: '/var/log/manner.js/',
       onlyLogFail: true,
-      staticFilePrevents: {
+      abortTimeout: 8000,
+      methodNotSupport: { interval: 7500, },
+      interfaceDontExist: { interval: 7500, },
+      normalSituation: { interval: 7500, },
+      forwardSituation: { interval: 7500, },
+      staticFileSituation: {
         count: 3,
         interval: 20000,
       },
-      methodNotSupportBlocks: {
-        interval: 7500,
-      },
-      interfaceDontExistBlocks: {
-        interval: 7500,
-      },
-      aheadBlocks: {
-        interval: 7500,
-      },
-      selfBlocks: {
-        interval: 7500,
-      },
-      aheadTimeout: 8000,
-    };
+    }
     this.options = Object.assign(defaultOptions, options);
     this.dealOptions();
     const {
@@ -201,16 +195,12 @@ class HttpHandle {
     }
     const {
       options: {
-        methodNotSupportBlocks: {
-          interval: interval1,
-        },
-        interfaceDontExistBlocks: {
-          interval: interval2,
-        },
+        methodNotSupport,
+        interfaceDontExist,
       },
     } = this;
-    this.blocks1 = new Blocks(interval1);
-    this.blocks2 = new Blocks(interval2);
+    this.blks1 = new Blocks(methodNotSupport.interval);
+    this.blks2 = new Blocks(interfaceDontExist.interval);
     this.checkMemory();
   }
 
@@ -239,12 +229,7 @@ class HttpHandle {
         logLevel,
         logPath,
         onlyLogFail,
-        staticFilePrevents,
-        methodNotSupportBlocks,
-        interfaceDontExistBlocks,
-        aheadBlocks,
-        aheadTimeout,
-        selfBlocks,
+        abortTimeout,
       },
     } = this;
     if (typeof debug !== 'boolean') {
@@ -262,11 +247,11 @@ class HttpHandle {
     if (typeof onlyLogFail !== 'boolean') {
       throw new Error('[Error] Option onlyLogFail should be of type boolean.');
     }
-    if (!Number.isInteger(aheadTimeout)) {
-      throw new Error('[Error] The option aheadTimeout should be of integer type.');
+    if (!Number.isInteger(abortTimeout)) {
+      throw new Error('[Error] The option abortTimeout should be of integer type.');
     }
-    if (!(aheadTimeout > 0)) {
-      throw new Error('[Error] The option aheadTimeout should be a positive integer.');
+    if (!(abortTimeout > 0)) {
+      throw new Error('[Error] The option abortTimeout should be a positive integer.');
     }
   }
 
@@ -444,15 +429,15 @@ class HttpHandle {
       switch (method) {
         case 'PUT':
         case 'DELETE': {
-          const { blocks1, } = this;
-          if (blocks1.examine(ip)) {
+          const { blks1, } = this;
+          if (blks1.examine(ip)) {
             res.end(JSON.stringify({
               status: -1,
               message: 'The static server currently does not support this method ' + method + '.',
             }));
             this.outputSituation('method not supported', ip, url, method);
           } else {
-            blkReq(ip, res, blocks1);
+            stemRequest(ip, res, blks1);
             this.outputSituation('block request', ip, url, method);
           }
           return;
@@ -478,22 +463,22 @@ class HttpHandle {
           const restUrl = path.basename(url);
           const filePath = path.resolve('static', restUrl);
           if (fs.existsSync(filePath)) {
-            let prevents = staticStop.gain(filePath);
+            let prevents = fr4.gain(filePath);
             if (prevents === undefined) {
               const {
                 options: {
-                  staticFilePrevents: {
+                  staticFileSituation: {
                     count,
                     interval,
                   },
                 },
               } = this;
               const newPrevents = new Prevents(count, interval);
-              staticStop.attach(filePath, newPrevents);
+              fr4.attach(filePath, newPrevents);
               prevents = newPrevents;
             }
             if (prevents.inspect(ip, req) === false) {
-              pvntObt(res);
+              deterObtainFile(res);
               this.outputSituation('prevent obtain', ip, url, method);
               return;
             }
@@ -508,12 +493,12 @@ class HttpHandle {
                   returnIndexHtml(req, res);
                   this.outputSituation('obtain static resource', ip, url, method);
                 default: {
-                  const { blocks2, } = this;
-                  if (blocks2.examine(ip)) {
+                  const { blks2, } = this;
+                  if (blks2.examine(ip)) {
                     returnNotFoundJSON(req, res);
                     this.outputSituation('interface does not exist', ip, url, method);
                   } else {
-                    blkReq(ip, res, blocks2);
+                    stemRequest(ip, res, blks2);
                     this.outputSituation('block request', ip, url, method);
                   }
                 }
@@ -525,21 +510,21 @@ class HttpHandle {
       if (url.substring(0, 4) === '/api') {
         const { length, } = url;
         const path = url.substring(4, length);
-        let { content: aheadBlocks, }= aheadObstruct.gain(path);
-        if (aheadBlocks === undefined) {
+        let { content: blks1, }= wr1.gain(path);
+        if (blks1 === undefined) {
           const {
             options: {
-              aheadBlocks: {
+              forwardSituation: {
                 interval,
               },
             }
           } = this;
-          const newAheadBlocks = new Blocks(interval);
-          aheadObstruct.attach(path, newAheadBlocks);
-          aheadBlocks = newAheadBlocks;
+          const blks2 = new Blocks(interval);
+          wr1.attach(path, blks2);
+          blks1 = blks2;
         }
-        if (aheadBlocks.examine(ip) === false) {
-          blkReq(ip, res, aheadBlocks);
+        if (blks1.examine(ip) === false) {
+          stemRequest(ip, res, blks1);
           this.outputSituation('block request', ip, url, method);
           return;
         }
@@ -563,13 +548,13 @@ class HttpHandle {
             } else {
               const {
                 options: {
-                  aheadTimeout,
+                  abortTimeout,
                 },
               } = this;
-              const result = await dealTimeout(res, async () => {
+              const result = await treatTimeout(res, async () => {
                 response = await onward.fetch(path, {
                   method: 'POST',
-                  signal: AbortSignal.timeout(aheadTimeout),
+                  signal: AbortSignal.timeout(abortTimeout),
                   body,
                 });
               });
@@ -586,13 +571,13 @@ class HttpHandle {
             } else {
               const {
                 options: {
-                  aheadTimeout,
+                  abortTimeout,
                 },
               } = this;
-              const result = await dealTimeout(res, async () => {
+              const result = await treatTimeout(res, async () => {
                 response = await onward.fetch(path, {
                   method: 'POST',
-                  signal: AbortSignal.timeout(aheadTimeout),
+                  signal: AbortSignal.timeout(abortTimeout),
                 });
               });
               if (result === false) {
@@ -618,21 +603,21 @@ class HttpHandle {
       }
       switch (method) {
         case 'POST': {
-          let { content: ownBlocks }= ownObstruct.gain(url);
-          if (ownBlocks === undefined) {
+          let { content: blks1 }= wr2.gain(url);
+          if (blks1 === undefined) {
             const {
               options: {
-                selfBlocks: {
+                normalSituation: {
                   interval,
                 },
               },
             } = this;
-            const newOwnBlocks = new Blocks(interval);
-            ownObstruct.attach(url, newOwnBlocks);
-            ownBlocks = newOwnBlocks;
+            const blks2 = new Blocks(interval);
+            wr2.attach(url, blks2);
+            blks1 = blks2;
           }
-          if (ownBlocks.examine(ip) === false) {
-            blkReq(ip, res, ownBlocks);
+          if (blks1.examine(ip) === false) {
+            stemRequest(ip, res, blks2);
             this.outputSituation('block request', ip, url, method);
             return;
           }
@@ -646,12 +631,10 @@ class HttpHandle {
           }
           return;
         }
-        case 'GET': {
+        case 'GET':
           returnIndexHtml(req, res);
           this.outputSituation('obtain static resource', ip, url, method);
           return;
-        }
-        default:
       }
     } catch (error) {
       const { development, } = this;

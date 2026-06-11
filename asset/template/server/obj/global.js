@@ -3,24 +3,24 @@ import {
   FileRouter,
 } from 'advising.js';
 
-const modify = new FileRouter({ debug: false, hideError: true, });
-const file = new FileRouter({ debug: false, hideError: true, });
-const compress = new FileRouter({ debug: false, hideError: true, });
-const staticStop = new FileRouter({ debug: false, hideError: true, });
-const aheadObstruct = new WebRouter({ debug: false, hideError: true, });
-const ownObstruct = new WebRouter({ debug: false, hideError: true, });
+const fr1 = new FileRouter({ debug: false, hideError: true, });
+const fr2 = new FileRouter({ debug: false, hideError: true, });
+const fr3 = new FileRouter({ debug: false, hideError: true, });
+const fr4  = new FileRouter({ debug: false, hideError: true, });
+const wr1 = new WebRouter({ debug: false, hideError: true, });
+const wr2 = new WebRouter({ debug: false, hideError: true, });
 const fwd = new WebRouter({ debug: false, hideError: true, });
-const wr = new WebRouter({ debug: false, hideError: true, });
+const wr0 = new WebRouter({ debug: false, hideError: true, });
 const sys = {};
 
 export default {
   sys,
   wr,
   fwd,
-  modify,
-  file,
-  compress,
-  aheadObstruct,
-  ownObstruct,
-  staticStop,
+  fr1,
+  fr2,
+  fr3,
+  fr4,
+  wr1,
+  wr2,
 };
