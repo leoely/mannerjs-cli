@@ -14,7 +14,7 @@ class LatencyTooHigh extends Page {
   }
 
   stillVisit() {
-    emitter.send('busy:false');
+    emitter.send('busy', false);
   }
 
   async ownComponentWillUnmount() {

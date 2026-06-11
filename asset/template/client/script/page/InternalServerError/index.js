@@ -20,7 +20,7 @@ class InternalServerError extends Page {
   }
 
   comeback() {
-    emitter.send('error:false');
+    emitter.send('error', false);
     location.back();
   }
 

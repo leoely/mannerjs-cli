@@ -2,6 +2,7 @@ import React from 'react';
 import global from '~/client/script/obj/global';
 
 const {
+  emitter,
   location,
   clientFetch,
 } = global;
@@ -9,9 +10,6 @@ const {
 class WebApp extends React.Component {
   constructor(props) {
     super(props);
-    this.state = {
-      update: false,
-    };
     this.checkUpdate = this.checkUpdate.bind(this);
     this.time = new Date().getTime();
   }
@@ -23,7 +21,7 @@ class WebApp extends React.Component {
     if (response.ok) {
       const result = await response.json();
       const { time, } = this;
-      this.setState({ update: mtimeMs > time, });
+      emitter.send('update', mtimeMs > time);
     }
   }
 

@@ -48,8 +48,7 @@ class Router extends WebApp {
   constructor(props) {
     super(props);
     this.sys = {};
-    this.jmp = true;
-    this.comp = new WebRouter({
+    const wr = new WebRouter({
       threshold: 0.05,
       number: 8,
       bond: 5,
@@ -57,12 +56,13 @@ class Router extends WebApp {
       hideError: true,
       interception: undefined,
     });
-    const { state, } = this;
-    this.state = Object.assign({
+    this.comp = wr;
+    this.state = {
       location: '/',
+      update: false,
       status: 0,
       loading: true,
-    }, state);
+    };
   }
 
   async ownComponentDidMount() {
@@ -74,13 +74,7 @@ class Router extends WebApp {
     const path = pathname + search + hash;
     await this.bindEvent();
     await emitter.send('page' + removePathVariables(pathname), { path, });
-    const { jmp, } = this;
-    switch (jmp) {
-      case true:
-        location.to(path);
-        this.jmp = false;
-        break;
-    }
+    location.to(path);
     if (localStorage.getItem('ip') !== null && localStorage.getItem('time') !== null) {
       this.setState({ loading: true, });
       await this.loadAccessBlock();
@@ -122,32 +116,35 @@ class Router extends WebApp {
         loading: false,
       });
     });
-    emitter.on('block:true', async () => {
-      this.setState({ loading: true, });
-      await this.loadAccessBlock();
-      this.setState({ status: 2, loading: false, });
+    emitter.on('block', async (flag) => {
+      if (flag === true) {
+        this.setState({ loading: true, });
+        await this.loadAccessBlock();
+        this.setState({ status: 2, loading: false, });
+      } else {
+        this.setState({ status: 0, });
+      }
     });
-    emitter.on('block:false', () => {
-      this.setState({ status: 0, });
+    emitter.on('error', async (flag) => {
+      if (flag === true) {
+        this.setState({ loading: true, });
+        await this.loadInternalServerError();
+        this.setState({ status: 1, loading: false, });
+      } else {
+        this.setState({ status: 0, });
+      }
     });
-    emitter.on('error:true', async () => {
-      this.setState({ loading: true, });
-      await this.loadInternalServerError();
-      this.setState({ status: 1, loading: false, });
+    emitter.on('busy', async (flag) => {
+      if (flag === true) {
+        this.setState({ loading: true, });
+        await this.loadLatencyTooHigh();
+        this.setState({ status: 3, loading: false, })
+      } else {
+        this.setState({ status: 0, });
+      }
     });
-    emitter.on('error:false', () => {
-      this.setState({ status: 0, });
-    });
-    emitter.on('busy:true', async () => {
-      this.setState({ loading: true, });
-      await this.loadLatencyTooHigh();
-      this.setState({ status: 3, loading: false, })
-    });
-    emitter.on('busy:false', () => {
-      this.setState({ status: 0, });
-    });
-    emitter.on('update:false', () => {
-      this.setState({ update: false, });
+    emitter.on('update', (flag) => {
+      this.setState({ flag, });
     });
     emitter.on('page/', async ({ path, }) => {
       if (this.checkRoute('/') === false) {
@@ -156,7 +153,6 @@ class Router extends WebApp {
         this.addRoute('/', Home);
       }
       location.to(path);
-      this.jmp = true;
     });
   }
 

@@ -12,13 +12,13 @@ clientFetch.addFilter(429, async (response) => {
   const { time, ip  } = await response.json();
   localStorage.setItem('time', String(time));
   localStorage.setItem('ip', ip);
-  emitter.send('block:true');
+  emitter.send('block', true);
 });
 clientFetch.addFilter(500, async (response) => {
-  emitter.send('error:true');
+  emitter.send('error', true);
 });
 clientFetch.addFilter(512, async (response) => {
-  emitter.send('busy:true');
+  emitter.send('busy', true);
 });
 
 export default {

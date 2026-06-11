@@ -36,7 +36,7 @@ class AccessBlock extends Page {
       localStorage.removeItem('time');
       localStorage.removeItem('ip');
       clearInterval(id);
-      emitter.send('block:false');
+      emitter.send('block', false);
     }
   }
 
