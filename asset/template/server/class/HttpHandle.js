@@ -25,15 +25,22 @@ import {
 } from 'manner.js/server'
 import global from '~/server/obj/global';
 
+const fr1Key = Symbol.for('fr1');
+const fr2Key = Symbol.for('fr2');
+const fr3Key = Symbol.for('fr3');
+const fr4Key = Symbol.for('fr4');
+const wr1Key = Symbol.for('wr1');
+const wr2Key = Symbol.for('wr2');
+
 const {
   wr,
   fwd,
-  fr1,
-  fr2,
-  fr3,
-  fr4,
-  wr1,
-  wr2,
+  [fr1Key]: fr1,
+  [fr2Key]: fr2,
+  [fr3Key]: fr3,
+  [fr4Key]: fr4,
+  [wr1Key]: wr1,
+  [wr2Key]: wr2,
 } = global;
 
 function dealCompress(data, address, res) {
@@ -463,8 +470,8 @@ class HttpHandle {
           const restUrl = path.basename(url);
           const filePath = path.resolve('static', restUrl);
           if (fs.existsSync(filePath)) {
-            let prevents = fr4.gain(filePath);
-            if (prevents === undefined) {
+            let prevn1 = fr4.gain(filePath);
+            if (prevn1 === undefined) {
               const {
                 options: {
                   staticFileSituation: {
@@ -473,11 +480,11 @@ class HttpHandle {
                   },
                 },
               } = this;
-              const newPrevents = new Prevents(count, interval);
-              fr4.attach(filePath, newPrevents);
-              prevents = newPrevents;
+              const prevn2 = new Prevents(count, interval);
+              fr4.attach(filePath, prevn2);
+              prevn1 = prevn2;
             }
-            if (prevents.inspect(ip, req) === false) {
+            if (prevn1.inspect(ip, req) === false) {
               deterObtainFile(res);
               this.outputSituation('prevent obtain', ip, url, method);
               return;
