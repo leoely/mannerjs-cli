@@ -1,6 +1,5 @@
 import { series, src, dest, } from 'gulp';
 import babel from 'gulp-babel';
-import ts from 'gulp-typescript';
 
 function buildJs() {
   return src('src/server/**/*.js')
@@ -33,4 +32,4 @@ function buildJs() {
     .pipe(dest('dist'));
 }
 
-exports.build = series(buildJs, buildTs);
+exports.build = series(buildJs);

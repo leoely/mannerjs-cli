@@ -182,6 +182,8 @@ export default async function update(...param) {
         await replaceFile(currentPath, configPath, node);
     }
   }
+  childProcess.execSync('yarn upgrade', { stdio: 'inherit', });
+  fulmination.scan(tick() + '(+) bold: The ' + emphasis('yarn') + '(+) bold: * upgrade related dependencies. &');
   const imagePath = path.join(assetPath, 'image');
   await replaceFile(path.join(currentPath, 'asset'), imagePath, 'favicon.png');
   const templatePath = path.join(assetPath, 'template');

@@ -284,8 +284,8 @@ class HttpHandle {
       const {
         fulmination,
       } = this;
-+      const content = Fulmination.processOriginalContent(error.stack);
-+      fulmination.scan(`<+> dim: ${content}`);
+      const content = Fulmination.processOriginalContent(error.stack);
+      fulmination.scan(`<+> dim: ${content}`);
     }
     const {
       options: {
@@ -668,7 +668,7 @@ class HttpHandle {
           throw new Error('[Error] Parameter development should be character boolean type');
       }
     }
-    this.[checkMemoryKey]();
+    this[checkMemoryKey]();
   }
 
   listen() {

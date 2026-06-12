@@ -11,6 +11,14 @@ import {
 } from 'mien';
 import copyFile from '~/lib/util/copyFile';
 
+function installDevDep(dep) {
+  childProcess.execSync('yarn add --dev ' + dep, { stdio: 'inherit', });
+}
+
+function installDep(dep) {
+  childProcess.execSync('yarn add ' + dep, { stdio: 'inherit', });
+}
+
 export default async function init(...param) {
   checkVersion('v21.6.2');
   await checkDependencies(['yarn', 'git']);
@@ -26,34 +34,6 @@ export default async function init(...param) {
       dev: 'webpack serve --config webpack.config.dev.babel.js',
       pro: 'webpack --config webpack.config.pro.babel.js',
       test: 'yarn playwright test --ui',
-    },
-    devDependencies: {
-      '@babel/cli': '^7.24.1',
-      '@babel/core': '^7.24.3',
-      '@babel/preset-env': '^7.24.3',
-      '@babel/preset-react': '^7.24.1',
-      '@babel/register': '^7.23.7',
-      '@fortawesome/fontawesome-svg-core': '^6.7.2',
-      '@fortawesome/free-brands-svg-icons': '^6.7.2',
-      '@fortawesome/free-regular-svg-icons': '^6.7.2',
-      '@fortawesome/free-solid-svg-icons': '^6.7.2',
-      '@playwright/test': '^1.53.1',
-      'autoprefixer': '^10.4.19',
-      'babel-loader': '^9.1.3',
-      'babel-plugin-root-import': '^6.6.0',
-      'babel-preset-minify': '^0.5.2',
-      'css-loader': '^6.10.0',
-      'file-loader': '^6.2.0',
-      'gulp-babel': '^8.0.0',
-      'html-webpack-plugin': '^5.6.0',
-      'postcss-loader': '^8.1.1',
-      'style-loader': '^3.3.4',
-      'sugarss': '^4.0.1',
-      'terser-webpack-plugin': '^5.3.14',
-      'ts-loader': '^9.5.2',
-      'webpack': '^5.91.0',
-      'webpack-cli': '^5.1.4',
-      'webpack-dev-server': '^5.0.4'
     },
     dependencies: {
       '@fortawesome/react-fontawesome': '^0.2.2',
@@ -106,28 +86,67 @@ export default async function init(...param) {
   fulmination.scan(tick() + '(+) bold: The ' + emphasis('project') + '(+) bold: * successfully created. &');
   if (needEslint === true) {
     projectPackageData.scripts['lint'] = 'eslint ./src';
-    projectPackageData.devDependencies['@eslint/css'] = '^0.10.0';
-    projectPackageData.devDependencies['@eslint/js'] = '^9.33.0';
-    projectPackageData.devDependencies['@eslint/json'] = '^0.13.1';
-    projectPackageData.devDependencies['@eslint/markdown'] = '^7.1.0';
-    projectPackageData.devDependencies['eslint'] = '^9.27.0';
-    projectPackageData.devDependencies['eslint-plugin-react'] = '^7.37.5';
+    installDevDep('@eslint/css');
+    installDevDep('@eslint/js');
+    installDevDep('@eslint/json');
+    installDevDep('@eslint/markdown');
+    installDevDep('eslint');
+    installDevDep('eslint-plugin-react');;
   }
   if (needTailwind === true) {
-    projectPackageData.dependencies['@tailwindcss/postcss'] = '^4.1.12';
-    projectPackageData.dependencies['tailwindcss'] = '^4.1.12';
+    installDep('@tailwindcss/postcss');
+    installDep('tailwindcss');
   }
   if (needMui === true) {
-    projectPackageData.dependencies['@emotion/react'] = '^11.14.0';
-    projectPackageData.dependencies['@emotion/styled'] = '^11.14.1';
-    projectPackageData.dependencies['@mui/material'] = '^7.3.1';
+    installDep('@emotion/react');
+    installDep('@emotion/styled');
+    installDep('@mui/material');
   }
   const modulePath = path.resolve(__dirname, '..', '..', '..')
   const assetPath = path.join(modulePath, 'asset');
   fulmination.scan('(+) &');
   fs.writeFileSync(path.join(currentPath, 'package.json'), JSON.stringify(projectPackageData, null, 2));
   fulmination.scan(tick() + '(+) bold: File ' + emphasis('package.json') + '(+) bold: * created successful. &');
-  childProcess.execSync('yarn install', { stdio: 'inherit', });
+  installDep('@fortawesome/react-fontawesome');
+  installDep('advising.js'a);
+  installDep('browser-advising');
+  installDep('fulmination');
+  installDep('glow.js');
+  installDep('gulp');
+  installDep('manner.js');
+  installDep('mien');
+  installDep('normalize.css');
+  installDep('postcss');
+  installDep('react');
+  installDep('react-dom');
+  installDevDep('@babel/core');
+  installDevDep('@babel/cli');
+  installDevDep('@babel/preset-env');
+  installDevDep('@babel/preset-react');
+  installDevDep('@babel/preset-react');
+  installDevDep('@babel/plugin-proposal-decorators');
+  installDevDep('@babel/register');
+  installDevDep('@fortawesome/fontawesome-svg-core');
+  installDevDep('@fortawesome/free-brands-svg-icons');
+  installDevDep('@fortawesome/free-regular-svg-icons');
+  installDevDep('@fortawesome/free-solid-svg-icons');
+  installDevDep('@playwright/test');
+  installDevDep('autoprefixer');
+  installDevDep('babel-loader');
+  installDevDep('babel-plugin-root-import');
+  installDevDep('babel-preset-minify');
+  installDevDep('css-loader');
+  installDevDep('file-loader');
+  installDevDep('gulp-babel');
+  installDevDep('html-webpack-plugin');
+  installDevDep('postcss-loader');
+  installDevDep('style-loader');
+  installDevDep('sugarss');
+  installDevDep('terser-webpack-plugin');
+  installDevDep('ts-loader');
+  installDevDep('webpack');
+  installDevDep('webpack-cli');
+  installDevDep('webpack-dev-server');
   fulmination.scan(tick() + '(+) bold: The ' + emphasis('yarn') + '(+) bold: * installation related dependencies. &');
   const templatePath = path.join(assetPath, 'template');
   fs.mkdirSync(path.join(currentPath, 'src'));

@@ -1,9 +1,9 @@
 import React, { StrictMode, } from 'react';
 import ReactDOM from 'react-dom/client';
-import Application from '~/client/script/component/Appliction';
+import Application from '~/client/script/component/Application';
 import '~/client/style/index.css';
 
-function Application() {
+function App() {
   return (
     <StrictMode>
       <div style={{ height: '100%', }}>
@@ -15,4 +15,4 @@ function Application() {
 
 const domNode = document.getElementById('root');
 const root = ReactDOM.createRoot(domNode);
-root.render(<Application />);
+root.render(<App />);
