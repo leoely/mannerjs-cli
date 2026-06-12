@@ -19,6 +19,8 @@ const {
 const updateKey = Symbol('update');
 const closeKey = Symbol('close');
 const dimmerKey = Symbol('dimmer')
+const showKey = Symbol.for('show');
+const hiddenKey = Symbol.for('hidden');
 
 class UpdateConfirm extends React.Component {
   constructor(props) {
@@ -34,12 +36,12 @@ class UpdateConfirm extends React.Component {
 
   [closeKey](){
     emitter.send('update', false);
-    this[dimmerKey].hidden();
+    this[dimmerKey][hiddenKey]();
   }
 
   componentDidMount() {
     this[dimmerKey] = new Dimmer();
-    this[dimmerKey].show();
+    this[dimmerKey][showKey]();
   }
 
   componentWillUnmount() {

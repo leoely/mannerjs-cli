@@ -23,9 +23,6 @@ function splitNumber(number) {
 }
 
 export default function formatNumber(number) {
-  if (typeof number !== 'number') {
-    throw new Error('[Error]');
-  }
   const highLight = new HighLight();
   highLight.addLexer(NumberLexer);
   const tokens = highLight.parse(splitNumber(number));

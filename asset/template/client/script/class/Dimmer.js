@@ -1,3 +1,6 @@
+const showKey = Symbol.for('show');
+const hiddenKey = Symbol.for('hidden');
+
 class Dimmer {
   constructor() {
     const pageElem = document.getElementById('page');
@@ -7,13 +10,13 @@ class Dimmer {
     this.pageElem = pageElem;
   }
 
-  show() {
+  [showKey]() {
     const { pageElem, } = this;
     pageElem.style.backgroundColor = 'rgb(255, 255, 255)';
     pageElem.style.filter = 'brightness(0.5)';
   }
 
-  hidden() {
+  [hiddenKey]() {
     const { pageElem, } = this;
     pageElem.style.backgroundColor = null;
     pageElem.style.filter = null;
