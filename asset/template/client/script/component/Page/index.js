@@ -1,4 +1,5 @@
 import React from 'react';
+import removePathVariables from '~/client/script/lib/util/removePathVariables';
 import global from '~/client/script/obj/global';
 
 const {
@@ -16,6 +17,10 @@ class Page extends React.Component {
     if (typeof this.ownComponentWillUnmount === 'function') {
       await this.ownComponentWillUnmount();
     }
+  }
+
+  async toLink(link, search, hash) {
+    await emitter.send('page' + removePathVariables(pathname), { path, });
   }
 }
 

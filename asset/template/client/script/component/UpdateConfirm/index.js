@@ -39,7 +39,7 @@ class UpdateConfirm extends React.Component {
 
   componentDidMount() {
     this[dimmerKey] = new Dimmer();
-    this[dimmer].show();
+    this[dimmerKey].show();
   }
 
   componentWillUnmount() {

@@ -1,13 +1,13 @@
 import React, { StrictMode, } from 'react';
 import ReactDOM from 'react-dom/client';
-import Router from '~/client/script/component/Router';
+import Application from '~/client/script/component/Appliction';
 import '~/client/style/index.css';
 
 function Application() {
   return (
     <StrictMode>
       <div style={{ height: '100%', }}>
-        <Router />
+        <Application />
       </div>
     </StrictMode>
   );

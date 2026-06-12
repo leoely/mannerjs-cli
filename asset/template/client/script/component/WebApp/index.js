@@ -9,6 +9,7 @@ const {
 
 const checkUpdateKey = Symbol('checkUpdate');
 const timeKey = Symbol('time');
+const ownComponentDidMountKey = Symbol.for('ownComponentDidMount');
 
 class WebApp extends React.Component {
   constructor(props) {
@@ -33,7 +34,7 @@ class WebApp extends React.Component {
     window.addEventListener('popstate', (event) => {
       location.to(event.currentTarget.location.pathname);
     });
-    await this.ownComponentDidMount();
+    await this[ownComponentDidMountKey]();
   }
 
   async componentWillUnmount() {

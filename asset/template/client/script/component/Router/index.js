@@ -26,35 +26,17 @@ function dealPath(path) {
   }
 }
 
-function removePathVariables(pathname) {
-  let i;
-  for (i = pathname.length - 1; i >= 1; i -= 1) {
-    const char = pathname.charAt(i);
-    if (char === '/') {
-      const prevChar = pathname.charAt(i - 1);
-      if (prevChar === '/') {
-        break;
-      }
-    }
-  }
-  if (i <= 1) {
-    return pathname;
-  } else {
-    return pathname.substring(0, i - 2 + 1);
-  }
-}
-
 const sysKey = Symbol('sys');
 const compKey = Symbol('comp');
 const initDataKey = Symbol('initData');
-const loadAccessBlockKey = Symbol('loadAccessBlock');
-const loadInternalServerErrorKey = Symbol('loadInternalServerError');
-const loadLatencyTooHighKey = Symbol('loadLatencyTooHigh');
-const loadLatencyTooHighKey = Symbol('loadLatencyTooHigh');
+const ldAcsBlkKey = Symbol('ldAcsBlk');
+const ldIntlSvrErrKey = Symbol('ldIntlSvrErr');
+const ldLatTooHighKey = Symbol('ldLatTooHigh');
 const bindEventKey = Symbol('bindEvent');
 const getPageKey = Symbol('getPage');
-const addRouteKey = Symbol('addRoute');
-const checkRouteKey = Symbol('checkRoute');
+const addRouteKey = Symbol.for('addRoute');
+const checkRouteKey = Symbol.for('checkRoute');
+const ownComponentDidMountKey = Symbol.for('ownComponentDidMount');
 
 class Router extends WebApp {
   constructor(props) {
@@ -80,7 +62,7 @@ class Router extends WebApp {
     });
   }
 
-  async ownComponentDidMount() {
+  async [ownComponentDidMountKey]() {
     const {
       pathname,
       search,
@@ -92,35 +74,36 @@ class Router extends WebApp {
     location.to(path);
     if (localStorage.getItem('ip') !== null && localStorage.getItem('time') !== null) {
       this.setState({ loading: true, });
-      await this[loadAccessBlockKey]();
+      await this[loadAcsBlkKey]();
       this.setState({
         status: 2,
         loading: false,
       });
     }
+    await this.ownComponentDidMount();
   }
 
-  async [loadAccessBlockKey]() {
-    if (this[sysKey].accessBlock === undefined) {
+  async [ldAcsBlkKey]() {
+    if (this[sysKey].acsBlk === undefined) {
       const module = await import('~/client/script/page/AccessBlock');
       const AccessBlock = module.default;
-      this[sysKey].accessBlock = <AccessBlock/>;
+      this[sysKey].acsBlk = <AccessBlock/>;
     }
   }
 
-  async [loadInternalServerErrorKey]() {
-    if (this[sysKey].internalServerError === undefined) {
+  async [ldIntlSvrErrKey]() {
+    if (this[sysKey].internalSvrError === undefined) {
       const module = await import('~/client/script/page/InternalServerError');
       const InternalServerError = module.default;
-      this[sysKey].internalServerError = <InternalServerError/>;
+      this[sysKey].intlSvrErr = <InternalServerError/>;
     }
   }
 
-  async [loadLatencyTooHighKey]() {
-    if (this[sysKey].latencyTooHigh === undefined) {
+  async [ldLatTooHighKey]() {
+    if (this[sysKey].latTooHigh === undefined) {
       const module = await import('~/client/script/page/LatencyTooHigh');
       const LatencyTooHigh = module.default;
-      this[sysKey].latencyTooHigh = <LatencyTooHigh/>;
+      this[sysKey].latTooHigh = <LatencyTooHigh/>;
     }
   }
 
@@ -134,7 +117,7 @@ class Router extends WebApp {
     emitter.on('block', async (flag) => {
       if (flag === true) {
         this.setState({ loading: true, });
-        await this[loadAccessBlockKey]();
+        await this[ldAcsBlkKey]();
         this.setState({ status: 2, loading: false, });
       } else {
         this.setState({ status: 0, });
@@ -143,7 +126,7 @@ class Router extends WebApp {
     emitter.on('error', async (flag) => {
       if (flag === true) {
         this.setState({ loading: true, });
-        await this[loadInternalServerError.key]();
+        await this[ldIntlSvrErr.key]();
         this.setState({ status: 1, loading: false, });
       } else {
         this.setState({ status: 0, });
@@ -152,7 +135,7 @@ class Router extends WebApp {
     emitter.on('busy', async (flag) => {
       if (flag === true) {
         this.setState({ loading: true, });
-        await this[loadLatencyTooHighKey]();
+        await this[ldLatTooHighKey]();
         this.setState({ status: 3, loading: false, })
       } else {
         this.setState({ status: 0, });
@@ -161,11 +144,12 @@ class Router extends WebApp {
     emitter.on('update', (flag) => {
       this.setState({ flag, });
     });
-    emitter.on('page/', async ({ path, }) => {
-      if (this[checkRouteKey]('/') === false) {
-        const module = await import('~/client/script/page/Home');
-        const Home = module.default;
-        this[addRouteKey]('/', Home);
+  }
+
+  addPage(path, component) {
+    emitter.on('page' + path, async ({ path, }) => {
+      if (this[checkRouteKey](path) === false) {
+        this[addRouteKey](path, component);
       }
       location.to(path);
     });
@@ -213,18 +197,20 @@ class Router extends WebApp {
   }
 
   render() {
-    const { location, update, loading, } = this.state;
+    const { loading, } = this.state;
     if (loading === true) {
       return <Loading />;
     }
+    const { status, } = this.state;
     switch (status) {
       case 1:
-        return this[sysKey].internalServerError;
+        return this[sysKey].intlSvrErr;
       case 2:
-        return this[sysKey].accessBlock;
+        return this[sysKey].acsBlk;
       case 3:
-        return this[sysKey].latencyTooHigh;
-      case 4:
+        return this[sysKey].latTooHigh;
+      case 4: {
+        const { update, } = this.state;
         return (
           <>
             { update && <UpdateConfirm /> }
@@ -233,15 +219,19 @@ class Router extends WebApp {
             </div>
           </>
         );
+      }
+      case 0: {
+        const { update, } = this;
+        return (
+          <>
+            { update && <UpdateConfirm /> }
+            <div id="page" className={style.page}>
+              <Container>{this[getPageKey](location)}</Container>
+            </div>
+          </>
+        );
+      }
     }
-    return (
-      <>
-        { update && <UpdateConfirm /> }
-        <div id="page" className={style.page}>
-          <Container>{this[getPageKey](location)}</Container>
-        </div>
-      </>
-    );
   }
 }
 
