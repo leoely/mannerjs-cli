@@ -6,8 +6,9 @@ import Loading from '~/client/script/page/Loading';
 import Container from '~/client/script/component/Container'
 import WebApp from '~/client/script/component/WebApp';
 import UpdateConfirm from '~/client/script/component/UpdateConfirm';
+import removePathVariables from '~/client/script/lib/util/removePathVariables';
 import global from '~/client/script/obj/global';
-import style from './index.module.css';
+import * as style from './index.module.css';
 
 const {
   emitter,
@@ -70,8 +71,6 @@ class Router extends WebApp {
     } = window.location;
     const path = pathname + search + hash;
     await this[bindEventKey]();
-    await emitter.send('page' + removePathVariables(pathname), { path, });
-    location.to(path);
     if (localStorage.getItem('ip') !== null && localStorage.getItem('time') !== null) {
       this.setState({ loading: true, });
       await this[loadAcsBlkKey]();
@@ -81,6 +80,8 @@ class Router extends WebApp {
       });
     }
     await this.ownComponentDidMount();
+    await emitter.send('page' + dealPath(removePathVariables(pathname)), { path, });
+    location.to(path);
   }
 
   async [ldAcsBlkKey]() {
@@ -147,7 +148,7 @@ class Router extends WebApp {
   }
 
   addPage(path, component) {
-    emitter.on('page' + path, async ({ path, }) => {
+    emitter.on('page' + dealPath(path), async ({ path, }) => {
       if (this[checkRouteKey](path) === false) {
         this[addRouteKey](path, component);
       }
@@ -158,17 +159,17 @@ class Router extends WebApp {
   [addRouteKey](path, Class) {
     path = dealPath(path);
     const { [compKey]: comp, } = this;
-    if (comp.gain(path).content === undefined) {
-      comp.attach(path, <Class />);
+    if (comp.gain(dealPath(path)).content === undefined) {
+      comp.attach(dealPath(path), <Class />);
       comp.setPathKeys(path);
     }
   }
 
   [checkRouteKey](path) {
     path = dealPath(path);
-    const { [comKey]: comp, } = this;
+    const { [compKey]: comp, } = this;
     let ans = true;
-    if (comp(path).content === undefined) {
+    if (comp.gain(dealPath(path)).content === undefined) {
       ans = false;
     }
     return ans;
@@ -181,7 +182,7 @@ class Router extends WebApp {
       content,
       queryParams,
       pathVariables,
-    } = comp.gain(path);
+    } = comp.gain(dealPath(path));
     if (content === undefined) {
       this.setState({ loading: true, });
       import('~/client/script/page/NotFound').then((module) => {
@@ -212,23 +213,23 @@ class Router extends WebApp {
       case 4: {
         const { update, } = this.state;
         return (
-          <>
+          <div>
             { update && <UpdateConfirm /> }
             <div id="page" className={style.page}>
               <Container>{this[sysKey].notFound}</Container>
             </div>
-          </>
+          </div>
         );
       }
       case 0: {
-        const { update, } = this;
+        const { update, location, } = this.state;
         return (
-          <>
+          <div>
             { update && <UpdateConfirm /> }
             <div id="page" className={style.page}>
               <Container>{this[getPageKey](location)}</Container>
             </div>
-          </>
+          </div>
         );
       }
     }

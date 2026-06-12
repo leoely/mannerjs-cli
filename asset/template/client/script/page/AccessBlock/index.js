@@ -9,7 +9,7 @@ import Page from '~/client/script/component/Page';
 import formatNumber from '~/client/script/lib/util/formatNumber';
 import formatLocation from '~/client/script/lib/util/formatLocation';
 import global from '~/client/script/obj/global';
-import style from './index.module.css';
+import * as style from './index.module.css';
 
 const {
   emitter,

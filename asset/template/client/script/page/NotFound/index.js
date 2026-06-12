@@ -6,8 +6,8 @@ import {
   faEarthAmericas,
 } from '@fortawesome/free-solid-svg-icons';
 import Page from '~/client/script/component/Page';
-import style from './index.module.css';
 import formatLocation from '~/client/script/lib/util/formatLocation';
+import * as style from './index.module.css';
 
 class NotFound extends Page {
   render() {

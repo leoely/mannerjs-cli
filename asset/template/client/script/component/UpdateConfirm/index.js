@@ -7,9 +7,9 @@ import {
   faFileArrowDown,
   faHourglassHalf,
 } from '@fortawesome/free-solid-svg-icons';
-import style from './index.module.css';
 import Dimmer from '~/client/script/class/Dimmer';
 import global from '~/client/script/obj/global';
+import * as style from './index.module.css';
 
 const {
   location,
@@ -56,11 +56,11 @@ class UpdateConfirm extends React.Component {
           Detect a new version update of this webapp.Whether or not process update?
         </div>
         <div className={style.btnGrp}>
-          <button onClick={this[updateKey]} className={[style.btn, style.update].join(' ')}>
+          <button onClick={this[updateKey]} className={[style.btn].join(' ')}>
             <FontAwesomeIcon className={[style.updateIcon, style.icon].join(' ')} icon={faHourglassHalf} />
             update
           </button>
-          <button onClick={this[closeKey]} className={[style.btn, style.ignore].join(' ')}>
+          <button onClick={this[closeKey]} className={[style.btn].join(' ')}>
             <FontAwesomeIcon className={[style.ignoreIcon, style.icon].join(' ')} icon={faFaceTired} />
             delay util the next thirty minutes
           </button>

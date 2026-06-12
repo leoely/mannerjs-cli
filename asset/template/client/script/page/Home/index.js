@@ -1,7 +1,7 @@
 import React from 'react';
 import Page from '~/client/script/component/Page';
 import welcomeImg from './welcome.png';
-import style from './index.module.css';
+import * as style from './index.module.css';
 
 class Home extends Page {
   render() {

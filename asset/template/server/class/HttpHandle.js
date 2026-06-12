@@ -100,16 +100,16 @@ function dealModify(fr, address, ms) {
 function cacheOutput(req, res, url, data, ms) {
   let ifModifiedSince = req.headers['if-modified-since'];
   if (ifModifiedSince === undefined) {
-    const raw = dealFile(fr2, url, data);
+    const raw = dealFile(url, data);
     const change = dealModify(fr1, url, ms);
     res.setHeader('Last-Modified', formatHttpDate(change));
     compressOutput(req, res, raw, url);
   } else {
     const change = dealModify(fr1, url, ms);
-    const raw = dealFile(fr2, url, data);
+    const raw = dealFile(url, data);
     const since = parseHttpDate(ifModifiedSince).getTime();
     if (since < change) {
-      const raw = dealFile(fr2, url, data);
+      const raw = dealFile(url, data);
       res.setHeader('Last-Modified', formatHttpDate(change));
       compressOutput(req, res, raw, url);
     } else {
@@ -676,8 +676,8 @@ class HttpHandle {
     switch (safe) {
       case 'true':
         http2.createSecureServer({
-          key: fs.readFileSync('asset/temporary-key.pem'),
-          cert: fs.readFileSync('asset/temporary-cert.pem'),
+          key: fs.readFileSync('asset/test-key.pem'),
+          cert: fs.readFileSync('asset/test-cert.pem'),
         }, async (req, res) => {
           await this[handleKey](req, res);
         }).listen(port);

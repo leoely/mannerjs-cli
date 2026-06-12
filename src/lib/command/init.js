@@ -35,20 +35,6 @@ export default async function init(...param) {
       pro: 'webpack --config webpack.config.pro.babel.js',
       test: 'yarn playwright test --ui',
     },
-    dependencies: {
-      '@fortawesome/react-fontawesome': '^0.2.2',
-      'advising.js': '^1.0.36',
-      'browser-advising': '^0.0.9',
-      'fulmination': '^1.1.26',
-      'glow.js': '^1.0.16',
-      'gulp': '^5.0.0',
-      'manner.js': '^1.0.46',
-      'mien': '^1.0.25',
-      'normalize.css': '^8.0.1',
-      'postcss': '^8.5.3',
-      'react': '^19.1.0',
-      'react-dom': '^19.1.0'
-    }
   });
   const { name, } = projectPackageData;
   const { dependencies, } = await inquirer.prompt({
@@ -108,7 +94,7 @@ export default async function init(...param) {
   fs.writeFileSync(path.join(currentPath, 'package.json'), JSON.stringify(projectPackageData, null, 2));
   fulmination.scan(tick() + '(+) bold: File ' + emphasis('package.json') + '(+) bold: * created successful. &');
   installDep('@fortawesome/react-fontawesome');
-  installDep('advising.js'a);
+  installDep('advising.js');
   installDep('browser-advising');
   installDep('fulmination');
   installDep('glow.js');

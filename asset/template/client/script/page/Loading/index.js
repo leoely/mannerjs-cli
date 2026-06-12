@@ -5,8 +5,8 @@ import {
 import {
   faSpinner,
 } from '@fortawesome/free-solid-svg-icons';
-import style from './index.module.css';
 import formatUnit from '~/client/script/lib/util/formatUnit';
+import * as style from './index.module.css';
 
 const spinKey = Symbol('spin');
 

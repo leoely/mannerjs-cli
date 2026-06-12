@@ -30,7 +30,7 @@ export default {
     }),
   ],
   resolve: {
-    extensions: ['.ts', '.tsx', '.js', '.jsx'],
+    extensions: ['.js', '.jsx'],
   },
   module: {
     rules: [
@@ -40,21 +40,6 @@ export default {
         use: {
           loader: 'babel-loader',
         }
-      },
-      {
-        test: /\.(ts|tsx)$/,
-        use: [
-          {
-            loader: 'ts-loader',
-            options: {
-              transpileOnly: true,
-            },
-          },
-          {
-            loader: 'babel-loader',
-          },
-        ],
-        exclude: /node_modules/,
       },
       {
         test: /\.css$/i,

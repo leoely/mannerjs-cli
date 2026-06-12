@@ -1,7 +1,7 @@
 import React from 'react';
 import Page from '~/client/script/component/Page';
 import global from '~/client/script/obj/global';
-import style from './index.module.css';
+import * as style from './index.module.css';
 
 const {
   emitter,
