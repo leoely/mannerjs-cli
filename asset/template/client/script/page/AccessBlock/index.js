@@ -15,6 +15,8 @@ const {
   emitter,
 } = global;
 
+const decreaseClockKey = Symbol('decreaseClock');
+
 class AccessBlock extends Page {
   constructor(props) {
     super(props);
@@ -22,10 +24,10 @@ class AccessBlock extends Page {
       ip: '',
       time: 0,
     };
-    this.decreaseClock = this.decreaseClock.bind(this);
+    this[decreaseClockKey] = this[decreaseClockKey].bind(this);
   }
 
-  decreaseClock() {
+  [decreaseClockKey]() {
     let { time, } = this.state;
     if (time > 0) {
       time -= 500;
@@ -50,7 +52,7 @@ class AccessBlock extends Page {
         time,
       });
     }
-    this.id = setInterval(this.decreaseClock, 500);
+    this.id = setInterval(this[decreaseClockKey], 500);
   }
 
   render() {

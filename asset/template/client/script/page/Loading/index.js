@@ -8,24 +8,26 @@ import {
 import style from './index.module.css';
 import formatUnit from '~/client/script/lib/util/formatUnit';
 
+const spinKey = Symbol('spin');
+
 class Loading extends React.Component {
   constructor(props) {
     super(props);
     this.state = {
       angle: 0,
     };
-    this.spin = this.spin.bind(this);
+    this[spinKey] = this[spinKey].bind(this);
   }
 
   componentDidMount() {
-    this.id = setInterval(this.spin, 1000 / 29);
+    this.id = setInterval(this[spinKey], 1000 / 29);
   }
 
   componentWillUnmount() {
     clearInterval(this.id);
   }
 
-  spin() {
+  [spinKey]() {
     const { angle, } = this.state;
     if (angle < 360) {
       this.setState({

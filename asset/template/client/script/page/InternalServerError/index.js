@@ -14,12 +14,14 @@ const {
   location,
 } = global;
 
+const comebackKey = Symbol('comeback');
+
 class InternalServerError extends Page {
   constructor(props) {
     super(props);
   }
 
-  comeback() {
+  [comebackKey]() {
     emitter.send('error', false);
     location.back();
   }
@@ -31,7 +33,7 @@ class InternalServerError extends Page {
         There is an error in the server of the current page.You can inform the
         the relevant personnel of the website about this situations.Thank you
         very much.In addition,you can visit other pages.
-        <button onClick={this.comeback} className={style.comeback}>
+        <button onClick={this[comebackKey]} className={style.comeback}>
           Come Back
         </button>
       </div>

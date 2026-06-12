@@ -44,10 +44,22 @@ function removePathVariables(pathname) {
   }
 }
 
+const sysKey = Symbol('sys');
+const compKey = Symbol('comp');
+const initDataKey = Symbol('initData');
+const loadAccessBlockKey = Symbol('loadAccessBlock');
+const loadInternalServerErrorKey = Symbol('loadInternalServerError');
+const loadLatencyTooHighKey = Symbol('loadLatencyTooHigh');
+const loadLatencyTooHighKey = Symbol('loadLatencyTooHigh');
+const bindEventKey = Symbol('bindEvent');
+const getPageKey = Symbol('getPage');
+const addRouteKey = Symbol('addRoute');
+const checkRouteKey = Symbol('checkRoute');
+
 class Router extends WebApp {
   constructor(props) {
     super(props);
-    this.initData();
+    this[initDataKey]();
     this.state = {
       location: '/',
       update: false,
@@ -56,9 +68,9 @@ class Router extends WebApp {
     };
   }
 
-  initData() {
-    this.sys = {};
-    this.comp = new WebRouter({
+  [initDataKey]() {
+    this[sysKey] = {};
+    this[compKey] = new WebRouter({
       threshold: 0.05,
       number: 8,
       bond: 5,
@@ -75,12 +87,12 @@ class Router extends WebApp {
       hash,
     } = window.location;
     const path = pathname + search + hash;
-    await this.bindEvent();
+    await this[bindEventKey]();
     await emitter.send('page' + removePathVariables(pathname), { path, });
     location.to(path);
     if (localStorage.getItem('ip') !== null && localStorage.getItem('time') !== null) {
       this.setState({ loading: true, });
-      await this.loadAccessBlock();
+      await this[loadAccessBlockKey]();
       this.setState({
         status: 2,
         loading: false,
@@ -88,31 +100,31 @@ class Router extends WebApp {
     }
   }
 
-  async loadAccessBlock() {
-    if (this.sys === undefined) {
+  async [loadAccessBlockKey]() {
+    if (this[sysKey].accessBlock === undefined) {
       const module = await import('~/client/script/page/AccessBlock');
       const AccessBlock = module.default;
-      this.sys.accessBlock = <AccessBlock/>;
+      this[sysKey].accessBlock = <AccessBlock/>;
     }
   }
 
-  async loadInternalServerError() {
-    if (this.sys.internalServerError === undefined) {
+  async [loadInternalServerErrorKey]() {
+    if (this[sysKey].internalServerError === undefined) {
       const module = await import('~/client/script/page/InternalServerError');
       const InternalServerError = module.default;
-      this.sys.internalServerError = <InternalServerError/>;
+      this[sysKey].internalServerError = <InternalServerError/>;
     }
   }
 
-  async loadLatencyTooHigh() {
-    if (this.sys.latencyTooHigh === undefined) {
+  async [loadLatencyTooHighKey]() {
+    if (this[sysKey].latencyTooHigh === undefined) {
       const module = await import('~/client/script/page/LatencyTooHigh');
       const LatencyTooHigh = module.default;
-      this.sys.latencyTooHigh = <LatencyTooHigh/>;
+      this[sysKey].latencyTooHigh = <LatencyTooHigh/>;
     }
   }
 
-  bindEvent() {
+  [bindEventKey]() {
     location.onChange((location) => {
       this.setState({
         location,
@@ -122,7 +134,7 @@ class Router extends WebApp {
     emitter.on('block', async (flag) => {
       if (flag === true) {
         this.setState({ loading: true, });
-        await this.loadAccessBlock();
+        await this[loadAccessBlockKey]();
         this.setState({ status: 2, loading: false, });
       } else {
         this.setState({ status: 0, });
@@ -131,7 +143,7 @@ class Router extends WebApp {
     emitter.on('error', async (flag) => {
       if (flag === true) {
         this.setState({ loading: true, });
-        await this.loadInternalServerError();
+        await this[loadInternalServerError.key]();
         this.setState({ status: 1, loading: false, });
       } else {
         this.setState({ status: 0, });
@@ -140,7 +152,7 @@ class Router extends WebApp {
     emitter.on('busy', async (flag) => {
       if (flag === true) {
         this.setState({ loading: true, });
-        await this.loadLatencyTooHigh();
+        await this[loadLatencyTooHighKey]();
         this.setState({ status: 3, loading: false, })
       } else {
         this.setState({ status: 0, });
@@ -150,27 +162,27 @@ class Router extends WebApp {
       this.setState({ flag, });
     });
     emitter.on('page/', async ({ path, }) => {
-      if (this.checkRoute('/') === false) {
+      if (this[checkRouteKey]('/') === false) {
         const module = await import('~/client/script/page/Home');
         const Home = module.default;
-        this.addRoute('/', Home);
+        this[addRouteKey]('/', Home);
       }
       location.to(path);
     });
   }
 
-  addRoute(path, Class) {
+  [addRouteKey](path, Class) {
     path = dealPath(path);
-    const { comp, } = this;
+    const { [compKey]: comp, } = this;
     if (comp.gain(path).content === undefined) {
       comp.attach(path, <Class />);
       comp.setPathKeys(path);
     }
   }
 
-  checkRoute(path) {
+  [checkRouteKey](path) {
     path = dealPath(path);
-    const { comp, } = this;
+    const { [comKey]: comp, } = this;
     let ans = true;
     if (comp(path).content === undefined) {
       ans = false;
@@ -178,9 +190,9 @@ class Router extends WebApp {
     return ans;
   }
 
-  getPage(path) {
+  [getPageKey](path) {
     path = dealPath(path);
-    const { comp, } = this;
+    const { [compKey]: comp, } = this;
     const {
       content,
       queryParams,
@@ -190,7 +202,7 @@ class Router extends WebApp {
       this.setState({ loading: true, });
       import('~/client/script/page/NotFound').then((module) => {
         const NotFound = module.default;
-        this.sys.notFound = <NotFound/>;
+        this[sysKey].notFound = <NotFound/>;
         this.setState({ status: 4, loading: false, });
       });
     } else {
@@ -207,17 +219,17 @@ class Router extends WebApp {
     }
     switch (status) {
       case 1:
-        return this.sys.internalServerError;
+        return this[sysKey].internalServerError;
       case 2:
-        return this.sys.accessBlock;
+        return this[sysKey].accessBlock;
       case 3:
-        return this.sys.latencyTooHigh;
+        return this[sysKey].latencyTooHigh;
       case 4:
         return (
           <>
             { update && <UpdateConfirm /> }
             <div id="page" className={style.page}>
-              <Container>{this.sys.notFound}</Container>
+              <Container>{this[sysKey].notFound}</Container>
             </div>
           </>
         );
@@ -226,7 +238,7 @@ class Router extends WebApp {
       <>
         { update && <UpdateConfirm /> }
         <div id="page" className={style.page}>
-          <Container>{this.getPage(location)}</Container>
+          <Container>{this[getPageKey](location)}</Container>
         </div>
       </>
     );

@@ -8,12 +8,14 @@ const {
   clientFetch,
 } = global;
 
+const stillVisitKey = Symbol('stillVisit');
+
 class LatencyTooHigh extends Page {
   constructor(props) {
     super(props);
   }
 
-  stillVisit() {
+  [stillVisitKey]() {
     emitter.send('busy', false);
   }
 
@@ -59,7 +61,7 @@ class LatencyTooHigh extends Page {
             improve the user experience.
           </span>
         </div>
-        <button onClick={this.stillVisit} className={style.stillVisit}>Still Visit</button>
+        <button onClick={this[stillVisitKey]} className={style.stillVisit}>Still Visit</button>
       </div>
     );
   }

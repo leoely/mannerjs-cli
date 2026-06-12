@@ -7,26 +7,29 @@ const {
   clientFetch,
 } = global;
 
+const checkUpdateKey = Symbol('checkUpdate');
+const timeKey = Symbol('time');
+
 class WebApp extends React.Component {
   constructor(props) {
     super(props);
-    this.checkUpdate = this.checkUpdate.bind(this);
-    this.time = new Date().getTime();
+    this[checkUpdateKey] = this[checkUpdateKey].bind(this);
+    this[timeKey] = new Date().getTime();
   }
 
-  async checkUpdate() {
+  async [checkUpdateKey]() {
     const response = await clientFetch.fetch('/get/system/main', {
       method: 'POST',
     });
     if (response.ok) {
       const result = await response.json();
-      const { time, } = this;
+      const { [timeKey]: time, } = this;
       emitter.send('update', mtimeMs > time);
     }
   }
 
   async componentDidMount() {
-    this.id = setInterval(this.checkUpdate, 1000 * 60 * 20);
+    this.id = setInterval(this[checkUpdateKey], 1000 * 60 * 20);
     window.addEventListener('popstate', (event) => {
       location.to(event.currentTarget.location.pathname);
     });

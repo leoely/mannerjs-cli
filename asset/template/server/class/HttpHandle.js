@@ -168,11 +168,20 @@ function stemRequest(ip, res, blocks) {
   }
 }
 
+const handleKey = Symbol('handle');
+const dealCmdOptionsKey = Symbol('dealCmdOptions');
+const dealOptionsKey = Symbol('dealOptions');
+const outputErrorKey = Symbol('outputError');
+const outputSituationKey = Symbol('outputSituation');
+const checkMemoryKey = Symbol('checkMemory');
+const addToLogKey = Symbol('addToLog');
+const appendToLogKey = Symbol('appendToLog');
+
 class HttpHandle {
   constructor(options) {
     const [_, ...rest] = process.argv;
     const cmdOptions = parseOptions(...rest);
-    this.dealCmdOptions(cmdOptions);
+    this[dealCmdOptionsKey](cmdOptions);
     const defaultOptions = {
       debug: false,
       logLevel: 0,
@@ -189,7 +198,7 @@ class HttpHandle {
       },
     }
     this.options = Object.assign(defaultOptions, options);
-    this.dealOptions();
+    this[dealOptionsKey]();
     const {
       options: {
         logPath,
@@ -208,10 +217,10 @@ class HttpHandle {
     } = this;
     this.blks1 = new Blocks(methodNotSupport.interval);
     this.blks2 = new Blocks(interfaceDontExist.interval);
-    this.checkMemory();
+    this[checkMemoryKey]();
   }
 
-  dealCmdOptions(options) {
+  [dealCmdOptionsKey](options) {
     const port = options.p || options.port;
     if (!isIntOpt(port)) {
       throw new Error('[Error] Option port should be of integer type.');
@@ -229,7 +238,7 @@ class HttpHandle {
     this.safe = safe;
   }
 
-  dealOptions() {
+  [dealOptionsKey]() {
     const {
       options: {
         debug,
@@ -262,7 +271,7 @@ class HttpHandle {
     }
   }
 
-  outputError(error) {
+  [outputErrorKey](error) {
     if (!(error instanceof Error)) {
       throw new Error('Parameter error should be of error type.');
     }
@@ -284,11 +293,11 @@ class HttpHandle {
       },
     } = this;
     if (typeof logPath === 'string') {
-      this.addToLog(error.stack);
+      this[addToLogKey](error.stack);
     }
   }
 
-  outputSituation(situation, ip, url, method) {
+  [outputSituationKey](situation, ip, url, method) {
     if (typeof situation !== 'string') {
       throw new Error('[Error] The parameter situation should be of string type.');
     }
@@ -360,25 +369,25 @@ class HttpHandle {
         case 0:
           break;
         case 1:
-          this.appendToLog('Situation:' + situation + ' ████ & ████ Ip:' + ip);
+          this[appendToLogKey]('Situation:' + situation + ' ████ & ████ Ip:' + ip);
           break;
         case 2:
-          this.appendToLog('Situation:' + situation + ' ████ & ████ Url:' + url);
+          this[appendToLogKey]('Situation:' + situation + ' ████ & ████ Url:' + url);
           break;
         case 3:
-          this.appendToLog('Situation:' + situation + ' ████ & ████ Method:' + method);
+          this[appendToLogKey]('Situation:' + situation + ' ████ & ████ Method:' + method);
           break;
         case 4:
-          this.appendToLog('Situation:' + situation + ' ████ & ████ Ip:' + ip + '████ & ████ Url:' + url);
+          this[appendToLogKey]('Situation:' + situation + ' ████ & ████ Ip:' + ip + '████ & ████ Url:' + url);
           break;
         case 5:
-          this.appendToLog('Situation:' + situation + ' ████ & ████ Ip:' + ip + '████ & ████ Method:' + method);
+          this[appendToLogKey]('Situation:' + situation + ' ████ & ████ Ip:' + ip + '████ & ████ Method:' + method);
           break;
         case 6:
-          this.appendToLog('Situation:' + situation + ' ████ & ████ Url:' + url + '████ & ████ Method:' + method);
+          this[appendToLogKey]('Situation:' + situation + ' ████ & ████ Url:' + url + '████ & ████ Method:' + method);
           break;
         case 7:
-          this.appendToLog('Situation:' + situation + ' ████ & ████ Url:' + url + '████ & ████ Url:' + url + '████ & ████ Method:' + method + '████ & ████ Ip:' + ip);
+          this[appendToLogKey]('Situation:' + situation + ' ████ & ████ Url:' + url + '████ & ████ Url:' + url + '████ & ████ Method:' + method + '████ & ████ Ip:' + ip);
           break;
         default:
           throw new Error('[Error] The log should be in the interval [0, 7].');
@@ -386,7 +395,7 @@ class HttpHandle {
     }
   }
 
-  checkMemory() {
+  [checkMemoryKey]() {
     const freemem = os.freemem();
     if (freemem <= 0) {
       const {
@@ -400,7 +409,7 @@ class HttpHandle {
     }
   }
 
-  appendToLog(content) {
+  [appendToLogKey](content) {
     if (typeof content !== 'string') {
       throw new Error('[Error] The parameter content must be of string type.');
     }
@@ -412,7 +421,7 @@ class HttpHandle {
     appendToLog(logPath, ' || ████ ' + content + ' ████ ||\n');
   }
 
-  addToLog(content) {
+  [addToLogKey](content) {
     if (typeof content !== 'string') {
       throw new Error('[Error] The parameter content must be of string type.');
     }
@@ -424,7 +433,7 @@ class HttpHandle {
     addToLog(logPath, content);
   }
 
-  async handle(req, res) {
+  async [handleKey](req, res) {
     const {
       method,
       url,
@@ -442,10 +451,10 @@ class HttpHandle {
               status: -1,
               message: 'The static server currently does not support this method ' + method + '.',
             }));
-            this.outputSituation('method not supported', ip, url, method);
+            this[outputSituationKey]('method not supported', ip, url, method);
           } else {
             stemRequest(ip, res, blks1);
-            this.outputSituation('block request', ip, url, method);
+            this[outputSituationKey]('block request', ip, url, method);
           }
           return;
         }
@@ -486,27 +495,27 @@ class HttpHandle {
             }
             if (prevn1.inspect(ip, req) === false) {
               deterObtainFile(res);
-              this.outputSituation('prevent obtain', ip, url, method);
+              this[outputSituationKey]('prevent obtain', ip, url, method);
               return;
             }
             const data = fs.readFileSync(filePath);
             const ms = fs.statSync(filePath).mtimeMs;
             cacheOutput(req, res, restUrl, data, ms);
-            this.outputSituation('obtain static resource', ip, url, method);
+            this[outputSituationKey]('obtain static resource', ip, url, method);
             return;
           } else {
               switch (method) {
                 case 'GET':
                   returnIndexHtml(req, res);
-                  this.outputSituation('obtain static resource', ip, url, method);
+                  this[outputSituationKey]('obtain static resource', ip, url, method);
                 default: {
                   const { blks2, } = this;
                   if (blks2.examine(ip)) {
                     returnNotFoundJSON(req, res);
-                    this.outputSituation('interface does not exist', ip, url, method);
+                    this[outputSituationKey]('interface does not exist', ip, url, method);
                   } else {
                     stemRequest(ip, res, blks2);
-                    this.outputSituation('block request', ip, url, method);
+                    this[outputSituationKey]('block request', ip, url, method);
                   }
                 }
               }
@@ -532,7 +541,7 @@ class HttpHandle {
         }
         if (blks1.examine(ip) === false) {
           stemRequest(ip, res, blks1);
-          this.outputSituation('block request', ip, url, method);
+          this[outputSituationKey]('block request', ip, url, method);
           return;
         }
         const { content: onward, } = await fwd.gain(path);
@@ -566,7 +575,7 @@ class HttpHandle {
                 });
               });
               if (result === false) {
-                this.outputSituation('timeout', ip, url, method);
+                this[outputSituationKey]('timeout', ip, url, method);
                 return;
               }
             }
@@ -588,7 +597,7 @@ class HttpHandle {
                 });
               });
               if (result === false) {
-                this.outputSituation('timeout', ip, url, method);
+                this[outputSituationKey]('timeout', ip, url, method);
                 return;
               }
             }
@@ -600,11 +609,11 @@ class HttpHandle {
             }
             const data = await response.text();
             res.end(data);
-            this.outputSituation('forward', ip, url, method);
+            this[outputSituationKey]('forward', ip, url, method);
           }
         } else {
           returnNotFoundJSON(req, res);
-          this.outputSituation('interface does not exist', ip, url, method);
+          this[outputSituationKey]('interface does not exist', ip, url, method);
         }
         return;
       }
@@ -625,22 +634,22 @@ class HttpHandle {
           }
           if (blks1.examine(ip) === false) {
             stemRequest(ip, res, blks2);
-            this.outputSituation('block request', ip, url, method);
+            this[outputSituationKey]('block request', ip, url, method);
             return;
           }
           const { content: router, } = wr.gain(url);
           if (router !== undefined) {
             await router(req, res);
-            this.outputSituation('processing', ip, url, method);
+            this[outputSituationKey]('processing', ip, url, method);
           } else {
             returnNotFoundJSON(req, res);
-            this.outputSituation('interface does not exist', ip, url, method);
+            this[outputSituationKey]('interface does not exist', ip, url, method);
           }
           return;
         }
         case 'GET':
           returnIndexHtml(req, res);
-          this.outputSituation('obtain static resource', ip, url, method);
+          this[outputSituationKey]('obtain static resource', ip, url, method);
           return;
       }
     } catch (error) {
@@ -652,14 +661,14 @@ class HttpHandle {
         case 'false':
           res.writeHead(500);
           res.end();
-          this.outputSituation('server internal error', ip, url, method);
-          this.outputError(error);
+          this[outputSituationKey]('server internal error', ip, url, method);
+          this[outputErrorKey](error);
           break;
         default:
           throw new Error('[Error] Parameter development should be character boolean type');
       }
     }
-    this.checkMemory();
+    this.[checkMemoryKey]();
   }
 
   listen() {
@@ -670,13 +679,13 @@ class HttpHandle {
           key: fs.readFileSync('asset/temporary-key.pem'),
           cert: fs.readFileSync('asset/temporary-cert.pem'),
         }, async (req, res) => {
-          await this.handle(req, res);
+          await this[handleKey](req, res);
         }).listen(port);
         break;
       default:
         http.createServer({
         }, async (req, res) => {
-          await this.handle(req, res);
+          await this[handleKey](req, res);
         }).listen(port);
     }
     const {
@@ -706,7 +715,7 @@ class HttpHandle {
         ` + tick() + `(+) bold: Project ` + emphasis('safe mode') + `(+) bold: * is` + emphasis(safe) + `(+) bold: . 2&
       `);
     }
-    this.checkMemory();
+    this[checkMemoryKey]();
   }
 }
 

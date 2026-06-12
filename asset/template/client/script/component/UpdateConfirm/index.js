@@ -16,29 +16,34 @@ const {
   emitter,
 } = global;
 
+const updateKey = Symbol('update');
+const closeKey = Symbol('close');
+const dimmerKey = Symbol('dimmer')
+
 class UpdateConfirm extends React.Component {
   constructor(props) {
     super(props);
-    this.close = this.close.bind(this);
+    this[closeKey] = this[closeKey].bind(this);
+    this[updateKey] = this[updateKey].bind(this);
   }
 
-  update(){
+  [updateKey](){
     location.reload();
     this.dimmer.close();
   }
 
-  close(){
-    emitter.send('update:false');
-    this.dimmer.hidden();
+  [closeKey](){
+    emitter.send('update', false);
+    this[dimmerKey].hidden();
   }
 
   componentDidMount() {
-    this.dimmer = new Dimmer();
-    this.dimmer.show();
+    this[dimmerKey] = new Dimmer();
+    this[dimmer].show();
   }
 
   componentWillUnmount() {
-    this.close();
+    this[closeKey]();
   }
 
   render() {
@@ -49,11 +54,11 @@ class UpdateConfirm extends React.Component {
           Detect a new version update of this webapp.Whether or not process update?
         </div>
         <div className={style.btnGrp}>
-          <button onClick={this.update} className={[style.btn, style.update].join(' ')}>
+          <button onClick={this[updateKey]} className={[style.btn, style.update].join(' ')}>
             <FontAwesomeIcon className={[style.updateIcon, style.icon].join(' ')} icon={faHourglassHalf} />
             update
           </button>
-          <button onClick={this.close} className={[style.btn, style.ignore].join(' ')}>
+          <button onClick={this[closeKey]} className={[style.btn, style.ignore].join(' ')}>
             <FontAwesomeIcon className={[style.ignoreIcon, style.icon].join(' ')} icon={faFaceTired} />
             delay util the next thirty minutes
           </button>
