@@ -49,6 +49,7 @@ class UpdateConfirm extends React.Component {
   }
 
   render() {
+    const { mode, } = this.props;
     return (
       <div className={style.confirm}>
         <div className={style.title}>
@@ -62,7 +63,8 @@ class UpdateConfirm extends React.Component {
           </button>
           <button name="delay" onClick={this[closeKey]} className={[style.btn].join(' ')}>
             <FontAwesomeIcon className={[style.ignoreIcon, style.icon].join(' ')} icon={faFaceTired} />
-            delay until the next thirty minutes
+            { mode === 'default' && 'delay until the next thirty minutes' }
+            { mode === 'test' && 'delay until the next eight seconds' }
           </button>
         </div>
       </div>

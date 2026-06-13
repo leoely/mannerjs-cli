@@ -212,9 +212,10 @@ class Router extends WebApp {
         return this[sysKey].latTooHigh;
       case 4: {
         const { update, } = this.state;
+        const { mode, } = this.props;
         return (
           <div className={style.outer}>
-            { update && <UpdateConfirm /> }
+            { update && <UpdateConfirm mode={mode} /> }
             <div id="page" className={style.page}>
               <Container>{this[sysKey].notFound}</Container>
             </div>
@@ -223,9 +224,10 @@ class Router extends WebApp {
       }
       case 0: {
         const { update, location, } = this.state;
+        const { mode, } = this.props;
         return (
           <div className={style.outer}>
-            { update && <UpdateConfirm /> }
+            { update && <UpdateConfirm mode={mode} /> }
             <div id="page" className={style.page}>
               <Container>{this[getPageKey](location)}</Container>
             </div>
