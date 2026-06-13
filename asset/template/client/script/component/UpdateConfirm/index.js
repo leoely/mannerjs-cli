@@ -56,13 +56,13 @@ class UpdateConfirm extends React.Component {
           Detect a new version update of this webapp.Whether or not process update?
         </div>
         <div className={style.btnGrp}>
-          <button onClick={this[updateKey]} className={[style.btn].join(' ')}>
+          <button name="update" onClick={this[updateKey]} className={[style.btn].join(' ')}>
             <FontAwesomeIcon className={[style.updateIcon, style.icon].join(' ')} icon={faHourglassHalf} />
             update
           </button>
-          <button onClick={this[closeKey]} className={[style.btn].join(' ')}>
+          <button name="delay" onClick={this[closeKey]} className={[style.btn].join(' ')}>
             <FontAwesomeIcon className={[style.ignoreIcon, style.icon].join(' ')} icon={faFaceTired} />
-            delay util the next thirty minutes
+            delay until the next thirty minutes
           </button>
         </div>
       </div>

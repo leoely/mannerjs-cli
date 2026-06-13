@@ -1,6 +1,6 @@
 import path from 'path';
 import HtmlWebpackPlugin from 'html-webpack-plugin';
-import TerserPlugin from 'terser-webpack-plugin';
+import minimizerWebpackPlugin from 'minimizer-webpack-plugin';
 
 export default {
   mode: 'production',
@@ -14,13 +14,7 @@ export default {
   },
    optimization: {
     minimize: true,
-    minimizer: [
-      new TerserPlugin({
-        terserOptions: {
-          keep_classnames: true,
-        },
-      }),
-    ],
+    minimizer: [new minimizerWebpackPlugin()],
   },
   plugins: [
     new HtmlWebpackPlugin({

@@ -3,6 +3,10 @@ import SinglePageApplication from '~/client/script/decorator/SinglePageApplicati
 
 @SinglePageApplication
 class Application extends Router {
+  constructor(props) {
+    super(props);
+  }
+
   async ownComponentDidMount() {
     const module = await import('~/client/script/page/Home');
     const Home = module.default;

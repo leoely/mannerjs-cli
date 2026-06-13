@@ -12,11 +12,11 @@ import {
 import copyFile from '~/lib/util/copyFile';
 
 function installDevDep(dep) {
-  childProcess.execSync('yarn add --dev ' + dep, { stdio: 'inherit', });
+  childProcess.execSync('yarn add --dev ' + dep + '@latest', { stdio: 'inherit', });
 }
 
 function installDep(dep) {
-  childProcess.execSync('yarn add ' + dep, { stdio: 'inherit', });
+  childProcess.execSync('yarn add ' + dep + '@latest', { stdio: 'inherit', });
 }
 
 export default async function init(...param) {
@@ -33,6 +33,7 @@ export default async function init(...param) {
       run: 'yarn run build && node dist/index.js --port 8888 --development true --safe true',
       dev: 'webpack serve --config webpack.config.dev.babel.js',
       pro: 'webpack --config webpack.config.pro.babel.js',
+      'run:test': 'yarn run build && node dist/index.js --port 8888 --development true --safe false',
       test: 'yarn playwright test --ui',
     },
   });
@@ -117,6 +118,7 @@ export default async function init(...param) {
   installDevDep('@fortawesome/free-regular-svg-icons');
   installDevDep('@fortawesome/free-solid-svg-icons');
   installDevDep('@playwright/test');
+  installDevDep('@types/node');
   installDevDep('autoprefixer');
   installDevDep('babel-loader');
   installDevDep('babel-plugin-root-import');
@@ -128,7 +130,7 @@ export default async function init(...param) {
   installDevDep('postcss-loader');
   installDevDep('style-loader');
   installDevDep('sugarss');
-  installDevDep('terser-webpack-plugin');
+  installDevDep('minimizer-webpack-plugin');
   installDevDep('ts-loader');
   installDevDep('webpack');
   installDevDep('webpack-cli');
@@ -171,7 +173,7 @@ export default async function init(...param) {
   const testPath = path.join(assetPath, 'test');
   fs.mkdirSync(path.join(currentPath, 'test'));
   fs.cpSync(testPath, path.join(currentPath, 'test'), { recursive: true, });
-  copyFile('playwright.config.ts', configPath, currentPath);
+  copyFile('playwright.config.js', configPath, currentPath);
   fulmination.scan(tick() + emphasis('Playwright') + '(+) bold: * integration tests were successfully replicated. &');
   currentPath = path.join(currentPath, 'asset');
   fs.mkdirSync(currentPath);

@@ -25,12 +25,21 @@ class WebApp extends React.Component {
     if (response.ok) {
       const result = await response.json();
       const { [timeKey]: time, } = this;
+      const { mtimeMs, } = result;
       emitter.send('update', mtimeMs > time);
     }
   }
 
   async componentDidMount() {
-    this.id = setInterval(this[checkUpdateKey], 1000 * 60 * 20);
+    const { mode, } = this.props;
+    switch (mode) {
+      case 'default':
+        this.id = setInterval(this[checkUpdateKey], 1000 * 60 * 20);
+        break;
+      case 'test':
+        this.id = setInterval(this[checkUpdateKey], 1000 * 8);
+        break;
+    }
     window.addEventListener('popstate', (event) => {
       location.to(event.currentTarget.location.pathname);
     });

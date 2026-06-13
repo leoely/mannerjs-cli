@@ -7,7 +7,7 @@ function App() {
   return (
     <StrictMode>
       <div style={{ height: '100%', }}>
-        <Application />
+        <Application mode="default" />
       </div>
     </StrictMode>
   );

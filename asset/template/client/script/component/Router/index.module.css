@@ -1,3 +1,6 @@
+.outer
+  display: flex
+  height: 100%
 .page
   display: flex
   width: 100%

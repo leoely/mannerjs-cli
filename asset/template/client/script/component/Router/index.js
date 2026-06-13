@@ -73,7 +73,7 @@ class Router extends WebApp {
     await this[bindEventKey]();
     if (localStorage.getItem('ip') !== null && localStorage.getItem('time') !== null) {
       this.setState({ loading: true, });
-      await this[loadAcsBlkKey]();
+      await this[ldAcsBlkKey]();
       this.setState({
         status: 2,
         loading: false,
@@ -143,7 +143,7 @@ class Router extends WebApp {
       }
     });
     emitter.on('update', (flag) => {
-      this.setState({ flag, });
+      this.setState({ update: flag, });
     });
   }
 
@@ -213,7 +213,7 @@ class Router extends WebApp {
       case 4: {
         const { update, } = this.state;
         return (
-          <div>
+          <div className={style.outer}>
             { update && <UpdateConfirm /> }
             <div id="page" className={style.page}>
               <Container>{this[sysKey].notFound}</Container>
@@ -224,7 +224,7 @@ class Router extends WebApp {
       case 0: {
         const { update, location, } = this.state;
         return (
-          <div>
+          <div className={style.outer}>
             { update && <UpdateConfirm /> }
             <div id="page" className={style.page}>
               <Container>{this[getPageKey](location)}</Container>

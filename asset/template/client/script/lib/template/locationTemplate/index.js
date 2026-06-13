@@ -1,5 +1,5 @@
 import React from 'react';
-import style from './index.module.css';
+import * as style from './index.module.css';
 
 export default function locationTemplate(token, idx){
   const { type, elem, } = token;

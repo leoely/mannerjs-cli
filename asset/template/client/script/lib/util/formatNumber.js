@@ -26,5 +26,5 @@ export default function formatNumber(number) {
   const highLight = new HighLight();
   highLight.addLexer(NumberLexer);
   const tokens = highLight.parse(splitNumber(number));
-  return tokens.map((e, idx) => NumberTemplate(e, idx));
+  return tokens.map((e, idx) => numberTemplate(e, idx));
 }

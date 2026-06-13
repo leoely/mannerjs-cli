@@ -8,8 +8,8 @@ const { wr, or, } = global;
 wr.attach('/get/system/main', async (req, res) => {
   if (or.gain('system.main.mtimeMs') === undefined) {
     const mainBundlePath = path.resolve('static', 'main.bundle.js');
-    const mtimeMs = await fsPromises.stat(mainBundlePath).mtimeMs;
-    or.attach('system.main.mtimeMs', mtimeMs);
+    const stat = await fsPromises.stat(mainBundlePath);
+    or.attach('system.main.mtimeMs', stat.mtimeMs);
   }
   const mtimeMs = or.gain('system.main.mtimeMs');
   res.end(JSON.stringify({ mtimeMs, }));

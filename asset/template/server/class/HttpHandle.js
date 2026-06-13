@@ -156,7 +156,7 @@ function deterObtainFile(res) {
   res.end();
 }
 
-function stemRequest(ip, res, blocks) {
+function stemRequest(ip, res, blks2) {
   const count = blocks.getCount(ip);
   switch (count) {
     case 2:
@@ -619,7 +619,7 @@ class HttpHandle {
       }
       switch (method) {
         case 'POST': {
-          let { content: blks1 }= wr2.gain(url);
+          let { content: blks1 } = wr2.gain(url);
           if (blks1 === undefined) {
             const {
               options: {
@@ -633,7 +633,7 @@ class HttpHandle {
             blks1 = blks2;
           }
           if (blks1.examine(ip) === false) {
-            stemRequest(ip, res, blks2);
+            stemRequest(ip, res, blks1);
             this[outputSituationKey]('block request', ip, url, method);
             return;
           }

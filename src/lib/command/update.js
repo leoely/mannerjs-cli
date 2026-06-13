@@ -54,12 +54,12 @@ async function replaceFile(originPath, laterPath, name, rename) {
 }
 
 function installDevDep(dep) {
-  childProcess.execSync('yarn add --dev ' + dep, { stdio: 'inherit', });
+  childProcess.execSync('yarn add --dev ' + dep + '@latest', { stdio: 'inherit', });
   fulmination.scan(tick() + '(+) bold: Development dependency ' + emphasis(dep) + '(+) bold: * installation is successful. &');
 }
 
 function installDep(dep) {
-  childProcess.execSync('yarn add ' + dep, { stdio: 'inherit', });
+  childProcess.execSync('yarn add ' + dep + '@latest', { stdio: 'inherit', });
   fulmination.scan(tick() + '(+) bold: Dependency ' + emphasis(dep) + '(+) bold: * installation is successful. &');
 }
 
