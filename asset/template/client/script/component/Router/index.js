@@ -160,7 +160,8 @@ class Router extends WebApp {
     path = dealPath(path);
     const { [compKey]: comp, } = this;
     if (comp.gain(dealPath(path)).content === undefined) {
-      comp.attach(dealPath(path), <Class />);
+      const { mode, } = this.props;
+      comp.attach(dealPath(path), <Class mode={mode} />);
       comp.setPathKeys(path);
     }
   }

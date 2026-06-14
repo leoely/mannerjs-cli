@@ -156,8 +156,8 @@ function deterObtainFile(res) {
   res.end();
 }
 
-function stemRequest(ip, res, blks2) {
-  const count = blocks.getCount(ip);
+function stemRequest(ip, res, blks) {
+  const count = blks.getCount(ip);
   switch (count) {
     case 2:
       res.writeHead(429);

@@ -14,3 +14,7 @@ wr.attach('/get/system/main', async (req, res) => {
   const mtimeMs = or.gain('system.main.mtimeMs');
   res.end(JSON.stringify({ mtimeMs, }));
 });
+
+wr.attach('/get/system/test', async (req, res) => {
+  res.end(JSON.stringify({ tip: 'Current is test mode.', }));
+});
