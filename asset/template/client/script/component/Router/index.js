@@ -93,7 +93,7 @@ class Router extends WebApp {
   }
 
   async [ldIntlSvrErrKey]() {
-    if (this[sysKey].internalSvrError === undefined) {
+    if (this[sysKey].intlSvrError === undefined) {
       const module = await import('~/client/script/page/InternalServerError');
       const InternalServerError = module.default;
       this[sysKey].intlSvrErr = <InternalServerError/>;
@@ -127,7 +127,7 @@ class Router extends WebApp {
     emitter.on('error', async (flag) => {
       if (flag === true) {
         this.setState({ loading: true, });
-        await this[ldIntlSvrErr.key]();
+        await this[ldIntlSvrErrKey]();
         this.setState({ status: 1, loading: false, });
       } else {
         this.setState({ status: 0, });

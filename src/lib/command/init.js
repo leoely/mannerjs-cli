@@ -33,7 +33,8 @@ export default async function init(...param) {
       run: 'yarn run build && node dist/index.js --port 8888 --development true --safe true',
       dev: 'webpack serve --config webpack.config.dev.babel.js',
       pro: 'webpack --config webpack.config.pro.babel.js',
-      'run:test': 'yarn run build && node dist/index.js --port 8888 --development true --safe false',
+      'run:test1': 'yarn run build && node dist/index.js --port 8888 --development true --safe false',
+      'run:test2': 'yarn run build && node dist/index.js --port 8888 --development false --safe false --condition 1',
       test: 'yarn playwright test --ui',
     },
   });

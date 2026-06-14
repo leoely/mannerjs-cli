@@ -22,8 +22,8 @@ class InternalServerError extends Page {
   }
 
   [comebackKey]() {
-    emitter.send('error', false);
     location.back();
+    emitter.send('error', false);
   }
 
   render() {
@@ -33,7 +33,7 @@ class InternalServerError extends Page {
         There is an error in the server of the current page.You can inform the
         the relevant personnel of the website about this situations.Thank you
         very much.In addition,you can visit other pages.
-        <button onClick={this[comebackKey]} className={style.comeback}>
+        <button name="comeback" onClick={this[comebackKey]} className={style.comeback}>
           Come Back
         </button>
       </div>

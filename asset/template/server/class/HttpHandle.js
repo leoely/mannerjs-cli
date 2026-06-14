@@ -33,6 +33,7 @@ const wr1Key = Symbol.for('wr1');
 const wr2Key = Symbol.for('wr2');
 
 const {
+  or,
   wr,
   fwd,
   [fr1Key]: fr1,
@@ -236,6 +237,11 @@ class HttpHandle {
       throw new Error('[Error] Option safe should be of type boolean.');
     }
     this.safe = safe;
+    const condition = options.c || options.condition;
+    if (!isIntOpt(condition)) {
+      throw new Error('[Error] Option condition should be of integer type.');
+    }
+    this.condition = condition;
   }
 
   [dealOptionsKey]() {
@@ -442,6 +448,12 @@ class HttpHandle {
       },
     } = req;
     try {
+      const { condition, } = this;
+      switch (condition) {
+        case '1':
+          or.attach('system.test.error', true);
+          break;
+      }
       switch (method) {
         case 'PUT':
         case 'DELETE': {
@@ -672,7 +684,7 @@ class HttpHandle {
   }
 
   listen() {
-    const { port, safe, development, } = this
+    const { port, safe, development, condition, } = this
     switch (safe) {
       case 'true':
         http2.createSecureServer({
@@ -712,7 +724,8 @@ class HttpHandle {
         |
         ` + tick() + `(+) bold: The project ` + emphasis(name) + `(+) bold: * was successfully started on port ` + emphasis(port) + `(+) bold: . &
         ` + tick() + `(+) bold: Project ` + emphasis('development mode') + `(+) bold: * is` + emphasis(development) + `(+) bold: . &
-        ` + tick() + `(+) bold: Project ` + emphasis('safe mode') + `(+) bold: * is` + emphasis(safe) + `(+) bold: . 2&
+        ` + tick() + `(+) bold: Project ` + emphasis('safe mode') + `(+) bold: * is` + emphasis(safe) + `(+) bold: . &
+        ` + tick() + `(+) bold: Project ` + emphasis('condition') + `(+) bold: * is` + emphasis(condition) + `(+) bold: . 2&
       `);
     }
     this[checkMemoryKey]();

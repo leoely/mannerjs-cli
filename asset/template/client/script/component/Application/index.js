@@ -11,6 +11,12 @@ class Application extends Router {
     const module = await import('~/client/script/page/Home');
     const Home = module.default;
     this.addPage('/', Home);
+    const { mode, } = this.props;
+    if (mode === 'test') {
+      const module = await import('~/client/script/page/Test');
+      const Test = module.default;
+      this.addPage('/test', Test);
+    }
   }
 }
 

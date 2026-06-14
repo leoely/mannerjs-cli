@@ -16,5 +16,8 @@ wr.attach('/get/system/main', async (req, res) => {
 });
 
 wr.attach('/get/system/test', async (req, res) => {
+  if (or.gain('system.test.error') === true) {
+    throw new Error('Internal test error.');
+  }
   res.end(JSON.stringify({ tip: 'Current is test mode.', }));
 });
