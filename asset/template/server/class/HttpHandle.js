@@ -431,9 +431,13 @@ class HttpHandle {
     try {
       await Promise.race([method(), timeoutPromise]);
     } catch (error) {
-      res.writeHead(512);
-      res.end('');
-      ans = false;
+      if (error.message === '[Error] Local processing overload timeout.') {
+        res.writeHead(512);
+        res.end('');
+        ans = false;
+      } else {
+        throw errror;
+      }
     }
     return ans;
   }

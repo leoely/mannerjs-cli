@@ -61,7 +61,7 @@ class LatencyTooHigh extends Page {
             improve the user experience.
           </span>
         </div>
-        <button onClick={this[stillVisitKey]} className={style.stillVisit}>Still Visit</button>
+        <button name="stillVisit" onClick={this[stillVisitKey]} className={style.stillVisit}>Still Visit</button>
       </div>
     );
   }
