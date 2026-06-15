@@ -1,5 +1,6 @@
 import http from 'http';
 import path from 'path';
+import timersPromises from 'timers/promises';
 import fsPromises from 'fs/promises';
 import global from '~/server/obj/global';
 
@@ -18,6 +19,9 @@ wr.attach('/get/system/main', async (req, res) => {
 wr.attach('/get/system/test', async (req, res) => {
   if (or.gain('system.test.error') === true) {
     throw new Error('Internal test error.');
+  }
+  if (or.gain('system.test.busy') === true) {
+    await timersPromises.setTimeout(8500);
   }
   res.end(JSON.stringify({ tip: 'Current is test mode.', }));
 });

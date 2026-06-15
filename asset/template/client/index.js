@@ -3,7 +3,7 @@ import ReactDOM from 'react-dom/client';
 import Application from '~/client/script/component/Application';
 import '~/client/style/index.css';
 
-function App() {
+function Website() {
   return (
     <StrictMode>
       <div style={{ height: '100%', }}>
@@ -15,4 +15,4 @@ function App() {
 
 const domNode = document.getElementById('root');
 const root = ReactDOM.createRoot(domNode);
-root.render(<App />);
+root.render(<Website />);

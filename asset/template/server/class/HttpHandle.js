@@ -151,7 +151,6 @@ async function treatTimeout(res, method) {
   }
   return ans;
 }
-
 function deterObtainFile(res) {
   res.writeHead(304);
   res.end();
@@ -177,6 +176,7 @@ const outputSituationKey = Symbol('outputSituation');
 const checkMemoryKey = Symbol('checkMemory');
 const addToLogKey = Symbol('addToLog');
 const appendToLogKey = Symbol('appendToLog');
+const handleBurdenKey = Symbol('handleBurden');
 
 class HttpHandle {
   constructor(options) {
@@ -188,6 +188,7 @@ class HttpHandle {
       logLevel: 0,
       logPath: '/var/log/manner.js/',
       onlyLogFail: true,
+      burdenTimeout: 8000,
       abortTimeout: 8000,
       methodNotSupport: { interval: 7500, },
       interfaceDontExist: { interval: 7500, },
@@ -237,7 +238,7 @@ class HttpHandle {
       throw new Error('[Error] Option safe should be of type boolean.');
     }
     this.safe = safe;
-    const condition = options.c || options.condition;
+    const condition = options.c || options.condition || '0';
     if (!isIntOpt(condition)) {
       throw new Error('[Error] Option condition should be of integer type.');
     }
@@ -415,6 +416,28 @@ class HttpHandle {
     }
   }
 
+  async [handleBurdenKey](res, method) {
+    let ans = true;
+    const {
+      options: {
+        burdenTimeout: timeout,
+      },
+    } = this;
+    const timeoutPromise = new Promise((_, reject) => {
+      setTimeout(() => {
+        reject(new Error('[Error] Local processing overload timeout.'));
+      }, timeout);
+    });
+    try {
+      await Promise.race([method(), timeoutPromise]);
+    } catch (error) {
+      res.writeHead(512);
+      res.end('');
+      ans = false;
+    }
+    return ans;
+  }
+
   [appendToLogKey](content) {
     if (typeof content !== 'string') {
       throw new Error('[Error] The parameter content must be of string type.');
@@ -452,6 +475,9 @@ class HttpHandle {
       switch (condition) {
         case '1':
           or.attach('system.test.error', true);
+          break;
+        case '2':
+          or.attach('system.test.busy', true);
           break;
       }
       switch (method) {
@@ -651,8 +677,14 @@ class HttpHandle {
           }
           const { content: router, } = wr.gain(url);
           if (router !== undefined) {
-            await router(req, res);
-            this[outputSituationKey]('processing', ip, url, method);
+            const result = await this[handleBurdenKey](res, async () => {
+              await router(req, res);
+            });
+            if (result === true) {
+              this[outputSituationKey]('processing', ip, url, method);
+            } else {
+              this[outputSituationKey]('timeout', ip, url, method);
+            }
           } else {
             returnNotFoundJSON(req, res);
             this[outputSituationKey]('interface does not exist', ip, url, method);
