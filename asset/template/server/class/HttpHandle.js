@@ -13,8 +13,7 @@ import {
   parseOptions,
 } from 'mien';
 import {
-  Blocks,
-  Prevents,
+  Blocks, Prevents,
   checkLogPath,
   addToLog,
   appendToLog,
@@ -23,7 +22,6 @@ import {
   formatHttpKey,
   formatHttpDate,
 } from 'manner.js/server';
-import TimeoutError from '~/server/class/TimeoutError';
 import existsPromise from '~/server/lib/util/existsPromise';
 import deflatePromise from '~/server/lib/util/deflatePromise';
 import gzipPromise from '~/server/lib/util/gzipPromise';
@@ -188,6 +186,14 @@ const checkMemoryKey = Symbol('checkMemory');
 const addToLogKey = Symbol('addToLog');
 const appendToLogKey = Symbol('appendToLog');
 const handleBurdenKey = Symbol('handleBurden');
+const nameKey = Symbol('name');
+
+class TimeoutError extends Error {
+  constructor(message) {
+    super(message);
+    this[nameKey] = 'TimeoutError';
+  }
+}
 
 class HttpHandle {
   constructor(options) {
