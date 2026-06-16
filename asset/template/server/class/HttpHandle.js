@@ -1,9 +1,9 @@
 import os from 'os';
 import path from 'path';
 import fs from 'fs';
-import zlib from 'zlib';
 import http from 'http';
 import http2 from 'http2';
+import fsPromises from 'fs/promises';
 import Fulmination from 'fulmination';
 import {
   emphasis,
@@ -23,6 +23,12 @@ import {
   formatHttpKey,
   formatHttpDate,
 } from 'manner.js/server'
+import TimeoutError from '~/server/class/TimeoutError';
+import existsPromise from '~/server/lib/util/existsPromise';
+import deflatePromise from '~/server/lib/util/deflatePromise';
+import gzipPromise from '~/server/lib/util/gzipPromise';
+import brotliCompressPromise from '~/server/lib/util/brotliCompressPromise';
+import zstdCompressPromise from '~/server/lib/util/zstdCompressPromise';
 import global from '~/server/obj/global';
 
 const fr1Key = Symbol.for('fr1');
@@ -53,21 +59,25 @@ function dealCompress(data, address, res) {
   res.end(mini);
 }
 
-function compressOutput(req, res, data, url) {
+async function compressOutput(req, res, data, url) {
   res.setHeader('Vary', 'Accept-Encoding');
   let acceptEncoding = req.headers['accept-encoding'] || '';
   if (/\bdeflate\b/.test(acceptEncoding)) {
     res.writeHead(200, { 'Content-Encoding': 'deflate' });
-    dealCompress(zlib.deflateSync(data), url, res);
+    const buffer = await deflatePromise(data);
+    dealCompress(buffer, url, res);
   } else if (/\bgzip\b/.test(acceptEncoding)) {
     res.writeHead(200, { 'Content-Encoding': 'gzip' });
-    dealCompress(zlib.gzipSync(data), url, res);
+    const buffer = await gzipPromise(data);
+    dealCompress(buffer, url, res);
   } else if (/\bbr\b/.test(acceptEncoding)) {
     res.writeHead(200, { 'Content-Encoding': 'br' });
-    dealCompress(zlib.brotliCompressSync(data), url, res);
+    const buffer = await brotliCompressPromise(data);
+    dealCompress(buffer, url, res);
   } else if (/\bzstd\b/.test(acceptEncoding)) {
     res.writeHead(200, { 'Content-Encoding': 'zstd' });
-    dealCompress(zlib.zstdCompressSync(data), url, res);
+    const buffer = await zstdCompressPromise(data);
+    dealCompress(buffer, url, res);
   } else {
     res.writeHead(200, {});
     let raw = fr2.gain(url);
@@ -98,13 +108,13 @@ function dealModify(fr, address, ms) {
   return change;
 }
 
-function cacheOutput(req, res, url, data, ms) {
+async function cacheOutput(req, res, url, data, ms) {
   let ifModifiedSince = req.headers['if-modified-since'];
   if (ifModifiedSince === undefined) {
     const raw = dealFile(url, data);
     const change = dealModify(fr1, url, ms);
     res.setHeader('Last-Modified', formatHttpDate(change));
-    compressOutput(req, res, raw, url);
+    await compressOutput(req, res, raw, url);
   } else {
     const change = dealModify(fr1, url, ms);
     const raw = dealFile(url, data);
@@ -112,7 +122,7 @@ function cacheOutput(req, res, url, data, ms) {
     if (since < change) {
       const raw = dealFile(url, data);
       res.setHeader('Last-Modified', formatHttpDate(change));
-      compressOutput(req, res, raw, url);
+      await compressOutput(req, res, raw, url);
     } else {
       res.writeHead(304);
       res.end();
@@ -120,13 +130,13 @@ function cacheOutput(req, res, url, data, ms) {
   }
 }
 
-function returnIndexHtml(req, res) {
-  const data = fs.readFileSync(path.resolve('static', 'index.html'));
-  const ms = fs.statSync(path.resolve('static', 'index.html')).mtimeMs;
-  cacheOutput(req, res, '/index.html', data, ms);
+async function returnIndexHtml(req, res) {
+  const data = await fsPromises.readFile(path.resolve('static', 'index.html'));
+  const stat = await fsPromises.stat(path.resolve('static', 'index.html'));
+  await cacheOutput(req, res, '/index.html', data, stat.mtimeMs);
 }
 
-function returnNotFoundJSON(req, res) {
+function returnNotFoundJson(req, res) {
   const { url, } = req;
   res.end(JSON.stringify({
     status: -2, message: 'The current route ' + url + ' does not exist.',
@@ -425,13 +435,14 @@ class HttpHandle {
     } = this;
     const timeoutPromise = new Promise((_, reject) => {
       setTimeout(() => {
-        reject(new Error('[Error] Local processing overload timeout.'));
+        const error = new TimeoutError('[Error] Local processing overload timeout.');
+        reject(error);
       }, timeout);
     });
     try {
       await Promise.race([method(), timeoutPromise]);
     } catch (error) {
-      if (error.message === '[Error] Local processing overload timeout.') {
+      if (error instanceof TimeoutError) {
         res.writeHead(512);
         res.end('');
         ans = false;
@@ -520,7 +531,7 @@ class HttpHandle {
         case '.svg': {
           const restUrl = path.basename(url);
           const filePath = path.resolve('static', restUrl);
-          if (fs.existsSync(filePath)) {
+          if (await existsPromise(filePath)) {
             let prevn1 = fr4.gain(filePath);
             if (prevn1 === undefined) {
               const {
@@ -540,20 +551,20 @@ class HttpHandle {
               this[outputSituationKey]('prevent obtain', ip, url, method);
               return;
             }
-            const data = fs.readFileSync(filePath);
-            const ms = fs.statSync(filePath).mtimeMs;
-            cacheOutput(req, res, restUrl, data, ms);
+            const data = await fsPromises.readFile(filePath);
+            const stat = await fsPromises.stat(filePath);
+            await cacheOutput(req, res, restUrl, data, stat.mtimeMs);
             this[outputSituationKey]('obtain static resource', ip, url, method);
             return;
           } else {
               switch (method) {
                 case 'GET':
-                  returnIndexHtml(req, res);
+                  await returnIndexHtml(req, res);
                   this[outputSituationKey]('obtain static resource', ip, url, method);
                 default: {
                   const { blks2, } = this;
                   if (blks2.examine(ip)) {
-                    returnNotFoundJSON(req, res);
+                    returnNotFoundJson(req, res);
                     this[outputSituationKey]('interface does not exist', ip, url, method);
                   } else {
                     stemRequest(ip, res, blks2);
@@ -654,7 +665,7 @@ class HttpHandle {
             this[outputSituationKey]('forward', ip, url, method);
           }
         } else {
-          returnNotFoundJSON(req, res);
+          returnNotFoundJson(req, res);
           this[outputSituationKey]('interface does not exist', ip, url, method);
         }
         return;
@@ -690,13 +701,13 @@ class HttpHandle {
               this[outputSituationKey]('timeout', ip, url, method);
             }
           } else {
-            returnNotFoundJSON(req, res);
+            returnNotFoundJson(req, res);
             this[outputSituationKey]('interface does not exist', ip, url, method);
           }
           return;
         }
         case 'GET':
-          returnIndexHtml(req, res);
+          await returnIndexHtml(req, res);
           this[outputSituationKey]('obtain static resource', ip, url, method);
           return;
       }
@@ -719,17 +730,20 @@ class HttpHandle {
     this[checkMemoryKey]();
   }
 
-  listen() {
+  async listen() {
     const { port, safe, development, condition, } = this
     switch (safe) {
-      case 'true':
+      case 'true': {
+        const key = await fsPromises.readFile('asset/test-key.pem');
+        const cert = await fsPromises.readFile('asset/test-cert.pem');
         http2.createSecureServer({
-          key: fs.readFileSync('asset/test-key.pem'),
-          cert: fs.readFileSync('asset/test-cert.pem'),
+          key,
+          cert,
         }, async (req, res) => {
           await this[handleKey](req, res);
         }).listen(port);
         break;
+      }
       default:
         http.createServer({
         }, async (req, res) => {
@@ -746,8 +760,8 @@ class HttpHandle {
         fulmination,
       } = this;
       const currentPath = path.resolve('.');
-      const packageJSON = fs.readFileSync(path.join(currentPath, 'package.json')).toString();
-      const { name, } = JSON.parse(packageJSON);
+      const buffer = await fsPromises.readFile(path.join(currentPath, 'package.json'));
+      const { name, } = JSON.parse(buffer.toString());
       fulmination.scan(`
         [+]:
         |
