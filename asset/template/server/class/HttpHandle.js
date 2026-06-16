@@ -13,7 +13,8 @@ import {
   parseOptions,
 } from 'mien';
 import {
-  Blocks, Prevents,
+  Blocks,
+  Prevents,
   checkLogPath,
   addToLog,
   appendToLog,
