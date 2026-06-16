@@ -1,5 +1,6 @@
 import React from 'react';
 import Page from '~/client/script/component/Page';
+import Image from '~/client/script/component/Image';
 import welcomeImg from './welcome.png';
 import global from '~/client/script/obj/global';
 import * as style from './index.module.css';
@@ -32,7 +33,7 @@ class Home extends Page {
   render() {
     return (
       <div className={style.home}>
-        <img
+        <Image
           className={style.welcome}
           src={welcomeImg}
           alt="manner.js welcome image"

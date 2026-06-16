@@ -22,7 +22,7 @@ import {
   parseHttpDate,
   formatHttpKey,
   formatHttpDate,
-} from 'manner.js/server'
+} from 'manner.js/server';
 import TimeoutError from '~/server/class/TimeoutError';
 import existsPromise from '~/server/lib/util/existsPromise';
 import deflatePromise from '~/server/lib/util/deflatePromise';
@@ -131,8 +131,9 @@ async function cacheOutput(req, res, url, data, ms) {
 }
 
 async function returnIndexHtml(req, res) {
-  const data = await fsPromises.readFile(path.resolve('static', 'index.html'));
-  const stat = await fsPromises.stat(path.resolve('static', 'index.html'));
+  const indexHtmlPath = path.resolve('static', 'index.html');
+  const data = await fsPromises.readFile(indexHtmlPath);
+  const stat = await fsPromises.stat(indexHtmlPath);
   await cacheOutput(req, res, '/index.html', data, stat.mtimeMs);
 }
 
