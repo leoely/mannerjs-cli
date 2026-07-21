@@ -1,9 +1,9 @@
+import fsPromises from 'fs/promises';
 import os from 'os';
 import path from 'path';
 import fs from 'fs';
 import http from 'http';
 import http2 from 'http2';
-import fsPromises from 'fs/promises';
 import Fulmination from 'fulmination';
 import {
   emphasis,
