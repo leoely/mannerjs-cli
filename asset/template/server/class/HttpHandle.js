@@ -13,8 +13,6 @@ import {
   parseOptions,
 } from 'mien';
 import {
-  Blocks,
-  Prevents,
   checkLogPath,
   addToLog,
   appendToLog,
@@ -23,6 +21,8 @@ import {
   formatHttpKey,
   formatHttpDate,
 } from 'manner.js/server';
+import Blocks from '~/server/class/Blocks';
+import Prevents from '~/server/class/Prevents';
 import existsPromise from '~/server/lib/util/existsPromise';
 import deflatePromise from '~/server/lib/util/deflatePromise';
 import gzipPromise from '~/server/lib/util/gzipPromise';
@@ -742,8 +742,8 @@ class HttpHandle {
     const { port, safe, development, condition, } = this
     switch (safe) {
       case 'true': {
-        const key = await fsPromises.readFile('asset/test-key.pem');
-        const cert = await fsPromises.readFile('asset/test-cert.pem');
+        const key = await fsPromises.readFile('asset/temporary-key.pem');
+        const cert = await fsPromises.readFile('asset/temporary-cert.pem');
         http2.createSecureServer({
           key,
           cert,

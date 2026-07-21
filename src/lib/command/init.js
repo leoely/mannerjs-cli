@@ -8,15 +8,24 @@ import {
   emphasis,
   checkDependencies,
   tick,
+  getResponse,
 } from 'mien';
 import copyFile from '~/lib/util/copyFile';
 
-function installDevDep(dep) {
-  childProcess.execSync('yarn add --dev ' + dep + '@latest', { stdio: 'inherit', });
+function installDevDep(dep, version) {
+  if (typeof version === 'string') {
+    childProcess.execSync('yarn add --dev ' + dep + '@' + version, { stdio: 'inherit', });
+  } else {
+    childProcess.execSync('yarn add --dev ' + dep + '@latest', { stdio: 'inherit', });
+  }
 }
 
-function installDep(dep) {
-  childProcess.execSync('yarn add ' + dep + '@latest', { stdio: 'inherit', });
+function installDep(dep, version) {
+  if (typeof version === 'string') {
+    childProcess.execSync('yarn add ' + dep + '@' + version, { stdio: 'inherit', });
+  } else {
+    childProcess.execSync('yarn add ' + dep + '@latest', { stdio: 'inherit', });
+  }
 }
 
 export default async function init(...param) {
@@ -24,6 +33,8 @@ export default async function init(...param) {
   await checkDependencies(['yarn', 'git']);
   let currentPath = path.resolve('.');
   childProcess.execSync('yarn init', { stdio: 'inherit', });
+  fs.rmSync('yarn.lock');
+  fs.rmSync('node_modules', { recursive: true, });
   const projectPackageJSONPath = path.join(currentPath, 'package.json');
   const projectPackageJSON = fs.readFileSync(path.join(currentPath, 'package.json')).toString();
   fs.rmSync(projectPackageJSONPath);
@@ -32,7 +43,7 @@ export default async function init(...param) {
       build: 'gulp build',
       run: 'yarn run build && node dist/index.js --port 8888 --development true --safe true',
       dev: 'webpack serve --config webpack.config.dev.babel.js',
-      pro: 'webpack --config webpack.config.pro.babel.js',
+      pro: 'export NODE_ENV=production && webpack --config webpack.config.pro.babel.js',
       'run:test1': 'yarn run build && node dist/index.js --port 8888 --development true --safe false',
       'run:test2': 'yarn run build && node dist/index.js --port 8888 --development false --safe false --condition 1',
       'run:test3': 'yarn run build && node dist/index.js --port 8888 --development false --safe false --condition 2',
@@ -93,6 +104,7 @@ export default async function init(...param) {
   }
   const modulePath = path.resolve(__dirname, '..', '..', '..')
   const assetPath = path.join(modulePath, 'asset');
+  const srcPath = path.join(modulePath, 'src');
   fulmination.scan('(+) &');
   fs.writeFileSync(path.join(currentPath, 'package.json'), JSON.stringify(projectPackageData, null, 2));
   fulmination.scan(tick() + '(+) bold: File ' + emphasis('package.json') + '(+) bold: * created successful. &');
@@ -108,13 +120,13 @@ export default async function init(...param) {
   installDep('postcss');
   installDep('react');
   installDep('react-dom');
-  installDevDep('@babel/core');
-  installDevDep('@babel/cli');
-  installDevDep('@babel/preset-env');
+  installDevDep('@babel/cli', '^7.28.6');
+  installDevDep('@babel/core', '^7.29.0');
+  installDevDep('@babel/preset-env', '^7.29.5');
   installDevDep('@babel/preset-react');
   installDevDep('@babel/preset-react');
   installDevDep('@babel/plugin-proposal-decorators');
-  installDevDep('@babel/register');
+  installDevDep('@babel/register', '^7.29.3');
   installDevDep('@fortawesome/fontawesome-svg-core');
   installDevDep('@fortawesome/free-brands-svg-icons');
   installDevDep('@fortawesome/free-regular-svg-icons');
@@ -141,6 +153,9 @@ export default async function init(...param) {
   const templatePath = path.join(assetPath, 'template');
   fs.mkdirSync(path.join(currentPath, 'src'));
   fs.cpSync(templatePath, path.join(currentPath, 'src'), { recursive: true, });
+  fs.copyFileSync(path.join(srcPath, 'class', 'Tackles.js'), path.join(currentPath, 'src', 'server', 'class', 'Tackles.js'));
+  fs.copyFileSync(path.join(srcPath, 'class', 'Blocks.js'), path.join(currentPath, 'src', 'server', 'class', 'Blocks.js'));
+  fs.copyFileSync(path.join(srcPath, 'class', 'Prevents.js'), path.join(currentPath, 'src', 'server', 'class', 'Prevents.js'));
   const HttpHandlePath = path.join(currentPath, 'src', 'server', 'class', 'HttpHandle.js');
   const HttpHandleString = fs.readFileSync(HttpHandlePath).toString();
   fs.writeFileSync(HttpHandlePath, HttpHandleString.replaceAll('temporary', name));
@@ -185,7 +200,8 @@ export default async function init(...param) {
   childProcess.execSync('openssl x509 -req -in ' + name + '-csr.pem -signkey ' + name + '-key.pem -out ' + name + '-cert.pem ' , { stdio: 'inherit', });
   fulmination.scan(tick() + '(+) bold: The ' + emphasis('certificate') + '(+) bold: *  successfully created. &');
   const imagePath = path.join(assetPath, 'image');
-  const imageName = 'favicon.png'; fs.copyFileSync(path.join(imagePath, imageName), path.join(currentPath, imageName));
+  const imageName = 'favicon.png';
+  fs.copyFileSync(path.join(imagePath, imageName), path.join(currentPath, imageName));
   fulmination.scan(tick() + '(+) bold: The ' + emphasis('favico') + '(+) bold: *  file was copied successfully. &');
   currentPath = path.resolve(currentPath, '..');
   const mannerPath = path.join(currentPath, '.manner');

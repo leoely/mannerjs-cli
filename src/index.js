@@ -1,7 +1,7 @@
 import init from '~/lib/command/init';
 //import update from '~/lib/command/update';
 
-process.chdir('/tmp');
+process.chdir('/Users/eric/Templates');
 init();
 //import update from '~/lib/command/update';
 

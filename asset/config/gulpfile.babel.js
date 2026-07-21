@@ -12,8 +12,7 @@ function buildJs() {
               'node': 'current'
             }
           },
-        ],
-        'minify'
+        ]
       ],
       plugins: [
         [
