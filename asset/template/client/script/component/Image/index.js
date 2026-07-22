@@ -11,7 +11,6 @@ function Loading(props) {
         <span style={{ display: count >= 3 ? 'inline' : 'none', }} className={style.cube}></span>
         <span style={{ display: count >= 4 ? 'inline' : 'none', }} className={style.cube}></span>
         <span style={{ display: count >= 5 ? 'inline' : 'none', }} className={style.cube}></span>
-        <span style={{ display: count >= 6 ? 'inline' : 'none', }} className={style.cube}></span>
       </div>
     );
   } else {
@@ -25,7 +24,7 @@ class Image extends React.Component {
     this.imageRef = createRef();
     this.state = {
       loading: true,
-      count: 0,
+      count: 5,
     };
   }
 
@@ -36,9 +35,9 @@ class Image extends React.Component {
       },
     } = this;
     imageNode.addEventListener('load', () => {
-      this.setState({
-        loading: false,
-      });
+      //this.setState({
+        //loading: false,
+      //});
     });
   }
 
@@ -59,7 +58,7 @@ class Image extends React.Component {
             count: 0,
           });
         }
-      }, 150);
+      }, 110);
     } else {
       const { id, } = this;
       clearInterval(id);

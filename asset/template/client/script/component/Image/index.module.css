@@ -4,11 +4,15 @@
   flex-shrink: 0
   align-items: center
   justify-content: left
-  padding-left: 15%
-  background-color: rgb(220, 220, 220)
+  padding-left: 12%
+  background: linear-gradient(to right, rgb(230, 230, 230), rgb(215, 215, 215))
+  box-shadow: inset 5px 5px 20px rgba(140, 140, 140, 0.5), inset -5px -5px 20px rgba(130, 140, 140, 0.5)
+  border: 1px solid rgb(60, 60 , 60)
 .cube
   display: inline-flex
   width: 7%
-  margin: 6% 6% 6% 0
+  margin: 10% 10% 10% 0
   height: 50%
-  background-color: rgb(35, 35, 35)
+  background: linear-gradient(to right, rgb(180, 180, 180), rgb(220, 220, 220), rgb(180, 180, 180))
+  border: 1px solid rgb(50, 50, 50)
+  box-shadow: 2px 3px 7px rgba(50, 50, 50, 0.8)

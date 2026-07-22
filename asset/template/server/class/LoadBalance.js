@@ -106,7 +106,7 @@ class LoadBalance {
             throw new Error('[Error] The internal status is not within the expected value.');
         }
         const value = Math.random();
-        if (value >= weight) {
+        if (value < weight) {
           this.index = index;
         } else {
           if (index === length - 1) {
