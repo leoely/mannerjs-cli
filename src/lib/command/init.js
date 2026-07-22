@@ -156,6 +156,7 @@ export default async function init(...param) {
   fs.copyFileSync(path.join(srcPath, 'class', 'Tackles.js'), path.join(currentPath, 'src', 'server', 'class', 'Tackles.js'));
   fs.copyFileSync(path.join(srcPath, 'class', 'Blocks.js'), path.join(currentPath, 'src', 'server', 'class', 'Blocks.js'));
   fs.copyFileSync(path.join(srcPath, 'class', 'Prevents.js'), path.join(currentPath, 'src', 'server', 'class', 'Prevents.js'));
+  fs.copyFileSync(path.join(modulePath, '.nvmrc'), path.join(currentPath, '.nvmrc'));
   const HttpHandlePath = path.join(currentPath, 'src', 'server', 'class', 'HttpHandle.js');
   const HttpHandleString = fs.readFileSync(HttpHandlePath).toString();
   fs.writeFileSync(HttpHandlePath, HttpHandleString.replaceAll('temporary', name));

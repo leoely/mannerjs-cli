@@ -569,11 +569,13 @@ class HttpHandle {
                 case 'GET':
                   await returnIndexHtml(req, res);
                   this[outputSituationKey]('obtain static resource', ip, url, method);
+                  break;
                 default: {
                   const { blks2, } = this;
                   if (blks2.examine(ip)) {
                     returnNotFoundJson(req, res);
                     this[outputSituationKey]('interface does not exist', ip, url, method);
+                    return;
                   } else {
                     stemRequest(ip, res, blks2);
                     this[outputSituationKey]('block request', ip, url, method);
@@ -675,6 +677,7 @@ class HttpHandle {
         } else {
           returnNotFoundJson(req, res);
           this[outputSituationKey]('interface does not exist', ip, url, method);
+          return;
         }
         return;
       }
@@ -711,6 +714,7 @@ class HttpHandle {
           } else {
             returnNotFoundJson(req, res);
             this[outputSituationKey]('interface does not exist', ip, url, method);
+            return;
           }
           return;
         }
@@ -742,8 +746,8 @@ class HttpHandle {
     const { port, safe, development, condition, } = this
     switch (safe) {
       case 'true': {
-        const key = await fsPromises.readFile('asset/temporary-key.pem');
-        const cert = await fsPromises.readFile('asset/temporary-cert.pem');
+        const key = await fsPromises.readFile('asset/test1-key.pem');
+        const cert = await fsPromises.readFile('asset/test1-cert.pem');
         http2.createSecureServer({
           key,
           cert,
