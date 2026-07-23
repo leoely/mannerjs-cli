@@ -42,12 +42,10 @@ class Home extends Page {
           <h1 className={style.title}>Welcome to the manner.js project.</h1>
           <ul className={style.list}>
             <li className={style.item}>
-              The project is highly customizable,allowing for the modification
-              of existing system compoents to confirm to user needs.
+              High performance
             </li>
             <li className={style.item}>
-              The project is highly customizable,allowing for the modification
-              of existing system compoents to confirm to user needs.
+              High scalability
             </li>
           </ul>
         </div>
