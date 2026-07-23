@@ -38,6 +38,19 @@ class Home extends Page {
           src={welcomeImg}
           alt="manner.js welcome image"
         />
+        <div className={style.right}>
+          <h1 className={style.title}>Welcome to the manner.js project.</h1>
+          <ul className={style.list}>
+            <li className={style.item}>
+              The project is highly customizable,allowing for the modification
+              of existing system compoents to confirm to user needs.
+            </li>
+            <li className={style.item}>
+              The project is highly customizable,allowing for the modification
+              of existing system compoents to confirm to user needs.
+            </li>
+          </ul>
+        </div>
       </div>
     );
   }
