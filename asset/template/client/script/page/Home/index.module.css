@@ -9,15 +9,23 @@
   width: 48%
 .right
   display: flex
-  width: 52%
+  width: 50%
+  margin-left: 2%
   flex-direction: column
 .title
   color: rgb(255, 255, 255)
   margin-top: 25%
-  font-size: 35px
+  font-size: 34px
   text-shadow: 0.5px 0.5px 2px rgba(20, 20, 20, 0.7)
 @media (width <= 649px)
+  .welcome
+    width: 100%
+  .right
+    width: 100%
+  .home
+    flex-direction: column
   .title
+    margin-top: 0
     font-size: 26px
 .list
   color: rgb(150, 150, 150)
