@@ -1,11 +1,7 @@
 import React from 'react';
-import {
-  FontAwesomeIcon,
-} from '@fortawesome/react-fontawesome';
-import {
-  faFaceMehBlank,
-} from '@fortawesome/free-solid-svg-icons';
 import Page from '~/client/script/component/Page';
+import Image from '~/client/script/component/Image';
+import serverErrorImg from './server-error.png';
 import global from '~/client/script/obj/global';
 import * as style from './index.module.css';
 
@@ -29,13 +25,23 @@ class InternalServerError extends Page {
   render() {
     return (
       <div className={style.internalServerError}>
-        <FontAwesomeIcon className={style.faceIcon} icon={faFaceMehBlank} />
-        There is an error in the server of the current page.You can inform the
-        the relevant personnel of the website about this situations.Thank you
-        very much.In addition,you can visit other pages.
-        <button name="comeback" onClick={this[comebackKey]} className={style.comeback}>
-          Come Back
-        </button>
+        <Image
+          className={style.image}
+          src={serverErrorImg}
+          alt="manner.js server error image"
+        />
+        <h2 className={style.title}>500 [Server Error]</h2>
+        <div className={style.detail}>
+          There is an internal server error processing the current page.You can
+          report this situation to the website maintenance personnel through
+          this method.After the maintenance staff resolves this issue,the
+          current will no longer display this error message.Thank you very much
+          for your help in solving this problem.You can usually also acesss
+          previous pages.
+          <button name="comeback" onClick={this[comebackKey]} className={style.comeback}>
+            Come Back
+          </button>
+        </div>
       </div>
     );
   }
