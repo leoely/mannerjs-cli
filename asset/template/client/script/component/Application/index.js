@@ -2,11 +2,20 @@ import Router from '~/client/script/component/Router';
 import SinglePageApplication from '~/client/script/decorator/SinglePageApplication';
 import MainMethod from '~/client/script/decorator/MainMethod';
 import RestMethod from '~/client/script/decorator/RestMethod';
+import global from '~/client/script/obj/global';
+
+const {
+  location,
+} = global;
 
 @SinglePageApplication
 class Application extends Router {
   constructor(props) {
     super(props);
+  }
+
+  setUpCurrentPage() {
+    location.to('/404');
   }
 
   @MainMethod
@@ -15,6 +24,10 @@ class Application extends Router {
     const Home = module.default;
     this.addPage('/', Home);
     await this.addTestPages();
+    const { mode, } = this.props;
+    if (mode === 'develop') {
+      this.setUpCurrentPage();
+    }
   }
 
   @RestMethod(1)

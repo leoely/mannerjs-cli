@@ -13,6 +13,5 @@ function Website() {
   );
 }
 
-const domNode = document.getElementById('root');
-const root = ReactDOM.createRoot(domNode);
+const root = ReactDOM.createRoot(document.getElementById('root'));
 root.render(<Website />);
