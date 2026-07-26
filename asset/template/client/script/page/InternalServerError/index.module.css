@@ -2,10 +2,11 @@
   display: flex
   font-size: 20px
   flex-wrap: wrap
-  justify-centent: center
   color: rgb(255, 255, 255)
   margin-top: -15px
   background-color: rgb(255, 20, 20)
+  height: calc(100% + 15px)
+  overflow: hidden
 .image
   width: 42%
 .title
@@ -19,6 +20,7 @@
   text-indent: 2em
   font-size: 24px
   width: 59%
+  height: 100%
   margin-top: -15px
   margin-left: 41%
   padding-bottom: 7px
@@ -32,3 +34,15 @@
   padding: 8px 4px 8px 4px
   border-radius: 4px
   background-color: rgb(255, 255, 255)
+@media (width <= 900px)
+  .internalServerError
+    overflow: scroll
+    height: auto
+  .image
+    width: 100%
+  .title
+    width: 100%
+    margin-bottom: 20px
+  .detail
+    width: 100%
+    margin-left: 0

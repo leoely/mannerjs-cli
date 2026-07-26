@@ -1,37 +1,50 @@
 .latencyTooHigh
   display: flex
   flex-wrap: wrap
-  height: 100%
-  justify-content: center
-  align-items: center
   padding: 0 40px 0 40px
-.logoIcon
-  display: flex
-  width: 130px
-  height: 130px
-.status
-  position: relative
-  top: 40px
-  left: -25px
-  width: 20px
-  height: 20px
-  border-radius: 20px
-  background-color: rgb(240, 230, 10)
-.bracket
-  color: rgb(255, 0, 0)
-.hint
-  font-size: 22px
+  background-color: rgb(255, 215, 100)
+  min-height: 100%
+.image
+  width: 42%
+  height: 70%
+.detail
   text-indent: 2em
-.reason
+  display: flex
   color: rgb(255, 255, 255)
-  background-color: rgb(45, 45, 45)
-.suggestion
-  color: rgb(255, 255, 255)
-  background-color: rgb(10, 190, 10)
+  font-size: 27px
+  width: 50%
+  margin-left: 5%
+  margin-top: 16%
+  flex-direction: column
+  align-items: center
 .stillVisit
+  height: 50px
+  width: 200px
   font-size: 21.5px
   color: rgb(255, 255, 255)
   background-color: rgb(240, 230, 10)
   border: 1px
   padding: 8px 13px 8px 13px
   border-radius: 5px
+  margin-top: 2%
+.title
+  font-size: 40px
+  color: rgb(255, 255, 255)
+  margin: 0 0 0 6%
+  text-shadow: 1px 1px 4px rgba(50, 50, 50, 0.5)
+@media (width <= 1050px)
+  .latencyTooHigh
+    height: auto
+  .detail
+    margin-top: 0
+    order: 3
+    width: 100%
+  .image
+    order: 1
+    width: 100%
+  .title
+    order: 2
+    margin: 2%
+    display: flex
+    justify-content: center
+    width: 100%

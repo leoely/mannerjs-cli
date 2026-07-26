@@ -17,7 +17,11 @@
   margin-top: 25%
   font-size: 34px
   text-shadow: 0.5px 0.5px 2px rgba(20, 20, 20, 0.7)
-@media (width <= 649px)
+.list
+  color: rgb(150, 150, 150)
+  font-size: 25px
+  list-style: none
+@media (width <= 900px)
   .welcome
     width: 100%
   .right
@@ -27,10 +31,6 @@
   .title
     margin-top: 0
     font-size: 26px
-.list
-  color: rgb(150, 150, 150)
-  font-size: 25px
-  list-style: none
 @media (width <= 649px)
   .list
     font-size: 19px
