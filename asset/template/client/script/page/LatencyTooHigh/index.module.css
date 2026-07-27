@@ -28,11 +28,11 @@
   border-radius: 5px
   margin-top: 2%
 .title
-  font-size: 40px
+  font-size: 44px
   color: rgb(255, 255, 255)
   margin: 0 0 0 6%
-  text-shadow: 1px 1px 4px rgba(50, 50, 50, 0.5)
-@media (width <= 1050px)
+  text-shadow: 1px 1px 4px rgba(50, 50, 50, 0.3)
+@media (width <= 1000px)
   .latencyTooHigh
     height: auto
   .detail
