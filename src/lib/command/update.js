@@ -8,7 +8,7 @@ import {
   askQuestion,
   emphasis,
   tick,
-  cross,
+  error,
   greaterOrEqualVersion,
   checkDependencies,
 } from 'mien';
@@ -49,7 +49,7 @@ async function replaceFile(originPath, laterPath, name, rename) {
     }
     fulmination.scan(tick() + '(+) bold: File ' + emphasis(originLocation) + '(+) bold: * updated successfully. &');
   } else {
-    fulmination.scan(cross() + '(+) bold: File ' + emphasis(originLocation) + '(+) bold: * update canceled. &');
+    fulmination.scan(error() + '(+) bold: File ' + emphasis(originLocation) + '(+) bold: * update canceled. &');
   }
 }
 
@@ -70,7 +70,7 @@ export default async function update(...param) {
   const mannerPath = path.join(currentPath, '.manner');
   const versionPath = path.join(mannerPath, 'version');
   if (!fs.existsSync(versionPath)) {
-    fulmination.scan(cross() + '(+) bold: The current project is not a' + emphasis('manner') + ' (+) bold: * project. &');
+    fulmination.scan(error() + '(+) bold: The current project is not a' + emphasis('manner') + ' (+) bold: * project. &');
     return;
   }
   const version1 = fs.readFileSync(versionPath).toString();
@@ -79,7 +79,7 @@ export default async function update(...param) {
   const modulePackageData = JSON.parse(modulePackageJSON);
   const { version: version2, } = modulePackageData;
   if (greaterOrEqualVersion(version1, version2)) {
-    fulmination.scan(cross() + '(+) bold: The current ' + emphasis('version') + ' (+) bold: * is already the latest and does not to be updated. &');
+    fulmination.scan(error() + '(+) bold: The current ' + emphasis('version') + ' (+) bold: * is already the latest and does not to be updated. &');
     return;
   }
   const { dependencies, } = await inquirer.prompt({

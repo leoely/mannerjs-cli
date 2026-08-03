@@ -35,9 +35,9 @@ class Image extends React.Component {
       },
     } = this;
     imageNode.addEventListener('load', () => {
-      //this.setState({
-        //loading: false,
-      //});
+      this.setState({
+        loading: false,
+      });
     });
   }
 

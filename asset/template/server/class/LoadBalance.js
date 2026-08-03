@@ -19,10 +19,6 @@ class LoadBalance {
     if (!(port > 0)) {
       throw new Error('[Error] The param port should be a positvie integer type.')
     }
-    this.port;
-    const {
-      port,
-    } = this;
     switch (port) {
       case 80:
       case 443:
@@ -63,20 +59,15 @@ class LoadBalance {
     if (!(doneTime > 0)) {
       throw new Error('[Error] The option doneTime should be a positvie integer type.')
     }
-    const {
-      options: {
-        doneTime,
-      },
-    } = this;
     this.status = 0;
     setInterval(() => {
       this.status = 1;
-    });
+    }, doneTime);
   }
 
   dealDifferentNode(index) {
     const {
-      allHttpHandles.
+      allHttpHandles,
     } = this;
     [_, port] = allHttpHandles[index];
     switch (port) {
