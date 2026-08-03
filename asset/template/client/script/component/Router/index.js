@@ -64,7 +64,7 @@ class Router extends WebApp {
   }
 
   async [ownComponentDidMountKey]() {
-    await this[bindEventKey]();
+    this[bindEventKey]();
     if (localStorage.getItem('ip') !== null && localStorage.getItem('time') !== null) {
       this.setState({ loading: true, });
       await this[ldAcsBlkKey]();
@@ -80,7 +80,7 @@ class Router extends WebApp {
       hash,
     } = window.location;
     const path = pathname + search + hash;
-    await emitter.send('page' + dealPath(removePathVariables(pathname)), { path, });
+    emitter.send('page' + dealPath(removePathVariables(pathname)), { path, });
     location.to(path);
   }
 

@@ -6,9 +6,9 @@ test.describe('[Page] ServerError;', () => {
     await page.goto('http://localhost:8888/test');
     await expect(page.getByText('Test Page')).toBeInViewport();
     await page.goto('http://localhost:8888/');
-    await expect(page.getByText('There is an error in the server of the current page.You can inform the the relevant personnel of the website about this situations.Thank you very much.In addition,you can visit other pages.')).toBeInViewport();
+    await expect(page.getByText('There is an internal server error processing the current page.)).toBeInViewport();
     const comeBackButton = page.getByRole('button');
     await comeBackButton.click();
-    await expect(page.getByText('There is an error in the server of the current page.You can inform the the relevant personnel of the website about this situations.Thank you very much.In addition,you can visit other pages.')).toBeInViewport({ timeout: 9000, });
+    await expect(page.getByText('Welcome to the manner.js project.')).toBeInViewport({ timeout: 9000, });
   });
 });

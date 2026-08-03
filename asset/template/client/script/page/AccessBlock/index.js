@@ -1,13 +1,9 @@
 import React from 'react';
-import {
-  FontAwesomeIcon,
-} from '@fortawesome/react-fontawesome';
-import {
-  faEyeSlash,
-} from '@fortawesome/free-solid-svg-icons';
+import Image from '~/client/script/component/Image';
 import Page from '~/client/script/component/Page';
 import formatNumber from '~/client/script/lib/util/formatNumber';
 import formatLocation from '~/client/script/lib/util/formatLocation';
+import accessBlockImg from './access-block.png';
 import global from '~/client/script/obj/global';
 import * as style from './index.module.css';
 
@@ -59,16 +55,23 @@ class AccessBlock extends Page {
     const { ip, time, } = this.state;
     return (
       <div className={style.accessBlock}>
-        <FontAwesomeIcon className={style.handIcon} icon={faEyeSlash} />
-        The current IP&nbsp;
-        <span className={[style.emphasis, style.ip].join(' ')}>
-        {formatLocation(ip)}
-        </span>
-        &nbsp;is blocked due to frequent acess.Then blocking will end in&nbsp;
-        <span className={[style.emphasis, style.time].join(' ')}>
-        {formatNumber(time)}
-        </span>
-        &nbsp;milliseconds.
+        <h2 className={style.title}>Access Block</h2>
+        <Image
+          className={style.image}
+          src={accessBlockImg}
+          alt="manner.js server error image"
+        />
+        <div className={style.detail}>
+          The current IP&nbsp;
+          <span className={[style.emphasis, style.ip].join(' ')}>
+          {formatLocation(ip)}
+          </span>
+          &nbsp;is blocked due to frequent acess.Then blocking will end in&nbsp;
+          <span className={[style.emphasis, style.time].join(' ')}>
+          {formatNumber(time)}
+          </span>
+          &nbsp;milliseconds.
+        </div>
       </div>
     );
   }
