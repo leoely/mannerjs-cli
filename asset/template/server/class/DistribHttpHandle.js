@@ -2,6 +2,7 @@ import net from 'net';
 import {
   getOwnIpAddresses,
   ByteArray,
+  getAddress,
   getGTMNowString,
 } from 'manner.js/server';
 import HttpHandle from './HttpHandle';
@@ -114,8 +115,8 @@ class DistribHttpHandle extends HttpHandle {
     const locations = [];
     ipAddresses.forEach((ipAddress) => {
       const { ipv4, ipv6, } = ipAddress;
-      locations.push(ipv4 + ':' + port);
-      locations.push('[' + ipv6 + ']:' + port);
+      locations.push(getAddress(ipv4, port));
+      locations.push(getAddress(ipv6, port));
     });
     const hash = {};
     const httpHandles = allHttpHandles.filter((httpHandle) => {
@@ -129,22 +130,11 @@ class DistribHttpHandle extends HttpHandle {
       for (let i = 0; i< locations.length ; i += 1) {
         const location = locations[i];
         const [ip] = httpHandle;
-        if (net.isIPv4(ip)) {
-          if (httpHandle.join(':') === location) {
-            const [ip] = httpHandle;
-            this.ip = ip;
-            flag = false;
-            break;
-          }
-        } else if (net.isIPv6(ip)) {
-          const [ip, port] = httpHandle;
-          const formatHttpHandle = ['[' + ip + ']', port];
-          if (formatHttpHandle.join(':') === location) {
-            const [ip] = httpHandle;
-            this.ip = ip;
-            flag = false;
-            break;
-          }
+        if (getAddress(ip, port)) {
+          const [ip] = httpHandle;
+          this.ip = ip;
+          flag = false;
+          break;
         }
       }
       return flag;

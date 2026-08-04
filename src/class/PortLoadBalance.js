@@ -1,6 +1,7 @@
-class LoadBalance {
+class PortLoadBalance {
   constructor(options = {}, port, httpHandles) {
     const defaultOptions = {
+      host: '127.0.0.1',
       undoneWeight: 0.5,
       doneWeight: 0.9,
       doneTime: 1000 * 60 * 60 * 24,
@@ -22,15 +23,20 @@ class LoadBalance {
     switch (port) {
       case 80:
       case 443:
+        if (port === 80) {
+          this.protocol = 'http';
+        } else {
+          this.protocol = 'https';
+        }
         this.type = 1;
         break;
       default:
         this.type = 0;
     }
-    if (Array.isArray(allHttpHandles) !== true) {
+    if (!Array.isArray(allHttpHandles)) {
       throw new Error('[Error] The parameter httpHandles should be array type.');
     }
-    this.allHttpHandle = allHttpHandles;
+    this.allHttpHandles = allHttpHandles;
   }
 
   dealOptions() {
@@ -41,16 +47,16 @@ class LoadBalance {
         doneTime,
       },
     } = this;
-    if (!Number.isInteger(undoneWeight)) {
-      throw new Error('[Error] The option undoneWeight should be an integer type.');
+    if (typeof undoneWeight !== 'number') {
+      throw new Error('[Error] The option undoneWeight should be a number type.');
     }
-    if (!(undoneWeigth > 0 && undoneWeight < 1)) {
+    if (!(undoneWeight > 0 && undoneWeight < 1)) {
       throw new Error('[Error] The option undoneWeight should be within a range (0, 1).');
     }
-    if (!Number.isInteger(doneWeight)) {
-      throw new Error('[Error] The option doneWeight should be an integer type.');
+    if (typeof doneWeight !== 'number') {
+      throw new Error('[Error] The option doneWeight should be an number type.');
     }
-    if (!(doneWeigth > 0 && doneWeight < 1)) {
+    if (!(doneWeight > 0 && doneWeight < 1)) {
       throw new Error('[Error] The option doneWeight should be within a range (0, 1).');
     }
     if (!Number.isInteger(doneTime)) {
@@ -59,17 +65,20 @@ class LoadBalance {
     if (!(doneTime > 0)) {
       throw new Error('[Error] The option doneTime should be a positvie integer type.')
     }
-    this.status = 0;
-    setInterval(() => {
-      this.status = 1;
-    }, doneTime);
+    const { type, } = this;
+    if (type === 1) {
+      this.status = 0;
+      setInterval(() => {
+        this.status = 1;
+      }, doneTime);
+    }
   }
 
   dealDifferentNode(index) {
     const {
       allHttpHandles,
     } = this;
-    [_, port] = allHttpHandles[index];
+    const [_, port] = allHttpHandles[index];
     switch (port) {
       case 80:
       case 443: {
@@ -116,7 +125,7 @@ class LoadBalance {
     }
   }
 
-  getBalancePort() {
+  getLoadBalancePort() {
     const {
       status,
     } = this;
@@ -125,7 +134,7 @@ class LoadBalance {
         length,
       },
     } = this;
-    if (index === length - 1) {
+    if (this.index === length - 1) {
       this.dealDifferentNode(0);
     } else {
       const {
@@ -134,12 +143,24 @@ class LoadBalance {
       this.dealDifferentNode(index + 1);
     }
     const {
+      allHttpHandles,
       index,
     } = this;
-    const httpHandles = allHttpHandles[index];
-    const [_, port] = httpHandles;
+    const httpHandle = allHttpHandles[index];
+    const [_, port] = httpHandle;
     return port;
+  }
+
+  getLocationWithPort(url) {
+    const port = this.getLoadBalancePort();
+    const {
+      options: {
+        host,
+      },
+      protocol,
+    } = this;
+    return protocol + '://' + host + ':' + port + url;
   }
 }
 
-export default LoadBalance;
+export default PortLoadBalance;
