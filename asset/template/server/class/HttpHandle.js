@@ -455,7 +455,7 @@ class HttpHandle {
         res.end('');
         ans = false;
       } else {
-        throw errror;
+        throw error;
       }
     }
     return ans;
