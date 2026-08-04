@@ -2,6 +2,8 @@ import { test, expect, } from '@playwright/test';
 
 test.describe('[Page] Update;', () => {
   test('The update page should be logically correct.', async ({ page, }) => {
+    await page.goto('http://localhost:8888/');
+    await expect(page.getByAltText('manner.js welcome image')).toBeInViewport();
     test.setTimeout(45500);
     await page.goto('http://localhost:8888/');
     await expect(page.getByText('Detect a new version update of this webapp.Whether or not process update?')).toBeInViewport({ timeout: 35000, });

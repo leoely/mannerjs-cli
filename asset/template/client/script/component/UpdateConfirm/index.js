@@ -30,7 +30,7 @@ class UpdateConfirm extends React.Component {
   }
 
   [updateKey](){
-    location.reload();
+    window.location.reload();
     this.dimmer.close();
   }
 

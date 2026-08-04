@@ -6,9 +6,9 @@ test.describe('[Page] ServerError;', () => {
     await page.goto('http://localhost:8888/test');
     await expect(page.getByText('Test Page')).toBeInViewport();
     await page.goto('http://localhost:8888/');
-    await expect(page.getByText('There is an internal server error processing the current page.)).toBeInViewport();
+    await expect(page.getByText('There is an internal server error processing the current page.')).toBeInViewport();
     const comeBackButton = page.getByRole('button');
     await comeBackButton.click();
-    await expect(page.getByText('Welcome to the manner.js project.')).toBeInViewport({ timeout: 9000, });
+    await expect(page.getByText('Then blocking will end in 7\'500 milliseconds.')).toBeInViewport({ timeout: 9000, });
   });
 });
