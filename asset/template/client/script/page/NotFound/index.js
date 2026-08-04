@@ -1,7 +1,7 @@
 import React from 'react';
 import Page from '~/client/script/component/Page';
 import Image from '~/client/script/component/Image';
-import notFoundImg from './not-found.png';
+import notFoundImg from './notFound.png';
 import formatLocation from '~/client/script/lib/util/formatLocation';
 import * as style from './index.module.css';
 

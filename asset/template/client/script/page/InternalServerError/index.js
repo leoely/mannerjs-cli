@@ -1,7 +1,7 @@
 import React from 'react';
 import Page from '~/client/script/component/Page';
 import Image from '~/client/script/component/Image';
-import serverErrorImg from './server-error.png';
+import serverErrorImg from './serverError.png';
 import global from '~/client/script/obj/global';
 import * as style from './index.module.css';
 

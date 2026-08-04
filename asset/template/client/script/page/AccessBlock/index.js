@@ -3,7 +3,7 @@ import Image from '~/client/script/component/Image';
 import Page from '~/client/script/component/Page';
 import formatNumber from '~/client/script/lib/util/formatNumber';
 import formatLocation from '~/client/script/lib/util/formatLocation';
-import accessBlockImg from './access-block.png';
+import accessBlockImg from './accessBlock.png';
 import global from '~/client/script/obj/global';
 import * as style from './index.module.css';
 
