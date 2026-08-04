@@ -4,16 +4,61 @@ import {
   ObjectRouter,
 } from 'advising.js';
 
-const fwd = new WebRouter({ debug: false, hideError: true, });
-const wr = new WebRouter({ debug: false, hideError: true, });
-const or = new ObjectRouter({ debug: false, hideError: true, });
+const fwd = new WebRouter({
+  debug: false,
+  hideError: true,
+  logLevel: 0,
+  convertToFullHash: true,
+});
+const wr = new WebRouter({
+  debug: false,
+  hideError: true,
+  logLevel: 0,
+  convertToFullHash: true,
+});
+const or = new ObjectRouter({
+  debug: false,
+  hideError: true,
+  logLevel: 0,
+  convertToFullHash: true,
+});
 
-const fr1 = new FileRouter({ debug: false, hideError: true, });
-const fr2 = new FileRouter({ debug: false, hideError: true, });
-const fr3 = new FileRouter({ debug: false, hideError: true, });
-const fr4 = new FileRouter({ debug: false, hideError: true, });
-const wr1 = new WebRouter({ debug: false, hideError: true, });
-const wr2 = new WebRouter({ debug: false, hideError: true, });
+const fr1 = new FileRouter({
+  debug: false,
+  hideError: true,
+  logLevel: 0,
+  convertToFullHash: true,
+});
+const fr2 = new FileRouter({
+  debug: false,
+  hideError: true,
+  logLevel: 0,
+  convertToFullHash: true,
+});
+const fr3 = new FileRouter({
+  debug: false,
+  hideError: true,
+  logLevel: 0,
+  convertToFullHash: true,
+});
+const fr4 = new FileRouter({
+  debug: false,
+  hideError: true,
+  logLevel: 0,
+  convertToFullHash: true,
+});
+const wr1 = new WebRouter({
+  debug: false,
+  hideError: true,
+  logLevel: 0,
+  convertToFullHash: true,
+});
+const wr2 = new WebRouter({
+  debug: false,
+  hideError: true,
+  logLevel: 0,
+  convertToFullHash: true,
+});
 
 const fr1Key = Symbol.for('fr1');
 const fr2Key = Symbol.for('fr2');

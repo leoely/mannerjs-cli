@@ -746,8 +746,8 @@ class HttpHandle {
     const { port, safe, development, condition, } = this
     switch (safe) {
       case 'true': {
-        const key = await fsPromises.readFile('asset/test1-key.pem');
-        const cert = await fsPromises.readFile('asset/test1-cert.pem');
+        const key = await fsPromises.readFile('asset/temporary-key.pem');
+        const cert = await fsPromises.readFile('asset/temporary-cert.pem');
         http2.createSecureServer({
           key,
           cert,
