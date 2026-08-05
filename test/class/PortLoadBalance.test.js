@@ -3,11 +3,30 @@ import PortLoadBalance from '~/class/PortLoadBalance';
 describe('[class] PortLoadBalance;', () => {
   test('PortLoadBlance master node should be able to obtain the load balancing URL.', async () => {
     const portLoadBalance = new PortLoadBalance({
-      host: 'mannerjs.io',
+      protocal: 'https',
+      weight: 0.5,
+      default: 'default',
     }, 80, [
-      ['192.168.63,4', '80'],
-      ['192.168.63,5', '1024'],
-      ['192.168.63,5', '1025'],
+      ['www1-mstr1.manner.io', 80],
+      ['www1-slv1.manner.io', 1024],
+      ['www1-slv2.manner.io', 80],
+      ['www1-slv2.manner.io', 1024],
+      ['www1-slv2.manner.io', 1025],
     ]);
+    console.log(portLoadBalance.getLocation('/login'));
+    console.log(portLoadBalance.getLocation('/login'));
+    console.log(portLoadBalance.getLocation('/login'));
+    console.log(portLoadBalance.getLocation('/login'));
+    console.log(portLoadBalance.getLocation('/login'));
+    console.log(portLoadBalance.getLocation('/login'));
+    console.log(portLoadBalance.getLocation('/login'));
+    console.log(portLoadBalance.getLocation('/login'));
+    console.log(portLoadBalance.getLocation('/login'));
+    console.log(portLoadBalance.getLocation('/login'));
+    console.log(portLoadBalance.getLocation('/login'));
+    console.log(portLoadBalance.getLocation('/login'));
+    console.log(portLoadBalance.getLocation('/login'));
+    console.log(portLoadBalance.getLocation('/login'));
+    console.log(portLoadBalance.getLocation('/login'));
   });
 });
