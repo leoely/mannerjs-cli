@@ -120,6 +120,7 @@ export default async function init(...param) {
   installDep('postcss');
   installDep('react');
   installDep('react-dom');
+  installDep('node-html-parser');
   installDevDep('@babel/cli', '^7.28.6');
   installDevDep('@babel/core', '^7.29.0');
   installDevDep('@babel/preset-env', '^7.29.5');

@@ -7,11 +7,11 @@ describe('[class] PortLoadBalance;', () => {
       weight: 0.5,
       default: 'default',
     }, 80, [
-      ['www1-mstr1.manner.io', 80],
-      ['www1-slv1.manner.io', 1024],
-      ['www1-slv2.manner.io', 80],
-      ['www1-slv2.manner.io', 1024],
-      ['www1-slv2.manner.io', 1025],
+      ['www-mstr.manner.io', 80],
+      ['www-slv1.manner.io', 1024],
+      ['www-slv2.manner.io', 80],
+      ['www-slv2.manner.io', 1024],
+      ['www-slv2.manner.io', 1025],
     ]);
     console.log(portLoadBalance.getLocation('/login'));
     console.log(portLoadBalance.getLocation('/login'));

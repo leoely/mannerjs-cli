@@ -2,6 +2,7 @@ import net from 'net';
 import {
   isIntranetIpv4Address,
 } from 'manner.js/server';
+import htmlParser from 'node-html-parser';
 
 function getModeValue(mode) {
   switch (mode) {
@@ -52,12 +53,27 @@ class PortLoadBalance {
       this.checkHttpHandle(httpHandle, index);
     });
     this.httpHandles = httpHandles;
-    const [address] = this.httpHandles[0];
-    if (net.isIP(address)) {
-      this.type = 0;
-    } else {
-      this.type = 1;
-    }
+    this.httpHandles.forEach((httpHandle) => {
+      const [address] = httpHandle;
+      if (this.type === undefined) {
+        if (net.isIP(address)) {
+          this.type = 0;
+        } else {
+          this.type = 1;
+        }
+      } else {
+        const { type, } = this;
+        if (net.isIP(address)) {
+          if (type === 1) {
+            throw new Error('[Error] The elements of the parameter httpHandles should all be of type hostname.');
+          }
+        } else {
+          if (type === 0) {
+            throw new Error('[Error] The elements of the parameter httpHandles should all be of type IP.');
+          }
+        }
+      }
+    });
   }
 
   dealOptions() {
@@ -100,6 +116,13 @@ class PortLoadBalance {
     this.options.weight = weight;
   }
 
+  setHtml(html) {
+    if (typeof html !== 'string') {
+      throw new Error('[Error] The parameter html should be a string.');
+    }
+    this.dom = htmlParser.parse(html);
+  }
+
   checkHttpHandle(httpHandle, index) {
     const [address, port] = httpHandle;
     if (/^(([a-zA-Z0-9]|[a-zA-Z0-9][a-zA-Z0-9\-]*[a-zA-Z0-9])\.)*([A-Za-z0-9]|[A-Za-z0-9][A-Za-z0-9\-]*[A-Za-z0-9])$/.test(address)) {
@@ -130,7 +153,7 @@ class PortLoadBalance {
     }
   }
 
-  getIndexByMaster(index) {
+  getIndexWhenMaster(index) {
     const {
       options: {
         weight,
@@ -167,7 +190,7 @@ class PortLoadBalance {
       switch (port) {
         case 80:
         case 443:
-          this.index = this.setIndexByMaster(index);
+          this.index = this.getIndexWhenMaster(index);
           break;
         default:
           this.index = index;
@@ -176,7 +199,7 @@ class PortLoadBalance {
       const [hostname, port] = httpHandles[index];
       const virtualHost = getVirtualHost(hostname);
       if (/mstr/.test(virtualHost)) {
-        this.index = this.getIndexByMaster(index);
+        this.index = this.getIndexWhenMaster(index);
       } else if (/slv/.test(virtualHost)) {
         this.index = index;
       } else {
@@ -218,6 +241,25 @@ class PortLoadBalance {
       },
     } = this;
     return protocol + '://' + address + ':' + port + url;
+  }
+
+  getRedirectHtml() {
+    const {
+      dom,
+    } = this;
+    if (dom === undefined) {
+      throw new Error('[Error] Please first set the load balancing related HTML content use the setHtml method.');
+    }
+    const location = this.getLocation();
+    const redirectNode = htmlParser.parse(`
+      <script>
+        if (localStorage.getItem('has-load-balance') === null) {
+          window.location = '${location}';
+          localStorage.setItem('has-load-balance', true);
+        }
+      </script>
+    `);
+    const scriptNode = dom.querySelector('script');
   }
 }
 

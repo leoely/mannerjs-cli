@@ -33,6 +33,7 @@
     "fulmination": "^1.1.13",
     "inquirer": "^12.7.0",
     "manner.js": "^1.2.7",
-    "mien": "^1.0.25"
+    "mien": "^1.0.25",
+    "node-html-parser": "^9.0.1"
   }
 }
