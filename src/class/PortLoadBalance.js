@@ -108,15 +108,15 @@ class PortLoadBalance {
       if (/mstr/.test(virtualHost)) {
       } else if (/slv/.test(virtualHost)) {
       } else {
-        throw new Error('[Error]');
+        throw new Error('[Error] Virtual hosts need to belong to a set {mstr, slv}.');
       }
-    } else if (net.isIp(address)) {
+    } else if (net.isIP(address)) {
       if (net.isIPv4(address)) {
         const {
           mode,
         } = this;
         if (mode === 1 && isIntranetIpv4Address(address)) {
-          throw new Error('[Error] Internal IP addresses are nott used in the default mode.');
+          throw new Error('[Error] Internal IP addresses are not used in the default mode.');
         }
       }
     } else {
