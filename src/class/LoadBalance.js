@@ -38,7 +38,7 @@ function minifyHtml(html) {
   });
 }
 
-class PortLoadBalance {
+class LoadBalance {
   constructor(options = {}, port, httpHandles) {
     const defaultOptions = {
       weight: 0.5,
@@ -47,6 +47,7 @@ class PortLoadBalance {
       minify: true,
       enable: true,
       first: false,
+      orderIndex: false,
     };
     this.options = Object.assign(defaultOptions, options);
     this.dealOptions();
@@ -61,12 +62,30 @@ class PortLoadBalance {
 
   getInitIndex() {
     const {
-      httpHandles: {
-        length,
+      options: {
+        orderIndex,
       },
     } = this;
-    const value = Math.random() * length;
-    return Math.floor(value);
+    if (orderIndex === true) {
+      const {
+        options: {
+          first,
+        },
+      } = this;
+      if (first === true) {
+        return 0;
+      } else {
+        return -1;
+      }
+    } else {
+      const {
+        httpHandles: {
+          length,
+        },
+      } = this;
+      const value = Math.random() * length;
+      return Math.floor(value);
+    }
   }
 
   dealParams(port, httpHandles) {
@@ -118,6 +137,7 @@ class PortLoadBalance {
         first,
         minify,
         enable,
+        orderIndex,
       },
     } = this;
     if (typeof weight !== 'number') {
@@ -145,6 +165,9 @@ class PortLoadBalance {
     }
     if (typeof enable !== 'boolean') {
       throw new Error('[Error] The option enable should be of boolean type.');
+    }
+    if (typeof orderIndex !== 'boolean') {
+      throw new Error('[Error] The options orderIndex should be of boolean type.');
     }
   }
 
@@ -233,23 +256,21 @@ class PortLoadBalance {
       return index;
     } else {
       const {
-        index,
         httpHandles: {
           length,
         },
+        index,
       } = this;
       if (index === length - 1) {
         return 0;
       } else {
-        const {
-          index,
-        } = this;
-        return this.index + 1;
+        return index + 1;
       }
     }
   }
 
   dealDifferentNode(index) {
+    this.index = index;
     const {
       httpHandles,
       type,
@@ -302,7 +323,15 @@ class PortLoadBalance {
     return httpHandle;
   }
 
-  getLocation(url) {
+  getLocation(url, timestamp) {
+    if (typeof url !== 'string') {
+      throw new Error('[Error] The parameter url should be a string.');
+    }
+    if (timestamp !== undefined) {
+      if (typeof timestamp !== 'boolean') {
+        throw new Error('[Error] The parameter timestamp should a boolean type.');
+      }
+    }
     const [address, port] = this.getLoadBalanceHttpHandle();
     const {
       options: {
@@ -310,8 +339,10 @@ class PortLoadBalance {
       },
     } = this;
     const redirectUrl = new URL(protocol + '://' + address + ':' + port + url);
-    const time = Date.now();
-    redirectUrl.searchParams.set('loadBalanceTime', time);
+    if (timestamp === true) {
+      const time = Date.now();
+      redirectUrl.searchParams.set('loadBalanceTime', time);
+    }
     return redirectUrl.toString();
   }
 
@@ -323,7 +354,7 @@ class PortLoadBalance {
       }
       location = url;
     } else {
-      location = this.getLocation(url);
+      location = this.getLocation(url, true);
     }
     const {
       dom,
@@ -396,4 +427,4 @@ class PortLoadBalance {
   }
 }
 
-export default PortLoadBalance;
+export default LoadBalance;

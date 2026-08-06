@@ -1,11 +1,13 @@
-import PortLoadBalance from '~/class/PortLoadBalance';
+import LoadBalance from '~/class/LoadBalance';
 
-describe('[class] PortLoadBalance;', () => {
-  test('PortLoadBlance should be able to obtain the load balancing URL.', async () => {
-    const portLoadBalance = new PortLoadBalance({
+describe('[class] LoadBalance;', () => {
+  test('LoadBlance should be able to obtain the load balancing URL.', async () => {
+    const portLoadBalance = new LoadBalance({
       protocal: 'https',
       weight: 0.5,
       mode: 'default',
+      orderIndex: true,
+      first: true,
     }, 80, [
       ['www-mstr.manner.io', 80],
       ['www-slv1.manner.io', 1024],
@@ -13,11 +15,14 @@ describe('[class] PortLoadBalance;', () => {
       ['www-slv2.manner.io', 1024],
       ['www-slv2.manner.io', 1025],
     ]);
-    //console.log(portLoadBalance.getLocation('/login'));
+    expect(portLoadBalance.getLocation('/login')).toMatch('https://www-slv1.manner.io:1024/login');
+    expect(portLoadBalance.getLocation('/login')).toMatch('https://www-slv2.manner.io:80/login');
+    expect(portLoadBalance.getLocation('/login')).toMatch('https://www-slv2.manner.io:1024/login');
+    expect(portLoadBalance.getLocation('/login')).toMatch('https://www-slv2.manner.io:1025/login');
   });
 
-  test('PortLoadBalance should be able to generate a redirect HTML template.', async () => {
-    const portLoadBalance = new PortLoadBalance({
+  test('LoadBalance should be able to generate a redirect HTML template.', async () => {
+    const portLoadBalance = new LoadBalance({
       protocal: 'https',
       weight: 0.5,
       mode: 'default',
