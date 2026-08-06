@@ -5,7 +5,7 @@ describe('[class] LoadBalance;', () => {
     const portLoadBalance = new LoadBalance({
       protocal: 'https',
       weight: 0.5,
-      mode: 'default',
+      mode: 1,
       orderIndex: true,
       first: true,
     }, 80, [
@@ -25,7 +25,7 @@ describe('[class] LoadBalance;', () => {
     const portLoadBalance = new LoadBalance({
       protocal: 'https',
       weight: 0.5,
-      mode: 'default',
+      mode: 1,
       enable: true,
     }, 80, [
       ['www-mstr.manner.io', 80],

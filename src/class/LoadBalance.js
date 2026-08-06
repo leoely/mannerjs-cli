@@ -6,15 +6,6 @@ import {
 import htmlParser from 'node-html-parser';
 import htmlMinifier from 'html-minifier';
 
-function getModeValue(mode) {
-  switch (mode) {
-    case 'test':
-      return 0;
-    case 'default':
-      return 1;
-  }
-}
-
 function getVirtualHost(hostname) {
   return hostname.split('.')[0];
 }
@@ -42,7 +33,7 @@ class LoadBalance {
   constructor(options = {}, port, httpHandles) {
     const defaultOptions = {
       weight: 0.5,
-      mode: 'default',
+      mode: 1,
       protocol: 'https',
       minify: true,
       enable: true,
@@ -146,16 +137,8 @@ class LoadBalance {
     if (!(weight > 0 && weight < 1)) {
       throw new Error('[Error] The option weight should be within a range (0, 1).');
     }
-    if (typeof mode !== 'string') {
-      throw new Error('[Erorr] The option mode should be a string type.');
-    }
-    switch (mode) {
-      case 'default':
-      case 'test':
-        this.options.mode = getModeValue(mode);
-        break;
-      default:
-        throw new Error('[Error] The option mode value is no within the set range.')
+    if (typeof mode !== 'number') {
+      throw new Error('[Erorr] The option mode should be a number type.');
     }
     if (typeof protocol !== 'string') {
       throw new Error('[Erorr] The option protocol should be a string type.');
