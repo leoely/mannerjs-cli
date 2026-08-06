@@ -106,7 +106,7 @@ export default async function init(...param) {
   const assetPath = path.join(modulePath, 'asset');
   const srcPath = path.join(modulePath, 'src');
   fulmination.scan('(+) &');
-  fs.writeFileSync(path.join(currentPath, 'package.json'), JSON.stringify(projectPackageData, null, 2));
+  fs.writeFileSync(path.join(currentPath, 'package.json'), JSON.stringify(projectPackageData));
   fulmination.scan(tick() + '(+) bold: File ' + emphasis('package.json') + '(+) bold: * created successful. &');
   installDep('@fortawesome/react-fontawesome');
   installDep('advising.js');
@@ -121,6 +121,7 @@ export default async function init(...param) {
   installDep('react');
   installDep('react-dom');
   installDep('node-html-parser');
+  installDep('html-minifier');
   installDevDep('@babel/cli', '^7.28.6');
   installDevDep('@babel/core', '^7.29.0');
   installDevDep('@babel/preset-env', '^7.29.5');
