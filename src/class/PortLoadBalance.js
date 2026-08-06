@@ -17,6 +17,9 @@ function getVirtualHost(hostname) {
   return hostname.split('.')[0];
 }
 
+function minifyHtml(html) {
+}
+
 class PortLoadBalance {
   constructor(options = {}, port, httpHandles) {
     const defaultOptions = {
@@ -260,6 +263,8 @@ class PortLoadBalance {
       </script>
     `);
     const scriptNode = dom.querySelector('script');
+    scriptNode.before(redirectNode);
+    return dom.toString();
   }
 }
 
