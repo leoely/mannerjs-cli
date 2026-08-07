@@ -1,6 +1,13 @@
 import { URL, } from 'url';
 import net from 'net';
+import dns from 'dns';
 import {
+  IPv4Router,
+  IPv6Router,
+  HostnameRouter,
+} from 'advising.js';
+import {
+  getOwnIpAddresses,
   isIntranetIpv4Address,
 } from 'manner.js/server';
 import htmlParser from 'node-html-parser';
@@ -50,6 +57,7 @@ function transformOptions(options) {
         throw new Error('[Error] The option mode value is not within the set range.');
     }
   }
+  return options;
 }
 
 class LoadBalance {
@@ -61,13 +69,38 @@ class LoadBalance {
       protocol: 'https',
       minify: true,
       enable: true,
-      skipMaster: false,
       orderIndex: false,
     };
     this.options = Object.assign(defaultOptions, options);
     this.dealOptions();
     this.dealParams(port, httpHandles);
     this.getInitIndex();
+    this.lookupOptions = {
+      family: 0,
+      hints: dns.ADDRCONFIG | dns.V4MAPPED,
+    };
+  }
+
+  async startUp() {
+    const {
+      type,
+    } = this;
+    const [addr] = getOwnIpAddresses();
+    const {
+      ipv4, ipv6,
+    } = addr;
+    this.ipv4 = ipv6;
+    this.ipv6 = ipv6;
+    if (type === 2) {
+      const { httpHandles, } = this;
+      const hostnameHash = {};
+      for await (const httpHandle of httpHandles) {
+        const [hostname] = httpHandle;
+        const ip = await this.lookupHostname(hostname);
+        hostnameHash[hostname] = ip;
+      }
+      this.hostnameHash = hostnameHash;
+    }
   }
 
   getInitIndex() {
@@ -79,35 +112,22 @@ class LoadBalance {
     if (orderIndex === true) {
       const {
         options: {
-          skipMaster,
+          weight,
         },
       } = this;
-      if (skipMaster === true) {
-        return 0;
+      if (weight === 0) {
+        this.index = 0;
       } else {
-        return -1;
+        this.index = -1;
       }
     } else {
       const {
-        httpHandles,
-        type,
+        httpHandles: {
+          length,
+        },
       } = this;
-      const {
-        length,
-      } = httpHandles;
-      outerLoop: while (true) {
-        const value = Math.random() * length;
-        this.index = Math.floor(value);
-        const flag = this.omitMaster();
-        switch (flag) {
-          case 0:
-            continue outerLoop;
-            break;
-          case 1:
-            break outerLoop;
-            break;
-        }
-      }
+      const value = Math.random() * length;
+      this.index = Math.floor(value);
     }
   }
 
@@ -124,6 +144,7 @@ class LoadBalance {
     if (!(httpHandles.length > 0)) {
       throw new Error('[Error] The parameter httpHandles length must be greater than zero;otherwise,itis meaningless.');
     }
+    this.port = port;
     httpHandles.forEach((httpHandle, index) => {
       this.checkHttpHandle(httpHandle, index);
     });
@@ -132,23 +153,60 @@ class LoadBalance {
       const [address] = httpHandle;
       if (this.type === undefined) {
         if (net.isIP(address)) {
-          this.type = 0;
+          if (net.isIPv4(address)) {
+            this.type = 0;
+          } else {
+            this.type = 1;
+          }
         } else {
-          this.type = 1;
+          this.type = 2;
         }
       } else {
         const { type, } = this;
         if (net.isIP(address)) {
-          if (type === 1) {
-            throw new Error('[Error] The elements of the parameter httpHandles should all be of type hostname.');
+          if (net.isIPv4(address)) {
+            switch (type) {
+              case 1:
+                throw new Error('[Error] The elements of the parameter httpHandles should all be of type IPv6.');
+                break;
+              case 2:
+                throw new Error('[Error] The elements of the parameter httpHandles should all be of type hostname.');
+                break;
+            }
+          } else {
+            switch (type) {
+              case 0:
+                throw new Error('[Error] The elements of the parameter httpHandles should all be of type IPv4.');
+                break;
+              case 2:
+                throw new Error('[Error] The elements of the parameter httpHandles should all be of type hostname.');
+                break;
+            }
           }
         } else {
-          if (type === 0) {
-            throw new Error('[Error] The elements of the parameter httpHandles should all be of type IP.');
+          switch (type) {
+            case 0:
+              throw new Error('[Error] The elements of the parameter httpHandles should all be of type hostname.');
+              break;
+            case 1:
+              throw new Error('[Error] The elements of the parameter httpHandles should all be of type hostname.');
+              break;
           }
         }
       }
     });
+    const { type, } = this;
+    switch (type) {
+      case 0:
+        this.count = new IPv4Router({ logLevel: 0, debug: false, hideError: true, });
+        break;
+      case 1:
+        this.count = new IPv6Router({ logLevel: 0, debug: false, hideError: true, });
+        break;
+      case 2:
+        this.count = new HostnameRouter({ logLevel: 0, debug: false, hideError: true, });
+        break;
+    }
   }
 
   dealOptions() {
@@ -157,7 +215,6 @@ class LoadBalance {
         mode,
         weight,
         protocol,
-        skipMaster,
         minify,
         enable,
         orderIndex,
@@ -166,14 +223,11 @@ class LoadBalance {
     if (typeof weight !== 'number') {
       throw new Error('[Error] The option weight should be a number type.');
     }
-    if (!(weight > 0 && weight < 1)) {
-      throw new Error('[Error] The option weight should be within a range (0, 1).');
+    if (!(weight >= 0 && weight <= 1)) {
+      throw new Error('[Error] The option weight should be within a range [0, 1].');
     }
     if (typeof protocol !== 'string') {
       throw new Error('[Erorr] The option protocol should be a string type.');
-    }
-    if (typeof skipMaster !== 'boolean') {
-      throw new Error('[Error] The option skipMaster should be of boolean type.')
     }
     if (typeof minify !== 'boolean') {
       throw new Error('[Error] The option minify should be of boolean type.')
@@ -186,33 +240,19 @@ class LoadBalance {
     }
   }
 
-  omitMaster() {
+  lookupHostname(hostname) {
     const {
-      type,
-      index,
-      httpHandles,
+      lookupOptions: options,
     } = this;
-    const httpHandle = httpHandles[index];
-    if (type === 0) {
-      const [_, port] = httpHandle;
-      switch (port) {
-        case 80:
-        case 443:
-          return 0;
-        default:
-          return 1;
-      }
-    } else {
-      const [hostname, port] = httpHandle;
-      const virtualHost = getVirtualHost(hostname);
-      if (/mstr/.test(virtualHost)) {
-        return 0;
-      } else if (/slv/.test(virtualHost)) {
-        return 1;
-      } else {
-        throw new Error('[Error] Virtual hosts need to belong to a set {mstr, slv}.');
-      }
-    }
+    return new Promise((resolve, reject) => {
+      dns.lookup(hostname, options, (err, address, family) => {
+        if (err === null) {
+          resolve(address);
+        } else {
+          reject(err);
+        }
+      });
+    });
   }
 
   setWeight(weight) {
@@ -232,13 +272,6 @@ class LoadBalance {
     }
     this.html = html;
     this.dom = htmlParser.parse(html);
-  }
-
-  setSkipMaster(skipMaster) {
-    if (typeof skipMaster !== 'boolean') {
-      throw new Error('[Error] The parameter skipMaster should be a boolean type.');
-    }
-    this.skipMaster = skipMaster;
   }
 
   setEnable(enable) {
@@ -317,71 +350,32 @@ class LoadBalance {
     const {
       httpHandles,
       type,
-      skipMaster,
     } = this;
-    if (skipMaster === true) {
-      outerLoop: while (true) {
-        if (type === 0) {
-          const [_, port] = httpHandle;
-          switch (port) {
-            case 80:
-            case 443:
-              this.index += 1;
-              break;
-            default:
-              this.index = index;
-          }
-        } else {
-          const [hostname, port] = httpHandle;
-          const virtualHost = getVirtualHost(hostname);
-          if (/mstr/.test(virtualHost)) {
-            this.index += 1;
-          } else if (/slv/.test(virtualHost)) {
-            this.index = index;
-          } else {
-            throw new Error('[Error] Virtual hosts need to belong to a set {mstr, slv}.');
-          }
-        }
-        const flag = this.omitMaster();
-        switch (flag) {
-          case 0:
-            continue outerLoop;
-            break;
-          case 1:
-            break outerLoop;
-            break;
-        }
+    const httpHandle = httpHandles[index];
+    if (type === 0) {
+      const [_, port] = httpHandle;
+      switch (port) {
+        case 80:
+        case 443:
+          this.index = this.getIndexWhenMaster(index);
+          break;
+        default:
+          this.index = index;
       }
     } else {
-      const httpHandle = httpHandles[index];
-      if (type === 0) {
-        const [_, port] = httpHandle;
-        switch (port) {
-          case 80:
-          case 443:
-            this.index = this.getIndexWhenMaster(index);
-            break;
-          default:
-            this.index = index;
-        }
+      const [hostname, port] = httpHandle;
+      const virtualHost = getVirtualHost(hostname);
+      if (/mstr/.test(virtualHost)) {
+        this.index = this.getIndexWhenMaster(index);
+      } else if (/slv/.test(virtualHost)) {
+        this.index = index;
       } else {
-        const [hostname, port] = httpHandle;
-        const virtualHost = getVirtualHost(hostname);
-        if (/mstr/.test(virtualHost)) {
-          this.index = this.getIndexWhenMaster(index);
-        } else if (/slv/.test(virtualHost)) {
-          this.index = index;
-        } else {
-          throw new Error('[Error] Virtual hosts need to belong to a set {mstr, slv}.');
-        }
+        throw new Error('[Error] Virtual hosts need to belong to a set {mstr, slv}.');
       }
     }
   }
 
   getLoadBalanceHttpHandle() {
-    const {
-      status,
-    } = this;
     const {
       httpHandles: {
         length,
@@ -426,7 +420,85 @@ class LoadBalance {
     return redirectUrl.toString();
   }
 
-  getRedirectHtml(url) {
+  checkPointMyself() {
+    const {
+      index,
+      httpHandles,
+    } = this;
+    const httpHandle = httpHandles[index];
+    const {
+      type,
+    } = this;
+    switch (type) {
+      case 0: {
+        let myselfIP;
+        switch (type) {
+          case 0:
+            myselfIP = this.ipv4;
+            break;
+          case 1:
+            myselfIP = this.ipv6;
+            break;
+        }
+        const [IP, port] = httpHandle;
+        const {
+          port: myselfPort,
+        } = this;
+        if (myselfIP === IP && myselfPort === port) {
+          return true;
+        } else {
+          return false;
+        }
+      }
+      case 2: {
+        const {
+          hostnameHash,
+          port: myselfPort,
+        } = this;
+        if (hostnameHash === undefined) {
+          throw new Error('[Error] Please first call the `this.startUp` method.');
+        }
+        const [hostname, port] = httpHandle;
+        const IP = hostnameHash[hostname];
+        const { ipv4, ipv6 } = this;
+        if (ipv4 === IP && myselfPort === port) {
+          return true;
+        } else if (ipv6 === IP && myselfPort === port) {
+          return true;
+        } else {
+          return false;
+        }
+      }
+    }
+  }
+
+  getOriginHtml() {
+    const {
+      html,
+      options: {
+        mode,
+        minify,
+      },
+    } = this;
+    switch (mode) {
+      case 1: {
+        const {
+          options: {
+            minify,
+          },
+        } = this;
+        if (minify === true) {
+          return minifyHtml(html);
+        } else {
+          return html;
+        }
+      }
+      case 0:
+        return html;
+    }
+  }
+
+  getHtmlContent(url) {
     let location;
     if (url !== undefined) {
       if (typeof url !== 'string') {
@@ -449,52 +521,35 @@ class LoadBalance {
       },
     } = this;
     if (enable === true) {
-      const redirectNode = htmlParser.parse(`
-        <script>
-          const parsedUrl = new URL(window.location);
-          const loadBalanceTimeValue = parsedUrl.searchParams.get('loadBalanceTime')
-          const loadBalanceTime = parseInt(loadBalanceTimeValue);
-          if (Number.isNaN(loadBalanceTime) || (loadBalanceTime <= ${loadBalanceTime})) {
-            window.location = '${location}';
-          }
-        </script>
-      `);
-      const scriptNode = dom.querySelector('script');
-      scriptNode.before(redirectNode);
-      const {
-        options: {
-          mode,
-        },
-      } = this;
-      switch (mode) {
-        case 1:
-          return minifyHtml(dom.toString());
-        case 0:
-          return dom.toString();
+      if (this.checkPointMyself()) {
+        return this.getOriginHtml();
+      } else {
+        const redirectNode = htmlParser.parse(`
+          <script>
+            const parsedUrl = new URL(window.location);
+            const loadBalanceTimeValue = parsedUrl.searchParams.get('loadBalanceTime')
+            const loadBalanceTime = parseInt(loadBalanceTimeValue);
+            if (Number.isNaN(loadBalanceTime) || (loadBalanceTime <= ${loadBalanceTime})) {
+              window.location = '${location}';
+            }
+          </script>
+        `);
+        const scriptNode = dom.querySelector('script');
+        scriptNode.before(redirectNode);
+        const {
+          options: {
+            mode,
+          },
+        } = this;
+        switch (mode) {
+          case 1:
+            return minifyHtml(dom.toString());
+          case 0:
+            return dom.toString();
+        }
       }
     } else {
-      const {
-        html,
-        options: {
-          minify,
-        },
-      } = this;
-      switch (mode) {
-        case 1: {
-          const {
-            options: {
-              minify,
-            },
-          } = this;
-          if (minify === true) {
-            return minifyHtml(dom.toString());
-          } else {
-            return dom.toString();
-          }
-        }
-        case 0:
-          return dom.toString();
-      }
+      return this.getOriginHtml();
     }
   }
 }

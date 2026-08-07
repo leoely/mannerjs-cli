@@ -1550,14 +1550,14 @@ acorn@^8.9.0:
   resolved "https://registry.yarnpkg.com/acorn/-/acorn-8.15.0.tgz#a360898bc415edaac46c8241f6383975b930b816"
   integrity sha512-NZyJarBfL7nWwIq+FDL6Zp/yHEhePMNnnJ0y3qfieCrmNvYct8uvtiV41UvlSe6apAfk0fY1FbWx+NwfmpvtTg==
 
-advising.js@^1.1.3:
-  version "1.1.3"
-  resolved "https://registry.yarnpkg.com/advising.js/-/advising.js-1.1.3.tgz#6b5d3bafc2d477f90453f76257668bc7763887c4"
-  integrity sha512-5BoHNzg2zLh95wUlQHxhRLQb1oiBbScXcD9CpXoAgWEerVw2TCa04XmK0a2BVRpRTDAsEvKFwOOpK19lvklLXA==
+advising.js@^1.3.7:
+  version "1.3.7"
+  resolved "https://registry.yarnpkg.com/advising.js/-/advising.js-1.3.7.tgz#aba8a91ed222f3c2e8532663a0fa96e2dfc37f3a"
+  integrity sha512-M1HcU6XJNd0586x26IWv7QqbrJ5S3mAQg8FBzj8PFhTCwCeY1mzVR4ppWX+nM+7fV1V0D+u+lquRkkOEIYAN8A==
   dependencies:
     fulmination "^1.1.31"
     gulp "^5.0.1"
-    manner.js "^1.1.4"
+    manner.js "^1.2.7"
 
 ajv@^6.12.4:
   version "6.12.6"
@@ -5118,15 +5118,6 @@ makeerror@1.0.12:
   integrity sha512-JmqCvUhmt43madlpFzG4BQzG2Z3m6tvQDNKdClZnO3VbIudJYmxsT0FNJMeiB2+JTSlTQTSbU8QdesVmwJcmLg==
   dependencies:
     tmpl "1.0.5"
-
-manner.js@^1.1.4:
-  version "1.1.4"
-  resolved "https://registry.yarnpkg.com/manner.js/-/manner.js-1.1.4.tgz#f0ebd15dac526a3b6a348dd70e2b086e0b128577"
-  integrity sha512-AME35QhegDgL2Q8AYOM/di+38Vi8b0cfWnUUKFaSycC0xX4uVemmT6kHHJY7wyzSSTfiQd0ynz4ZdLnRNULJ4A==
-  dependencies:
-    babel-plugin-root-import "^6.6.0"
-    gulp "^4.0.2"
-    node-fetch "2"
 
 manner.js@^1.2.7:
   version "1.2.7"
