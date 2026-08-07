@@ -242,17 +242,31 @@ class LoadBalance {
 
   lookupHostname(hostname) {
     const {
-      lookupOptions: options,
+      mode,
     } = this;
-    return new Promise((resolve, reject) => {
-      dns.lookup(hostname, options, (err, address, family) => {
-        if (err === null) {
-          resolve(address);
-        } else {
-          reject(err);
-        }
-      });
-    });
+    switch (mode) {
+      case 0: {
+        const {
+          CNAME_HASH,
+        } = this;
+        return Promise.resolve(CNAME_HASH[hostname]);
+        break;
+      }
+      case 1: {
+        const {
+          lookupOptions: options,
+        } = this;
+        return new Promise((resolve, reject) => {
+          dns.lookup(hostname, options, (err, address, family) => {
+            if (err === null) {
+              resolve(address);
+            } else {
+              reject(err);
+            }
+          });
+        });
+      }
+    }
   }
 
   setWeight(weight) {
@@ -290,6 +304,13 @@ class LoadBalance {
         this.loadBalanceTime = Date.now();
         break;
     }
+  }
+
+  setTemporaryCNAME_HASH(CNAME_HASH) {
+    if (!(typeof CNAME_HASH === 'object' && !Array.isArray(CNAME_HASH) && CNAME_HASH!== null)) {
+      throw new Error('[Error] The parameter CNAME should be an object type.');
+    }
+    this.CNAME_HASH = CNAME_HASH;
   }
 
   checkHttpHandle(httpHandle, index) {
@@ -498,13 +519,13 @@ class LoadBalance {
     }
   }
 
-  getHtmlContent(url) {
+  getHtmlContent(url, site) {
     let location;
-    if (url !== undefined) {
-      if (typeof url !== 'string') {
-        throw new Error('[Error] The parameter url should be a string type.');
+    if (site !== undefined) {
+      if (typeof site !== 'string') {
+        throw new Error('[Error] The parameter site should be a string type.');
       }
-      location = url;
+      location = site;
     } else {
       location = this.getLocation(url, true);
     }
@@ -544,8 +565,18 @@ class LoadBalance {
         switch (mode) {
           case 1:
             return minifyHtml(dom.toString());
-          case 0:
-            return dom.toString();
+          case 0: {
+            const {
+              options: {
+                minify,
+              },
+            } = this;
+            if (minify === true) {
+              return minifyHtml(dom.toString());
+            } else {
+              return dom.toString();
+            }
+          }
         }
       }
     } else {
