@@ -29,26 +29,45 @@ function minifyHtml(html) {
   });
 }
 
+function transformOptions(options) {
+  const {
+    mode,
+  } = options;
+  if (typeof mode !== 'string') {
+    if (typeof mode !== 'number') {
+      throw new Error('[Erorr] The option mode should be a string type.');
+    }
+  }
+  if (mode !== undefined) {
+    switch (mode) {
+      case 'default':
+        options.mode = 1;
+        break;
+      case 'test':
+        options.mode = 0;
+        break;
+      default:
+        throw new Error('[Error] The option mode value is not within the set range.');
+    }
+  }
+}
+
 class LoadBalance {
   constructor(options = {}, port, httpHandles) {
+    options = transformOptions(options);
     const defaultOptions = {
       weight: 0.5,
       mode: 1,
       protocol: 'https',
       minify: true,
       enable: true,
-      first: false,
+      skipMaster: false,
       orderIndex: false,
     };
     this.options = Object.assign(defaultOptions, options);
     this.dealOptions();
     this.dealParams(port, httpHandles);
-    this.index = this.getInitIndex();
-  }
-
-  static getProcessHeapUsed() {
-    const memoryUsage = process.memoryUsage();
-    return memoryUsage.heapUsed;
+    this.getInitIndex();
   }
 
   getInitIndex() {
@@ -60,22 +79,35 @@ class LoadBalance {
     if (orderIndex === true) {
       const {
         options: {
-          first,
+          skipMaster,
         },
       } = this;
-      if (first === true) {
+      if (skipMaster === true) {
         return 0;
       } else {
         return -1;
       }
     } else {
       const {
-        httpHandles: {
-          length,
-        },
+        httpHandles,
+        type,
       } = this;
-      const value = Math.random() * length;
-      return Math.floor(value);
+      const {
+        length,
+      } = httpHandles;
+      outerLoop: while (true) {
+        const value = Math.random() * length;
+        this.index = Math.floor(value);
+        const flag = this.omitMaster();
+        switch (flag) {
+          case 0:
+            continue outerLoop;
+            break;
+          case 1:
+            break outerLoop;
+            break;
+        }
+      }
     }
   }
 
@@ -125,7 +157,7 @@ class LoadBalance {
         mode,
         weight,
         protocol,
-        first,
+        skipMaster,
         minify,
         enable,
         orderIndex,
@@ -137,11 +169,11 @@ class LoadBalance {
     if (!(weight > 0 && weight < 1)) {
       throw new Error('[Error] The option weight should be within a range (0, 1).');
     }
-    if (typeof mode !== 'number') {
-      throw new Error('[Erorr] The option mode should be a number type.');
-    }
     if (typeof protocol !== 'string') {
       throw new Error('[Erorr] The option protocol should be a string type.');
+    }
+    if (typeof skipMaster !== 'boolean') {
+      throw new Error('[Error] The option skipMaster should be of boolean type.')
     }
     if (typeof minify !== 'boolean') {
       throw new Error('[Error] The option minify should be of boolean type.')
@@ -151,6 +183,35 @@ class LoadBalance {
     }
     if (typeof orderIndex !== 'boolean') {
       throw new Error('[Error] The options orderIndex should be of boolean type.');
+    }
+  }
+
+  omitMaster() {
+    const {
+      type,
+      index,
+      httpHandles,
+    } = this;
+    const httpHandle = httpHandles[index];
+    if (type === 0) {
+      const [_, port] = httpHandle;
+      switch (port) {
+        case 80:
+        case 443:
+          return 0;
+        default:
+          return 1;
+      }
+    } else {
+      const [hostname, port] = httpHandle;
+      const virtualHost = getVirtualHost(hostname);
+      if (/mstr/.test(virtualHost)) {
+        return 0;
+      } else if (/slv/.test(virtualHost)) {
+        return 1;
+      } else {
+        throw new Error('[Error] Virtual hosts need to belong to a set {mstr, slv}.');
+      }
     }
   }
 
@@ -173,11 +234,11 @@ class LoadBalance {
     this.dom = htmlParser.parse(html);
   }
 
-  setFirst(first) {
-    if (typeof first !== 'boolean') {
-      throw new Error('[Error] The parameter first should be a boolean type.');
+  setSkipMaster(skipMaster) {
+    if (typeof skipMaster !== 'boolean') {
+      throw new Error('[Error] The parameter skipMaster should be a boolean type.');
     }
-    this.first = first;
+    this.skipMaster = skipMaster;
   }
 
   setEnable(enable) {
@@ -253,30 +314,66 @@ class LoadBalance {
   }
 
   dealDifferentNode(index) {
-    this.index = index;
     const {
       httpHandles,
       type,
+      skipMaster,
     } = this;
-    if (type === 0) {
-      const [_, port] = httpHandles[index];
-      switch (port) {
-        case 80:
-        case 443:
-          this.index = this.getIndexWhenMaster(index);
-          break;
-        default:
-          this.index = index;
+    if (skipMaster === true) {
+      outerLoop: while (true) {
+        if (type === 0) {
+          const [_, port] = httpHandle;
+          switch (port) {
+            case 80:
+            case 443:
+              this.index += 1;
+              break;
+            default:
+              this.index = index;
+          }
+        } else {
+          const [hostname, port] = httpHandle;
+          const virtualHost = getVirtualHost(hostname);
+          if (/mstr/.test(virtualHost)) {
+            this.index += 1;
+          } else if (/slv/.test(virtualHost)) {
+            this.index = index;
+          } else {
+            throw new Error('[Error] Virtual hosts need to belong to a set {mstr, slv}.');
+          }
+        }
+        const flag = this.omitMaster();
+        switch (flag) {
+          case 0:
+            continue outerLoop;
+            break;
+          case 1:
+            break outerLoop;
+            break;
+        }
       }
     } else {
-      const [hostname, port] = httpHandles[index];
-      const virtualHost = getVirtualHost(hostname);
-      if (/mstr/.test(virtualHost)) {
-        this.index = this.getIndexWhenMaster(index);
-      } else if (/slv/.test(virtualHost)) {
-        this.index = index;
+      const httpHandle = httpHandles[index];
+      if (type === 0) {
+        const [_, port] = httpHandle;
+        switch (port) {
+          case 80:
+          case 443:
+            this.index = this.getIndexWhenMaster(index);
+            break;
+          default:
+            this.index = index;
+        }
       } else {
-        throw new Error('[Error] Virtual hosts need to belong to a set {mstr, slv}.');
+        const [hostname, port] = httpHandle;
+        const virtualHost = getVirtualHost(hostname);
+        if (/mstr/.test(virtualHost)) {
+          this.index = this.getIndexWhenMaster(index);
+        } else if (/slv/.test(virtualHost)) {
+          this.index = index;
+        } else {
+          throw new Error('[Error] Virtual hosts need to belong to a set {mstr, slv}.');
+        }
       }
     }
   }
@@ -345,14 +442,6 @@ class LoadBalance {
     } = this;
     if (dom === undefined) {
       throw new Error('[Error] Please first set the load balancing related HTML content use the setHtml method.');
-    }
-    const {
-      options: {
-        first,
-      },
-    } = this;
-    if (first === true) {
-      this.options.enbale = true;
     }
     const {
       options: {
