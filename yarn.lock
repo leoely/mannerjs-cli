@@ -1550,10 +1550,10 @@ acorn@^8.9.0:
   resolved "https://registry.yarnpkg.com/acorn/-/acorn-8.15.0.tgz#a360898bc415edaac46c8241f6383975b930b816"
   integrity sha512-NZyJarBfL7nWwIq+FDL6Zp/yHEhePMNnnJ0y3qfieCrmNvYct8uvtiV41UvlSe6apAfk0fY1FbWx+NwfmpvtTg==
 
-advising.js@^1.3.7:
-  version "1.3.7"
-  resolved "https://registry.yarnpkg.com/advising.js/-/advising.js-1.3.7.tgz#aba8a91ed222f3c2e8532663a0fa96e2dfc37f3a"
-  integrity sha512-M1HcU6XJNd0586x26IWv7QqbrJ5S3mAQg8FBzj8PFhTCwCeY1mzVR4ppWX+nM+7fV1V0D+u+lquRkkOEIYAN8A==
+advising.js@^1.3.9:
+  version "1.3.9"
+  resolved "https://registry.yarnpkg.com/advising.js/-/advising.js-1.3.9.tgz#7a2e6812498f991091359b8ee8531ac9f333814c"
+  integrity sha512-dozNjRmQNIz3fk41jItu0oy4y1rd6psdLiVr/usk4guJn5ATOh5AdqQ7gRxxZmwLCRjysvnRN1GMnDSi3otdPA==
   dependencies:
     fulmination "^1.1.31"
     gulp "^5.0.1"

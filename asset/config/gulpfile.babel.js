@@ -4,24 +4,32 @@ import babel from 'gulp-babel';
 function buildJs() {
   return src('src/server/**/*.js')
     .pipe(babel({
-      presets: [
+      "presets": [
         [
-          '@babel/preset-env',
+          "@babel/preset-env",
           {
-            'targets': {
-              'node': 'current'
+            "targets": {
+              "node": "current"
             }
           },
-        ]
-      ],
-      plugins: [
+        ],
         [
-          'babel-plugin-root-import',
+          "minify",
           {
-            'paths': [
+            "keepClassName": true,
+            "keepFnName": true,
+            "builtIns": false
+          },
+        ],
+      ],
+      "plugins": [
+        [
+          "babel-plugin-root-import",
+          {
+            "paths": [
               {
-                'rootPathSuffix': './src',
-                'rootPathPrefix': '~/'
+                "rootPathSuffix": "./src",
+                "rootPathPrefix": "~/"
               },
             ]
           }

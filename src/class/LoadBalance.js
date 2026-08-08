@@ -1,11 +1,8 @@
 import { URL, } from 'url';
 import net from 'net';
 import dns from 'dns';
-import {
-  IPv4Router,
-  IPv6Router,
-  HostnameRouter,
-} from 'advising.js';
+import { performance, } from 'perf_hooks';
+import { HostRouter, } from 'advising.js';
 import {
   getOwnIpAddresses,
   isIntranetIpv4Address,
@@ -70,15 +67,41 @@ class LoadBalance {
       minify: true,
       enable: true,
       orderIndex: false,
+      timeInterval: 20,
+      logLevel: 0,
     };
     this.options = Object.assign(defaultOptions, options);
     this.dealOptions();
     this.dealParams(port, httpHandles);
     this.getInitIndex();
+    this.average = {};
+    this.number = {};
+    const {
+      number,
+    } = this;
+    number.time = 0;
+    number.myself = 0;
+    number.redirect = 0;
     this.lookupOptions = {
       family: 0,
       hints: dns.ADDRCONFIG | dns.V4MAPPED,
     };
+    this.count = new HostRouter({ logLevel: 0, debug: false, hideError: true, });
+  }
+
+  emptyCache() {
+    this.average = {};
+    this.number = {};
+    const {
+      number,
+    } = this;
+    number.redirect = 0;
+    number.myself = 0;
+    number.time = 0;
+    const {
+      count,
+    } = this;
+    count.ruinAll();
   }
 
   async startUp() {
@@ -93,9 +116,15 @@ class LoadBalance {
       const { httpHandles, } = this;
       const hostnameHash = {};
       for await (const httpHandle of httpHandles) {
-        const [hostname] = httpHandle;
+        const [hostname, port] = httpHandle;
         const ip = await this.lookupHostname(hostname);
         hostnameHash[hostname] = ip;
+        const {
+          port: myselfPort,
+        } = this;
+        if ((ip === ipv4 || ip === ipv6) && (port === myselfPort)) {
+          this.hostname = hostname;
+        }
       }
       this.hostnameHash = hostnameHash;
     }
@@ -298,18 +327,6 @@ class LoadBalance {
       }
     });
     this.httpHandles = httpHandles;
-    const { type, } = this;
-    switch (type) {
-      case 0:
-        this.count = new IPv4Router({ logLevel: 0, debug: false, hideError: true, });
-        break;
-      case 1:
-        this.count = new IPv6Router({ logLevel: 0, debug: false, hideError: true, });
-        break;
-      case 2:
-        this.count = new HostnameRouter({ logLevel: 0, debug: false, hideError: true, });
-        break;
-    }
   }
 
   dealOptions() {
@@ -321,6 +338,8 @@ class LoadBalance {
         minify,
         enable,
         orderIndex,
+        timeInterval,
+        logLevel,
       },
     } = this;
     if (typeof weight !== 'number') {
@@ -340,6 +359,18 @@ class LoadBalance {
     }
     if (typeof orderIndex !== 'boolean') {
       throw new Error('[Error] The options orderIndex should be of boolean type.');
+    }
+    if (!Number.isInteger(timeInterval)) {
+      throw new Error('[Error] The option timeInterval should be an integer type.');
+    }
+    if (!(timeInterval > 0)) {
+      throw new Error('[Error] The option timeInterval should be a positive integer type.');
+    }
+    if (!Number.isInteger(logLevel)) {
+      throw new Error('[Error] The option logLevel should be an integer type.');
+    }
+    if (!(logLevel === 0 || logLevel === 1 || logLevel === 2)) {
+      throw new Error('[Error] The option logLevel should be in the set {0, 1, 2}.');
     }
   }
 
@@ -581,6 +612,73 @@ class LoadBalance {
     }
   }
 
+  getLoadValue() {
+    const {
+      average,
+      number,
+    } = this;
+    const ratio = average.redirect / average.myself;
+    return number.myself + number.redirect * ratio;
+  }
+
+  clearLoadValue() {
+    this.number = {};
+    this.average = {};
+  }
+
+  recordStartTime() {
+    const {
+      options: {
+        enable,
+        timeInterval,
+      },
+      number,
+    } = this;
+    number.time += 1;
+    if (number.time === timeInterval) {
+      number.time = 0;
+      if (enable === true) {
+        this.startTime = performance.now();
+      }
+    }
+  }
+
+  updateTwoSituationAverage() {
+    const {
+      number,
+      timeInterval,
+    } = this;
+    if (number.time === timeInterval) {
+      const {
+        situation,
+        startTime,
+        average,
+      } = this;
+      const endTime = performance.now();
+      const timeSpent = startTime - endTime;
+      switch (situation) {
+        case 0: {
+          if (average.myself === undefined) {
+            average.myself = timeSpent;
+          } else {
+            average.myself = (timeSpent + average.myself) / 2;
+          }
+          break;
+        }
+        case 1: {
+          if (average.redirect === undefined) {
+            average.redirect = timeSpent;
+          } else {
+            average.redirec = (timeSpent + average.redirect) / 2;
+          }
+          break;
+        }
+      }
+      delete this.startTime;
+      delete this.situation;
+    }
+  }
+
   getHtmlContent(url, site) {
     let location;
     if (site !== undefined) {
@@ -589,6 +687,7 @@ class LoadBalance {
       }
       location = site;
     } else {
+      this.recordStartTime();
       location = this.getLocation(url, true);
     }
     const {
@@ -605,8 +704,13 @@ class LoadBalance {
     } = this;
     if (enable === true) {
       if (this.checkPointMyself() && site === undefined) {
-        return this.getOriginHtml();
+        this.situation = 0;
+        const originHtml = this.getOriginHtml();
+        this.updateTwoSituationAverage();
+        this.myselfCount += 1;
+        return originHtml;
       } else {
+        this.situation = 1;
         const redirectNode = htmlParser.parse(`
           <script>
             const parsedUrl = new URL(window.location);
@@ -632,7 +736,10 @@ class LoadBalance {
         } = this;
         switch (mode) {
           case 1:
-            return minifyHtml(dom.toString());
+            const compressedHtml = minifyHtml(dom.toString());
+            this.updateTwoSituationAverage();
+            this.redirectCount += 1;
+            return compressedHtml;
           case 0: {
             const {
               options: {
@@ -640,15 +747,25 @@ class LoadBalance {
               },
             } = this;
             if (minify === true) {
-              return minifyHtml(dom.toString());
+              const compressedHtml = minifyHtml(dom.toString());
+              this.updateTwoSituationAverage();
+              this.redirectCount += 1;
+              return compressedHtml;
             } else {
-              return dom.toString();
+              const newHtml = dom.toString();
+              this.updateTwoSituationAverage();
+              this.redirectCount += 1;
+              return newHtml;
             }
           }
         }
       }
     } else {
-      return this.getOriginHtml();
+      this.situation = 1;
+      const originHtml = this.getOriginHtml();
+      this.updateTwoSituationAverage();
+      this.redirectCount += 1;
+      return originHtml;
     }
   }
 }
