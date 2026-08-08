@@ -86,10 +86,8 @@ class LoadBalance {
       type,
     } = this;
     const [addr] = getOwnIpAddresses();
-    const {
-      ipv4, ipv6,
-    } = addr;
-    this.ipv4 = ipv6;
+    const { ipv4, ipv6, } = addr;
+    this.ipv4 = ipv4;
     this.ipv6 = ipv6;
     if (type === 2) {
       const { httpHandles, } = this;
@@ -100,6 +98,88 @@ class LoadBalance {
         hostnameHash[hostname] = ip;
       }
       this.hostnameHash = hostnameHash;
+    }
+  }
+
+  checkHttpHandle(httpHandle) {
+    const [address, port] = httpHandle;
+    if (/^(([a-zA-Z0-9]|[a-zA-Z0-9][a-zA-Z0-9\-]*[a-zA-Z0-9])\.)*([A-Za-z0-9]|[A-Za-z0-9][A-Za-z0-9\-]*[A-Za-z0-9])$/.test(address)) {
+      const hostname = address;
+      const virtualHost = getVirtualHost(hostname);
+      if (/mstr/.test(virtualHost)) {
+      } else if (/slv/.test(virtualHost)) {
+      } else {
+        throw new Error('[Error] The virtual host of the httpHandle parameter need to belong to a set {mstr, slv}.');
+      }
+      const {
+        type,
+      } = this;
+      switch (type) {
+        case 0:
+          throw new Error('[Error] The address of the httpHandle parameter should be of ipv4 type.');
+        case 1:
+          throw new Error('[Error] The address of the httpHandle parameter should be of ipv6 type.');
+      }
+    } else if (net.isIP(address)) {
+      if (net.isIPv4(address)) {
+        const {
+          mode,
+        } = this;
+        if (mode === 1 && isIntranetIpv4Address(address)) {
+          throw new Error('[Error] Internal IP addresses are not used in the default mode.');
+        }
+        const {
+          type,
+        } = this;
+        switch (type) {
+          case 1:
+            throw new Error('[Error] The address of the httpHandle parameter should be of ipv6 type.');
+          case 2:
+            throw new Error('[Error] The address of the httpHandle parameter should be of hostname type.');
+        }
+      } else {
+        const {
+          type,
+        } = this;
+        switch (type) {
+          case 0:
+            throw new Error('[Error] The address of the httpHandle parameter should be of ipv4 type.');
+          case 2:
+            throw new Error('[Error] The address of the httpHandle parameter should be of hostname type.');
+        }
+      }
+    } else {
+      throw new Error('[Error] The address of the httpHandle parameter is not a valid domain name or IP address.');
+    }
+    if (!Number.isInteger(port)) {
+      throw new Error('[Error] The port of the httpHandle parameter should be an integer type.');
+    }
+    if (!(port > 0)) {
+      throw new Error('[Error] The port of the  httpHandle parameter should be a  postive integer type.');
+    }
+  }
+
+  addHttpHandle(httpHandle) {
+    this.checkHttpHandle(httpHandle);
+    this.httpHandles.push(httpHandle);
+  }
+
+  removeHttpHandle(httpHandle) {
+    this.checkHttpHandle(httpHandle);
+    const {
+      httpHandles,
+    } = this;
+    let remove = false;
+    httpHandles.filter(([address, port]) => {
+      if (address === httpHandle.address && port === httpHandle.port) {
+        remove = true;
+        return false;
+      } else {
+        return true;
+      }
+    });
+    if (remove === false) {
+      throw new Error('[Error] The httpHandle that needs to be removed dost not exist,the deletion did not take effect.');
     }
   }
 
@@ -146,11 +226,33 @@ class LoadBalance {
     }
     this.port = port;
     httpHandles.forEach((httpHandle, index) => {
-      this.checkHttpHandle(httpHandle, index);
-    });
-    this.httpHandles = httpHandles;
-    this.httpHandles.forEach((httpHandle) => {
-      const [address] = httpHandle;
+      const [address, port] = httpHandle;
+      if (/^(([a-zA-Z0-9]|[a-zA-Z0-9][a-zA-Z0-9\-]*[a-zA-Z0-9])\.)*([A-Za-z0-9]|[A-Za-z0-9][A-Za-z0-9\-]*[A-Za-z0-9])$/.test(address)) {
+        const hostname = address;
+        const virtualHost = getVirtualHost(hostname);
+        if (/mstr/.test(virtualHost)) {
+        } else if (/slv/.test(virtualHost)) {
+        } else {
+          throw new Error('[Error] The virtual host of the' + index + ' element  of the httpHandless parameter need to belong to a set {mstr, slv}.');
+        }
+      } else if (net.isIP(address)) {
+        if (net.isIPv4(address)) {
+          const {
+            mode,
+          } = this;
+          if (mode === 1 && isIntranetIpv4Address(address)) {
+            throw new Error('[Error] Internal IP addresses are not used in the default mode.');
+          }
+        }
+      } else {
+        throw new Error('[Error] The address of the ' + index + ' element of the httpHandles parameter is not a valid domain name or IP address.');
+      }
+      if (!Number.isInteger(port)) {
+        throw new Error('[Error] The port of the ' + index + ' element of the httpHandles parameter should be an integer type.');
+      }
+      if (!(port > 0)) {
+        throw new Error('[Error] The port of the ' + index + ' element of the httpHandles parameter should be a  postive integer type.');
+      }
       if (this.type === undefined) {
         if (net.isIP(address)) {
           if (net.isIPv4(address)) {
@@ -195,6 +297,7 @@ class LoadBalance {
         }
       }
     });
+    this.httpHandles = httpHandles;
     const { type, } = this;
     switch (type) {
       case 0:
@@ -242,15 +345,16 @@ class LoadBalance {
 
   lookupHostname(hostname) {
     const {
-      mode,
+      options: {
+        mode,
+      },
     } = this;
     switch (mode) {
       case 0: {
         const {
-          CNAME_HASH,
+          hostnameResolve,
         } = this;
-        return Promise.resolve(CNAME_HASH[hostname]);
-        break;
+        return Promise.resolve(hostnameResolve[hostname]);
       }
       case 1: {
         const {
@@ -306,41 +410,11 @@ class LoadBalance {
     }
   }
 
-  setTemporaryCNAME_HASH(CNAME_HASH) {
-    if (!(typeof CNAME_HASH === 'object' && !Array.isArray(CNAME_HASH) && CNAME_HASH!== null)) {
-      throw new Error('[Error] The parameter CNAME should be an object type.');
+  setTemporaryHostnameResolve(hostnameResolve) {
+    if (!(typeof hostnameResolve === 'object' && !Array.isArray(hostnameResolve) && hostnameResolve !== null)) {
+      throw new Error('[Error] The parameter hostnameResolve should be an object type.');
     }
-    this.CNAME_HASH = CNAME_HASH;
-  }
-
-  checkHttpHandle(httpHandle, index) {
-    const [address, port] = httpHandle;
-    if (/^(([a-zA-Z0-9]|[a-zA-Z0-9][a-zA-Z0-9\-]*[a-zA-Z0-9])\.)*([A-Za-z0-9]|[A-Za-z0-9][A-Za-z0-9\-]*[A-Za-z0-9])$/.test(address)) {
-      const hostname = address;
-      const virtualHost = getVirtualHost(hostname);
-      if (/mstr/.test(virtualHost)) {
-      } else if (/slv/.test(virtualHost)) {
-      } else {
-        throw new Error('[Error] Virtual hosts need to belong to a set {mstr, slv}.');
-      }
-    } else if (net.isIP(address)) {
-      if (net.isIPv4(address)) {
-        const {
-          mode,
-        } = this;
-        if (mode === 1 && isIntranetIpv4Address(address)) {
-          throw new Error('[Error] Internal IP addresses are not used in the default mode.');
-        }
-      }
-    } else {
-      throw new Error('[Error] The address of the ' + index + ' element of the httpHandles parameter is not a valid domain name or IP address.');
-    }
-    if (!Number.isInteger(port)) {
-      throw new Error('[Error] The port of the ' + index + ' element of the httpHandles parameter should be an integer type.');
-    }
-    if (!(port > 0)) {
-      throw new Error('[Error] The port of the ' + index + ' element of the httpHandles parameter should be a  postive integer type.');
-    }
+    this.hostnameResolve = hostnameResolve;
   }
 
   getIndexWhenMaster(index) {
@@ -497,25 +571,13 @@ class LoadBalance {
     const {
       html,
       options: {
-        mode,
         minify,
       },
     } = this;
-    switch (mode) {
-      case 1: {
-        const {
-          options: {
-            minify,
-          },
-        } = this;
-        if (minify === true) {
-          return minifyHtml(html);
-        } else {
-          return html;
-        }
-      }
-      case 0:
-        return html;
+    if (minify === true) {
+      return minifyHtml(html);
+    } else {
+      return html;
     }
   }
 
@@ -542,7 +604,7 @@ class LoadBalance {
       },
     } = this;
     if (enable === true) {
-      if (this.checkPointMyself()) {
+      if (this.checkPointMyself() && site === undefined) {
         return this.getOriginHtml();
       } else {
         const redirectNode = htmlParser.parse(`
@@ -557,6 +619,12 @@ class LoadBalance {
         `);
         const scriptNode = dom.querySelector('script');
         scriptNode.before(redirectNode);
+        const allLinkNode = dom.querySelectorAll('link');
+        allLinkNode.forEach((linkNode) => {
+          linkNode.remove();
+        });
+        const bodyNode = dom.querySelector('body');
+        bodyNode.innerHTML = '';
         const {
           options: {
             mode,
