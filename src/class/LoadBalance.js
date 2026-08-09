@@ -89,6 +89,19 @@ class LoadBalance {
     this.count = new HostRouter({ logLevel: 0, debug: false, hideError: true, });
   }
 
+  static getDeltaWeightWhenSlaveEnable(m2, r2, f, w) {
+    return (m2 + w * r2 - f * m2 - f * w * r2) / (1 - r2);
+  }
+
+  static getDeltaWeightWhenSlaveDisable(r1, m2, f) {
+    return (m2 * (1 - f)) / r1;
+  }
+
+  getLoadValueFactor(l2) {
+    const l1 = this.getLoadValue();
+    return l1 / l2;
+  }
+
   emptyCache() {
     this.average = {};
     this.number = {};
@@ -385,23 +398,31 @@ class LoadBalance {
         const {
           hostnameResolve,
         } = this;
-        return Promise.resolve(hostnameResolve[hostname]);
+        if (hostnameResolve === undefined) {
+          return this.lookupPromises(hostname);
+        } else {
+          return Promise.resolve(hostnameResolve[hostname]);
+        }
       }
       case 1: {
-        const {
-          lookupOptions: options,
-        } = this;
-        return new Promise((resolve, reject) => {
-          dns.lookup(hostname, options, (err, address, family) => {
-            if (err === null) {
-              resolve(address);
-            } else {
-              reject(err);
-            }
-          });
-        });
+        return this.lookupPromises(hostname);
       }
     }
+  }
+
+  lookupPromises(hostname) {
+    const {
+      lookupOptions: options,
+    } = this;
+    return new Promise((resolve, reject) => {
+      dns.lookup(hostname, options, (err, address, family) => {
+        if (err === null) {
+          resolve(address);
+        } else {
+          reject(err);
+        }
+      });
+    });
   }
 
   setWeight(weight) {
@@ -586,10 +607,17 @@ class LoadBalance {
         }
         const [hostname, port] = httpHandle;
         const IP = hostnameHash[hostname];
-        const { ipv4, ipv6 } = this;
+        const {
+          options: {
+            mode,
+          },
+          ipv4, ipv6,
+        } = this;
         if (ipv4 === IP && myselfPort === port) {
           return true;
         } else if (ipv6 === IP && myselfPort === port) {
+          return true;
+        } else if (mode === 0 && IP === '127.0.0.1' && myselfPort === port) {
           return true;
         } else {
           return false;
@@ -610,6 +638,20 @@ class LoadBalance {
     } else {
       return html;
     }
+  }
+
+  getRedirectValue() {
+    const {
+      average,
+    } = this;
+    return average.redirect;
+  }
+
+  getMyselfValue() {
+    const {
+      average,
+    } = this;
+    return average.myself;
   }
 
   getLoadValue() {
