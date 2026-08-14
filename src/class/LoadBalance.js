@@ -4,6 +4,7 @@ import dns from 'dns';
 import { performance, } from 'perf_hooks';
 import { HostRouter, } from 'advising.js';
 import {
+  getAddress,
   getOwnIpAddresses,
   isIntranetIpv4Address,
 } from 'manner.js/server';
@@ -57,6 +58,26 @@ function transformOptions(options) {
   return options;
 }
 
+function handleWeightBoundary(weight) {
+  if (weight < 1 && weight > 0) {
+    return weight;
+  }
+  if (weight >= 1) {
+    return 1;
+  }
+  if (weigth <= 0) {
+    return 0;
+  }
+}
+
+function getAverage(average) {
+  if (average !== undefined) {
+    return average;
+  } else {
+    return 0;
+  }
+}
+
 class LoadBalance {
   constructor(options = {}, port, httpHandles) {
     options = transformOptions(options);
@@ -89,17 +110,50 @@ class LoadBalance {
     this.count = new HostRouter({ logLevel: 0, debug: false, hideError: true, });
   }
 
-  static getDeltaWeightWhenSlaveEnable(m2, r2, f, w) {
-    return (m2 + w * r2 - f * m2 - f * w * r2) / (1 - r2);
+  static getDeltaWeightWhenSlaveEnable(loadBalance1, loadBalance2) {
+    if (!(loadBalance1 instanceof LoadBalancee)) {
+      throw new Error('[Error] The parameter loadBalance1 should be of type LoadBalance.');
+    }
+    if (!(loadBalance2 instanceof LoadBalancee)) {
+      throw new Error('[Error] The parameter loadBalance2 should be of type LoadBalance.');
+    }
+    const m2 = loadBalance2.getMyselfValue();
+    const r2 = loadBalance2.getRedirectValue();
+    const f = getLoadValueFactor(loadBalance1, loadBalance2);
+    const w = loadBalance1.getWeightValue();
+    const newWeight = (m2 + w * r2 - f * m2 - f * w * r2) / (1 - r2);
+    return handleWeightBoundary(newWeight);
   }
 
-  static getDeltaWeightWhenSlaveDisable(r1, m2, f) {
-    return (m2 * (1 - f)) / r1;
+  static getDeltaWeightWhenSlaveDisable(loadBalance1, loadBalance2) {
+    if (!(loadBalance1 instanceof LoadBalancee)) {
+      throw new Error('[Error] The parameter loadBalance1 should be of type LoadBalance.');
+    }
+    if (!(loadBalance2 instanceof LoadBalancee)) {
+      throw new Error('[Error] The parameter loadBalance2 should be of type LoadBalance.');
+    }
+    const r1 = loadBalance1.getRedirectValue();
+    const m2 = loadBalance2.getMyselfValue();
+    const f = getLoadValueFactor(loadBalance1, loadBalance2);
+    const newWeight = (m2 * (1 - f)) / r1;
+    return handleWeightBoundary(newWeight);
   }
 
-  getLoadValueFactor(l2) {
-    const l1 = this.getLoadValue();
+  static getLoadValueFactor(loadBalance1, loadBalance2) {
+    if (!(loadBalance1 instanceof LoadBalancee)) {
+      throw new Error('[Error] The parameter loadBalance1 should be of type LoadBalance.');
+    }
+    if (!(loadBalance2 instanceof LoadBalancee)) {
+      throw new Error('[Error] The parameter loadBalance2 should be of type LoadBalance.');
+    }
+    const l1 = loadBalance1.getLoadValue();
+    const l2 = loadBalance1.getLoadValue();
     return l1 / l2;
+  }
+
+  setAllHttpHandles(httpHandles) {
+    this.checkHttpHandle(httpHandle);
+    this.httpHandles = httpHandles;
   }
 
   emptyCache() {
@@ -199,11 +253,6 @@ class LoadBalance {
     if (!(port > 0)) {
       throw new Error('[Error] The port of the  httpHandle parameter should be a  postive integer type.');
     }
-  }
-
-  addHttpHandle(httpHandle) {
-    this.checkHttpHandle(httpHandle);
-    this.httpHandles.push(httpHandle);
   }
 
   removeHttpHandle(httpHandle) {
@@ -553,17 +602,28 @@ class LoadBalance {
         throw new Error('[Error] The parameter timestamp should a boolean type.');
       }
     }
-    const [address, port] = this.getLoadBalanceHttpHandle();
+    const [hostname, port] = this.getLoadBalanceHttpHandle();
     const {
       options: {
         protocol,
       },
     } = this;
-    const redirectUrl = new URL(protocol + '://' + address + ':' + port + url);
+    const redirectUrl = new URL(protocol + '://' + hostname + ':' + port + url);
     if (timestamp === true) {
       const time = Date.now();
       redirectUrl.searchParams.set('loadBalanceTime', time);
     }
+    const {
+      count,
+    } = this;
+    const address = getAddress(hostname, port);
+    let number = count.gain(address);
+    if (number === undefined) {
+      number = 1;
+    } else {
+      number += 1;
+    }
+    count.attach(address, number);
     return redirectUrl.toString();
   }
 
@@ -640,18 +700,27 @@ class LoadBalance {
     }
   }
 
+  getWeightValue() {
+    const {
+      options: {
+        weight,
+      },
+    } = this;
+    return weight;
+  }
+
   getRedirectValue() {
     const {
       average,
     } = this;
-    return average.redirect;
+    return getAverage(average.redirect);
   }
 
   getMyselfValue() {
     const {
       average,
     } = this;
-    return average.myself;
+    return getAverage(average.myself);
   }
 
   getLoadValue() {
