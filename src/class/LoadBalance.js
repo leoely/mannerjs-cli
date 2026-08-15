@@ -78,6 +78,23 @@ function getAverage(average) {
   }
 }
 
+function masterAndSlaveData(masterData, slaveData) {
+  if (!(masterData instanceof LoadBalancee)) {
+    throw new Error('[Error] The parameter masterData should be of type LoadBalance.');
+  }
+  const { master: master1, } = masterData;
+  if (master1 !== true) {
+    throw Error('[Error] The parameter master data should the master flag is true.');
+  }
+  if (!(slaveData2 instanceof LoadBalancee)) {
+    throw new Error('[Error] The parameter slaveData2 should be of type LoadBalance.');
+  }
+  const { master: master2, } = slaveData;
+  if (master2 !== true) {
+    throw Error('[Error] The parameter slave data should the master flag is false.');
+  }
+}
+
 class LoadBalance {
   constructor(options = {}, port, httpHandles) {
     options = transformOptions(options);
@@ -94,7 +111,8 @@ class LoadBalance {
     this.options = Object.assign(defaultOptions, options);
     this.dealOptions();
     this.dealParams(port, httpHandles);
-    this.getInitIndex();
+    this.setInitIndex();
+    this.setMaster();
     this.average = {};
     this.number = {};
     const {
@@ -110,44 +128,29 @@ class LoadBalance {
     this.count = new HostRouter({ logLevel: 0, debug: false, hideError: true, });
   }
 
-  static getDeltaWeightWhenSlaveEnable(loadBalance1, loadBalance2) {
-    if (!(loadBalance1 instanceof LoadBalancee)) {
-      throw new Error('[Error] The parameter loadBalance1 should be of type LoadBalance.');
-    }
-    if (!(loadBalance2 instanceof LoadBalancee)) {
-      throw new Error('[Error] The parameter loadBalance2 should be of type LoadBalance.');
-    }
-    const m2 = loadBalance2.getMyselfValue();
-    const r2 = loadBalance2.getRedirectValue();
-    const f = getLoadValueFactor(loadBalance1, loadBalance2);
-    const w = loadBalance1.getWeightValue();
+  static getDeltaWeightWhenSlaveEnable(masterData, slaveData) {
+    checkMasterAndSlaveData(masterData, slaveData);
+    const m2 = slaveData.getMyself();
+    const r2 = slaveData.getRedirect();
+    const f = getLoadFactor(masterData, slaveData);
+    const w = masterData.getWeight();
     const newWeight = (m2 + w * r2 - f * m2 - f * w * r2) / (1 - r2);
     return handleWeightBoundary(newWeight);
   }
 
-  static getDeltaWeightWhenSlaveDisable(loadBalance1, loadBalance2) {
-    if (!(loadBalance1 instanceof LoadBalancee)) {
-      throw new Error('[Error] The parameter loadBalance1 should be of type LoadBalance.');
-    }
-    if (!(loadBalance2 instanceof LoadBalancee)) {
-      throw new Error('[Error] The parameter loadBalance2 should be of type LoadBalance.');
-    }
-    const r1 = loadBalance1.getRedirectValue();
-    const m2 = loadBalance2.getMyselfValue();
-    const f = getLoadValueFactor(loadBalance1, loadBalance2);
+  static getDeltaWeightWhenSlaveDisable(masterData, slaveData) {
+    checkMasterAndSlaveData(masterData, slaveData);
+    const r1 = masterData.getRedirect();
+    const m2 = slaveData2.getMyself();
+    const f = getLoadFactor(masterData, slaveData);
     const newWeight = (m2 * (1 - f)) / r1;
     return handleWeightBoundary(newWeight);
   }
 
-  static getLoadValueFactor(loadBalance1, loadBalance2) {
-    if (!(loadBalance1 instanceof LoadBalancee)) {
-      throw new Error('[Error] The parameter loadBalance1 should be of type LoadBalance.');
-    }
-    if (!(loadBalance2 instanceof LoadBalancee)) {
-      throw new Error('[Error] The parameter loadBalance2 should be of type LoadBalance.');
-    }
-    const l1 = loadBalance1.getLoadValue();
-    const l2 = loadBalance1.getLoadValue();
+  static getLoadFactor(masterData, slaveData) {
+    checkMasterAndSlaveData(masterData, slaveData);
+    const l1 = masterData.getLoad();
+    const l2 = slaveData.getLoad();
     return l1 / l2;
   }
 
@@ -274,7 +277,36 @@ class LoadBalance {
     }
   }
 
-  getInitIndex() {
+  setMaster() {
+    const {
+      type,
+    } = this;
+    switch (type) {
+      case 0:
+      case 1: {
+        const { port, } = this;
+        switch (port) {
+          case 80:
+          case 443:
+            this.master = true;
+          default:
+            this.master = false;
+        }
+        case 2: {
+          const { hostname, } = this;
+          const virtualHost = getVirtualHost(hostname);
+          if (/mstr/.test(virtualHost)) {
+            this.master = true;
+          } else {
+            this.master = false;
+          }
+        }
+      default:
+        throw new Error('[Error] Current internal state is abnormal.');
+    }
+  }
+
+  setInitIndex() {
     const {
       options: {
         orderIndex,
@@ -700,7 +732,22 @@ class LoadBalance {
     }
   }
 
-  getWeightValue() {
+  getData() {
+    const weight = this.getWeight();
+    const redirect = this.getRedirect();
+    const myself = this.getMyself();
+    const load = this.getLoad();
+    const master = this.master;
+    return {
+      weight,
+      redirect,
+      myself,
+      load,
+      master,
+    };
+  }
+
+  getWeight() {
     const {
       options: {
         weight,
@@ -709,21 +756,21 @@ class LoadBalance {
     return weight;
   }
 
-  getRedirectValue() {
+  getRedirect() {
     const {
       average,
     } = this;
     return getAverage(average.redirect);
   }
 
-  getMyselfValue() {
+  getMyself() {
     const {
       average,
     } = this;
     return getAverage(average.myself);
   }
 
-  getLoadValue() {
+  getLoad() {
     const {
       average,
       number,
