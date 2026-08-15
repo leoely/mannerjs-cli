@@ -105,7 +105,8 @@ class LoadBalance {
       minify: true,
       enable: true,
       orderIndex: false,
-      timeInterval: 20,
+      computeInterval: 20,
+      logInterval: 30,
       logLevel: 0,
     };
     this.options = Object.assign(defaultOptions, options);
@@ -117,6 +118,7 @@ class LoadBalance {
     const {
       number,
     } = this;
+    number.digit = 0;
     number.time = 0;
     number.myself = 0;
     number.redirect = 0;
@@ -236,6 +238,7 @@ class LoadBalance {
     const {
       number,
     } = this;
+    number.digit = 0;
     number.redirect = 0;
     number.myself = 0;
     number.time = 0;
@@ -514,7 +517,7 @@ class LoadBalance {
         minify,
         enable,
         orderIndex,
-        timeInterval,
+        computeInterval,
         logLevel,
       },
     } = this;
@@ -536,11 +539,11 @@ class LoadBalance {
     if (typeof orderIndex !== 'boolean') {
       throw new Error('[Error] The options orderIndex should be of boolean type.');
     }
-    if (!Number.isInteger(timeInterval)) {
-      throw new Error('[Error] The option timeInterval should be an integer type.');
+    if (!Number.isInteger(computeInterval)) {
+      throw new Error('[Error] The option computeInterval should be an integer type.');
     }
-    if (!(timeInterval > 0)) {
-      throw new Error('[Error] The option timeInterval should be a positive integer type.');
+    if (!(computeInterval > 0)) {
+      throw new Error('[Error] The option computeInterval should be a positive integer type.');
     }
     if (!Number.isInteger(logLevel)) {
       throw new Error('[Error] The option logLevel should be an integer type.');
@@ -728,16 +731,27 @@ class LoadBalance {
       redirectUrl.searchParams.set('loadBalanceTime', time);
     }
     const {
-      count,
+      options: {
+        logInterval,
+      },
+      number,
     } = this;
-    const address = getAddress(hostname, port);
-    let number = count.gain(address);
-    if (number === undefined) {
-      number = 1;
+    if (number.digit === logInterval) {
+      number.digit = 0;
+      const {
+        count,
+      } = this;
+      const address = getAddress(hostname, port);
+      let number = count.gain(address);
+      if (number === undefined) {
+        number = 1;
+      } else {
+        number += 1;
+      }
+      count.attach(address, number);
     } else {
-      number += 1;
+      number.digit += 1;
     }
-    count.attach(address, number);
     return redirectUrl.toString();
   }
 
@@ -816,7 +830,9 @@ class LoadBalance {
     const redirect = this.getRedirect();
     const myself = this.getMyself();
     const load = this.getLoad();
-    const master = this.master;
+    const {
+      master,
+    } = this;
     return {
       weight,
       redirect,
@@ -860,6 +876,11 @@ class LoadBalance {
 
   clearLoadValue() {
     this.number = {};
+    const { number, } = this;
+    number.digit = 0;
+    number.time = 0;
+    number.myself = 0;
+    number.redirect = 0;
     this.average = {};
   }
 
@@ -867,13 +888,11 @@ class LoadBalance {
     const {
       options: {
         enable,
-        timeInterval,
+        computeInterval,
       },
       number,
     } = this;
-    number.time += 1;
-    if (number.time === timeInterval) {
-      number.time = 0;
+    if (number.time === computeInterval) {
       if (enable === true) {
         this.startTime = performance.now();
       }
@@ -883,16 +902,19 @@ class LoadBalance {
   updateTwoSituationAverage() {
     const {
       number,
-      timeInterval,
+      options: {
+        computeInterval,
+      },
     } = this;
-    if (number.time === timeInterval) {
+    if (number.time === computeInterval) {
+      number.time = 0;
       const {
         situation,
         startTime,
         average,
       } = this;
       const endTime = performance.now();
-      const timeSpent = startTime - endTime;
+      const timeSpent = endTime - startTime;
       switch (situation) {
         case 0: {
           if (average.myself === undefined) {
@@ -906,13 +928,15 @@ class LoadBalance {
           if (average.redirect === undefined) {
             average.redirect = timeSpent;
           } else {
-            average.redirec = (timeSpent + average.redirect) / 2;
+            average.redirect = (timeSpent + average.redirect) / 2;
           }
           break;
         }
       }
       delete this.startTime;
       delete this.situation;
+    } else {
+        number.time += 1;
     }
   }
 
@@ -938,16 +962,18 @@ class LoadBalance {
       options: {
         enable,
       },
+      number,
     } = this;
     if (enable === true) {
       if (this.checkPointMyself() && site === undefined) {
         this.situation = 0;
+        number.myself += 1;
         const originHtml = this.getOriginHtml();
         this.updateTwoSituationAverage();
-        this.myselfCount += 1;
         return originHtml;
       } else {
         this.situation = 1;
+        number.redirect += 1;
         const redirectNode = htmlParser.parse(`
           <script>
             const parsedUrl = new URL(window.location);
@@ -975,7 +1001,6 @@ class LoadBalance {
           case 1:
             const compressedHtml = minifyHtml(dom.toString());
             this.updateTwoSituationAverage();
-            this.redirectCount += 1;
             return compressedHtml;
           case 0: {
             const {
@@ -986,22 +1011,20 @@ class LoadBalance {
             if (minify === true) {
               const compressedHtml = minifyHtml(dom.toString());
               this.updateTwoSituationAverage();
-              this.redirectCount += 1;
               return compressedHtml;
             } else {
               const newHtml = dom.toString();
               this.updateTwoSituationAverage();
-              this.redirectCount += 1;
               return newHtml;
             }
           }
         }
       }
     } else {
-      this.situation = 1;
+      this.situation = 0;
+      number.myself += 1;
       const originHtml = this.getOriginHtml();
       this.updateTwoSituationAverage();
-      this.redirectCount += 1;
       return originHtml;
     }
   }
