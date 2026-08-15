@@ -112,7 +112,6 @@ class LoadBalance {
     this.dealOptions();
     this.dealParams(port, httpHandles);
     this.setInitIndex();
-    this.setMaster();
     this.average = {};
     this.number = {};
     const {
@@ -128,11 +127,23 @@ class LoadBalance {
     this.count = new HostRouter({ logLevel: 0, debug: false, hideError: true, });
   }
 
+  static hostnameHash = null;
+
+  static getHostnameHash() {
+    const {
+      hostnameHash,
+    } = LoadBalance;
+    if (hostnameHash === null) {
+      throw new Error('[Error] Please first call the `this.startUp` method.');
+    }
+    return hostnameHash
+  }
+
   static getDeltaWeightWhenSlaveEnable(masterData, slaveData) {
     checkMasterAndSlaveData(masterData, slaveData);
     const m2 = slaveData.getMyself();
     const r2 = slaveData.getRedirect();
-    const f = getLoadFactor(masterData, slaveData);
+    const f = LoadBalance.getLoadFactor(masterData, slaveData);
     const w = masterData.getWeight();
     const newWeight = (m2 + w * r2 - f * m2 - f * w * r2) / (1 - r2);
     return handleWeightBoundary(newWeight);
@@ -141,8 +152,8 @@ class LoadBalance {
   static getDeltaWeightWhenSlaveDisable(masterData, slaveData) {
     checkMasterAndSlaveData(masterData, slaveData);
     const r1 = masterData.getRedirect();
-    const m2 = slaveData2.getMyself();
-    const f = getLoadFactor(masterData, slaveData);
+    const m2 = slaveData.getMyself();
+    const f = LoadBalance.getLoadFactor(masterData, slaveData);
     const newWeight = (m2 * (1 - f)) / r1;
     return handleWeightBoundary(newWeight);
   }
@@ -152,6 +163,66 @@ class LoadBalance {
     const l1 = masterData.getLoad();
     const l2 = slaveData.getLoad();
     return l1 / l2;
+  }
+
+  static removeHttpHandle(httpHandle, loadBalances) {
+    const loadBalance = loadBalances[0];
+    const { type, } = loadBalance;
+    loadBalances.forEach((loadBalance) => {
+      loadBalance.removeHttpHandle(httpHandle);
+    });
+    switch (type) {
+      case 0:
+      case 1: {
+        const [_, port] = httpHandle;
+        switch (port) {
+          case 80:
+          case 443:
+            LoadBalance.generateNewMaster(httpHandle, loadBalance);
+            break;
+        }
+        break;
+      }
+      case 2: {
+        const [address] = httpHandle;
+        const virtualHost = getVirtualHost(address);
+        if (/mstr/.test(virtualHost)) {
+          LoadBalance.generateNewMaster(httpHandle, loadBalance);
+        }
+        break;
+      }
+    }
+  }
+
+  static generateNewMaster(httpHandle, loadBalances) {
+    const hostnameHash = LoadBalance.getHostnameHash();
+    const loadBalance = loadBalances[0];
+    const { type, } = loadBalance;
+    const [address, port] = httpHandle;
+    let ip;
+    switch (type) {
+      case 0:
+      case 1:
+        ip = address;
+        break;
+      case 2:
+        ip = hostnameHash[address];
+        break;
+    }
+    let minLoad = Infinity;
+    let minLoadBalance;
+    loadBalances.forEach((loadBalance) => {
+      const { ipv4, ipv6, } = loadBalance;
+      if (ip === ipv4 || ip === ipv6) {
+        const load = loadBalance.getLoad();
+        if (minLoad > load) {
+          minLoad = load;
+          minLoadBalance = loadBalance;
+        }
+      }
+    });
+    minLoadBalance.port = port;
+    return;
   }
 
   setAllHttpHandles(httpHandles) {
@@ -184,19 +255,59 @@ class LoadBalance {
     this.ipv6 = ipv6;
     if (type === 2) {
       const { httpHandles, } = this;
-      const hostnameHash = {};
+      let flag = false;
+      if (LoadBalance.hostnameHash === null) {
+        LoadBalance.hostnameHash = {};
+        flag = true;
+      }
       for await (const httpHandle of httpHandles) {
         const [hostname, port] = httpHandle;
         const ip = await this.lookupHostname(hostname);
-        hostnameHash[hostname] = ip;
+        if (flag === true) {
+          const hostnameHash = LoadBalance.hostnameHash;
+          hostnameHash[hostname] = ip;
+        }
         const {
+          options: {
+            mode,
+          },
           port: myselfPort,
         } = this;
+        if (mode === 0 && ip === '127.0.0.1' && port === myselfPort) {
+          this.hostname = hostname;
+          break;
+        }
         if ((ip === ipv4 || ip === ipv6) && (port === myselfPort)) {
           this.hostname = hostname;
+          break;
         }
       }
-      this.hostnameHash = hostnameHash;
+    }
+    switch (type) {
+      case 0:
+      case 1: {
+        const { port, } = this;
+        switch (port) {
+          case 80:
+          case 443:
+            this.master = true;
+          default:
+            this.master = false;
+        }
+        break;
+      }
+      case 2: {
+        const { hostname, } = this;
+        const virtualHost = getVirtualHost(hostname);
+        if (/mstr/.test(virtualHost)) {
+          this.master = true;
+        } else {
+          this.master = false;
+        }
+        break;
+      }
+      default:
+        throw new Error('[Error] Current internal state is abnormal.');
     }
   }
 
@@ -274,35 +385,6 @@ class LoadBalance {
     });
     if (remove === false) {
       throw new Error('[Error] The httpHandle that needs to be removed dost not exist,the deletion did not take effect.');
-    }
-  }
-
-  setMaster() {
-    const {
-      type,
-    } = this;
-    switch (type) {
-      case 0:
-      case 1: {
-        const { port, } = this;
-        switch (port) {
-          case 80:
-          case 443:
-            this.master = true;
-          default:
-            this.master = false;
-        }
-        case 2: {
-          const { hostname, } = this;
-          const virtualHost = getVirtualHost(hostname);
-          if (/mstr/.test(virtualHost)) {
-            this.master = true;
-          } else {
-            this.master = false;
-          }
-        }
-      default:
-        throw new Error('[Error] Current internal state is abnormal.');
     }
   }
 
@@ -690,13 +772,10 @@ class LoadBalance {
         }
       }
       case 2: {
+        const hostnameHash = LoadBalance.getHostnameHash();
         const {
-          hostnameHash,
           port: myselfPort,
         } = this;
-        if (hostnameHash === undefined) {
-          throw new Error('[Error] Please first call the `this.startUp` method.');
-        }
         const [hostname, port] = httpHandle;
         const IP = hostnameHash[hostname];
         const {
