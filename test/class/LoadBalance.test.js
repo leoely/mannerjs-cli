@@ -41,8 +41,8 @@ describe('[class] LoadBalance;', () => {
     const [addr] = getOwnIpAddresses();
     const { ipv4, } = addr;
     loadBalance.setTemporaryHostnameResolve({
-      'www-mstr-1.manner.io': ipv4,
-      'www-slv-1.manner.io': '192.168.1.1',
+      'www-mstr-1.manner.io': '127.0.0.1',
+      'www-slv-1.manner.io': '127.0.0.1',
       'www-slv-2.manner.io': '192.168.1.2',
     });
     await loadBalance.startUp();
@@ -127,9 +127,9 @@ describe('[class] LoadBalance;', () => {
     const [addr] = getOwnIpAddresses();
     const { ipv4, } = addr;
     loadBalance.setTemporaryHostnameResolve({
-      'www-mstr-1.manner.io': ipv4,
-      'www-slv-1.manner.io': '192.168.1.1',
-      'www-slv-2.manner.io': '192.168.1.2',
+      'www-mstr-1.manner.io': '127.0.0.1',
+      'www-slv-1.manner.io': '127.0.0.1',
+      'www-slv-2.manner.io': '192.168.1.1',
     });
     await loadBalance.startUp();
     loadBalance.setHtml(`
@@ -200,7 +200,7 @@ describe('[class] LoadBalance;', () => {
     expect(loadBalance.getHtmlContent('/login')).toMatch('<!doctype html><html lang=en><meta charset=utf-8><meta name=viewport content=\"width=device-width,initial-scale=1\"><meta name=description content=\"\"><link rel=preconnect href=https://fonts.googleapis.com><link rel=preconnect href=https://fonts.gstatic.com crossorigin><link href=\"https://fonts.googleapis.com/css2?family=Montserrat:ital,wght@0,100..900;1,100..900&family=Roboto:ital,wght@0,100..900;1,100..900&display=swap\"rel=stylesheet><link rel=icon href=favicon.png><script defer=defer src=main.bundle.js></script>');
   });
 
-  test('LoadBalance should be able to calculate load-related data', async () => {
+  test('LoadBalance should be able to calculate master node load-related data', async () => {
     const loadBalance = new LoadBalance({
       protocal: 'https',
       weight: 0.5,
@@ -258,14 +258,72 @@ describe('[class] LoadBalance;', () => {
     loadBalance.getHtmlContent('/login');
     loadBalance.getHtmlContent('/login');
     loadBalance.getHtmlContent('/login');
+    loadBalance.getHtmlContent('/login');
+    loadBalance.getHtmlContent('/login');
     const redirect = loadBalance.getRedirect();
     expect(redirect).toBeGreaterThan(13);
+    expect(redirect).toBeLessThan(18);
+    const myself = loadBalance.getMyself();
+    expect(myself).toBeGreaterThan(0);
+    expect(myself).toBeLessThan(2);
+    const load = loadBalance.getLoad();
+    expect(load).toBeGreaterThan(356);
+    expect(load).toBeLessThan(389);
+  });
+
+  test('LoadBalance should be able to calculate slave node load-related data', async () => {
+    const loadBalance = new LoadBalance({
+      protocal: 'https',
+      weight: 0.5,
+      mode: 'test',
+      enable: true,
+      minify: true,
+      computeInterval: 1,
+      orderIndex: true,
+    }, 1024, [
+      ['www-mstr-1.manner.io', 80],
+      ['www-slv-1.manner.io', 1024],
+      ['www-slv-2.manner.io', 80],
+      ['www-slv-2.manner.io', 1024],
+      ['www-slv-2.manner.io', 1025],
+    ]);
+    const [addr] = getOwnIpAddresses();
+    const { ipv4, } = addr;
+    await loadBalance.startUp();
+    loadBalance.setHtml(`
+      <!doctype html>
+      <html lang="en">
+          <head>
+              <meta charset="utf-8" />
+              <title></title>
+              <meta name="viewport" content="width=device-width,initial-scale=1" />
+              <meta name="description" content="" />
+              <link rel="preconnect" href="https://fonts.googleapis.com" />
+              <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+              <link
+                  href="https://fonts.googleapis.com/css2?family=Montserrat:ital,wght@0,100..900;1,100..900&family=Roboto:ital,wght@0,100..900;1,100..900&display=swap"
+                  rel="stylesheet"
+              />
+              <link rel="icon" href="favicon.png" />
+              <script defer="defer" src="main.bundle.js"></script>
+          </head>
+          <body>
+              <main id="root" />
+          </body>
+      </html>
+    `);
+    loadBalance.getHtmlContent('/login');
+    loadBalance.getHtmlContent('/login');
+    loadBalance.getHtmlContent('/login');
+    loadBalance.getHtmlContent('/login');
+    const redirect = loadBalance.getRedirect();
+    expect(redirect).toBeGreaterThan(3);
     expect(redirect).toBeLessThan(15);
     const myself = loadBalance.getMyself();
     expect(myself).toBeGreaterThan(0);
     expect(myself).toBeLessThan(2);
     const load = loadBalance.getLoad();
-    expect(load).toBeGreaterThan(216);
-    expect(load).toBeLessThan(240);
+    expect(load).toBeGreaterThan(20);
+    expect(load).toBeLessThan(27);
   });
 });

@@ -278,11 +278,9 @@ class LoadBalance {
         } = this;
         if (mode === 0 && ip === '127.0.0.1' && port === myselfPort) {
           this.hostname = hostname;
-          break;
         }
         if ((ip === ipv4 || ip === ipv6) && (port === myselfPort)) {
           this.hostname = hostname;
-          break;
         }
       }
     }
