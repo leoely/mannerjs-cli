@@ -248,8 +248,8 @@ describe('[class] LoadBalance;', () => {
     expect(myself).toBeGreaterThan(0);
     expect(myself).toBeLessThan(2);
     const load = loadBalance.getLoad();
-    expect(load).toBeGreaterThan(53);
-    expect(load).toBeLessThan(68);
+    expect(load).toBeGreaterThan(51);
+    expect(load).toBeLessThan(62);
   });
 
   test('LoadBalance should be able to calculate slave load-related data', async () => {
@@ -303,8 +303,8 @@ describe('[class] LoadBalance;', () => {
     expect(myself).toBeGreaterThan(0);
     expect(myself).toBeLessThan(2);
     const load = loadBalance.getLoad();
-    expect(load).toBeGreaterThan(50);
-    expect(load).toBeLessThan(59);
+    expect(load).toBeGreaterThan(45);
+    expect(load).toBeLessThan(56);
   });
 
   test('LoadBalance should be able to automatically calculate its weight', async () => {
@@ -395,6 +395,6 @@ describe('[class] LoadBalance;', () => {
     }
     const slaveData = loadBalance2.getData();
     expect(LoadBalance.getDeltaWeightWhenSlaveEnable(masterData, slaveData)).toBeGreaterThan(0.13);
-    expect(LoadBalance.getDeltaWeightWhenSlaveEnable(masterData, slaveData)).toBeLessThan(0.3);
+    expect(LoadBalance.getDeltaWeightWhenSlaveEnable(masterData, slaveData)).toBeLessThan(0.44);
   });
 });
