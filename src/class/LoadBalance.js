@@ -1,7 +1,7 @@
+import { performance, } from 'perf_hooks';
 import { URL, } from 'url';
 import net from 'net';
 import dns from 'dns';
-import { performance, } from 'perf_hooks';
 import ejs from 'ejs';
 import { HostRouter, } from 'advising.js';
 import {
@@ -193,10 +193,10 @@ class LoadBalance {
 
   static removeHttpHandle(httpHandle, loadBalances) {
     const loadBalance = loadBalances[0];
-    const { type, } = loadBalance;
     loadBalances.forEach((loadBalance) => {
       loadBalance.removeHttpHandle(httpHandle);
     });
+    const { type, } = loadBalance;
     switch (type) {
       case 0:
       case 1: {
@@ -204,27 +204,28 @@ class LoadBalance {
         switch (port) {
           case 80:
           case 443:
-            LoadBalance.generateNewMaster(httpHandle, loadBalance);
+            LoadBalance.generateNewMaster(httpHandle, loadBalances, port);
             break;
         }
         break;
       }
       case 2: {
-        const [address] = httpHandle;
+        const [address, port] = httpHandle;
         const virtualHost = getVirtualHost(address);
         if (/mstr/.test(virtualHost)) {
-          LoadBalance.generateNewMaster(httpHandle, loadBalance);
+          LoadBalance.generateNewMaster(httpHandle, loadBalances, port);
         }
         break;
       }
     }
   }
 
-  static generateNewMaster(httpHandle, loadBalances) {
-    const hostnameHash = this.getHostnameHash();
+  // @TODO Change to distribOperation.
+  static generateNewMaster(httpHandle, loadBalances, port) {
     const loadBalance = loadBalances[0];
+    const hostnameHash = loadBalance.getHostnameHash();
     const { type, } = loadBalance;
-    const [address, port] = httpHandle;
+    const [address,] = httpHandle;
     let ip;
     switch (type) {
       case 0:
@@ -235,24 +236,62 @@ class LoadBalance {
         ip = hostnameHash[address];
         break;
     }
+    const {
+      options: {
+        mode,
+      },
+    } = loadBalance;
     let minLoad = Infinity;
     let minLoadBalance;
     loadBalances.forEach((loadBalance) => {
       const { ipv4, ipv6, } = loadBalance;
-      if (ip === ipv4 || ip === ipv6) {
+      if ((ip === ipv4 || ip === ipv6) || (ip === '127.0.0.1' && mode === 0)) {
         const load = loadBalance.getLoad();
-        if (minLoad > load) {
+        if (load < minLoad) {
           minLoad = load;
           minLoadBalance = loadBalance;
         }
       }
     });
+    const {
+      httpHandles,
+    } = minLoadBalance;
+    httpHandles.forEach((httpHandle) => {
+      const [address, currentPort] = httpHandle;
+      switch (type) {
+        case 0: {
+          const { ipv4, port: myselfPort } = minLoadBalance;
+          if (address === ipv4 && currentPort === myselfPort) {
+            httpHandle[1] = port;
+          }
+          break;
+        }
+        case 1: {
+          const { ipv6, port: myselfPort } = minLoadBalance;
+          if (address === ipv6 && currentPort === myselfPort) {
+            httpHandle[1] = port;
+          }
+          break;
+        }
+        case 2:
+          const { hostname, port: myselfPort, } = minLoadBalance;
+          if (address === hostname && currentPort === myselfPort) {
+            httpHandle[1] = port;
+          }
+          break;
+      }
+    });
+    loadBalances.forEach((loadBalance) => {
+      loadBalance.setHttpHandles(httpHandles);
+    });
     minLoadBalance.port = port;
     return;
   }
 
-  setAllHttpHandles(httpHandles) {
-    this.checkHttpHandle(httpHandle);
+  setHttpHandles(httpHandles) {
+    httpHandles.forEach((httpHandle) => {
+      this.checkHttpHandle(httpHandle);
+    });
     this.httpHandles = httpHandles;
   }
 
@@ -393,8 +432,8 @@ class LoadBalance {
       httpHandles,
     } = this;
     let remove = false;
-    httpHandles.filter(([address, port]) => {
-      if (address === httpHandle.address && port === httpHandle.port) {
+    this.httpHandles = httpHandles.filter(([address, port]) => {
+      if (address === httpHandle[0] && port === httpHandle[1]) {
         remove = true;
         return false;
       } else {
