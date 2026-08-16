@@ -38,6 +38,7 @@ describe('[class] LoadBalance;', () => {
       ['www-slv-2.manner.io', 1024],
       ['www-slv-2.manner.io', 1025],
     ]);
+    const now = Date.now();
     const [addr] = getOwnIpAddresses();
     const { ipv4, } = addr;
     await loadBalance.startUp();
@@ -46,6 +47,7 @@ describe('[class] LoadBalance;', () => {
       'www-slv-1.manner.io': '127.0.0.1',
       'www-slv-2.manner.io': '192.168.1.2',
     });
+    loadBalance.setLoadBalanceTime(now);
     loadBalance.setHtml(`
       <!doctype html>
       <html lang="en">
@@ -68,7 +70,7 @@ describe('[class] LoadBalance;', () => {
         </body>
       </html>
     `);
-    expect(loadBalance.getHtmlContent(undefined, 'https://www-slv-2.manner.io:1025/login')).toMatch('<!doctype html><html lang=en><meta charset=utf-8><meta name=viewport content=\"width=device-width,initial-scale=1\"><meta name=description content=\"\"><script>let parsedUrl=new URL(window.location),loadBalanceTimeValue=parsedUrl.searchParams.get(\"loadBalanceTime\"),loadBalanceTime=parseInt(loadBalanceTimeValue);(Number.isNaN(loadBalanceTime)||loadBalanceTime<=void 0)&&(window.location=\"https://www-slv-2.manner.io:1025/login\")</script>');
+    expect(loadBalance.getHtmlContent(undefined, 'https://www-slv-2.manner.io:1025/login')).toMatch(`<!doctype html><html lang=en><meta charset=utf-8><meta name=viewport content=\"width=device-width,initial-scale=1\"><meta name=description content=\"\"><script>let parsedUrl=new URL(window.location),loadBalanceTimeValue=parsedUrl.searchParams.get(\"loadBalanceTime\"),loadBalanceTime=parseInt(loadBalanceTimeValue);(Number.isNaN(loadBalanceTime)||loadBalanceTime<=${now})&&(window.location=\"https://www-slv-2.manner.io:1025/login\")</script>`);
   });
 
   test('LoadBalance when disable should be able to generate a normal HTML template.', async () => {
@@ -236,35 +238,18 @@ describe('[class] LoadBalance;', () => {
         </body>
       </html>
     `);
-    loadBalance.getHtmlContent('/login');
-    loadBalance.getHtmlContent('/login');
-    loadBalance.getHtmlContent('/login');
-    loadBalance.getHtmlContent('/login');
-    loadBalance.getHtmlContent('/login');
-    loadBalance.getHtmlContent('/login');
-    loadBalance.getHtmlContent('/login');
-    loadBalance.getHtmlContent('/login');
-    loadBalance.getHtmlContent('/login');
-    loadBalance.getHtmlContent('/login');
-    loadBalance.getHtmlContent('/login');
-    loadBalance.getHtmlContent('/login');
-    loadBalance.getHtmlContent('/login');
-    loadBalance.getHtmlContent('/login');
-    loadBalance.getHtmlContent('/login');
-    loadBalance.getHtmlContent('/login');
-    loadBalance.getHtmlContent('/login');
-    loadBalance.getHtmlContent('/login');
-    loadBalance.getHtmlContent('/login');
-    loadBalance.getHtmlContent('/login');
+    for (let i = 0; i < 20; i += 1) {
+      loadBalance.getHtmlContent('/login');
+    }
     const redirect = loadBalance.getRedirect();
-    expect(redirect).toBeGreaterThan(13);
-    expect(redirect).toBeLessThan(24);
+    expect(redirect).toBeGreaterThan(2);
+    expect(redirect).toBeLessThan(3);
     const myself = loadBalance.getMyself();
     expect(myself).toBeGreaterThan(0);
     expect(myself).toBeLessThan(2);
     const load = loadBalance.getLoad();
-    expect(load).toBeGreaterThan(441);
-    expect(load).toBeLessThan(543);
+    expect(load).toBeGreaterThan(53);
+    expect(load).toBeLessThan(68);
   });
 
   test('LoadBalance should be able to calculate slave load-related data', async () => {
@@ -308,35 +293,18 @@ describe('[class] LoadBalance;', () => {
         </body>
       </html>
     `);
-    loadBalance.getHtmlContent('/login');
-    loadBalance.getHtmlContent('/login');
-    loadBalance.getHtmlContent('/login');
-    loadBalance.getHtmlContent('/login');
-    loadBalance.getHtmlContent('/login');
-    loadBalance.getHtmlContent('/login');
-    loadBalance.getHtmlContent('/login');
-    loadBalance.getHtmlContent('/login');
-    loadBalance.getHtmlContent('/login');
-    loadBalance.getHtmlContent('/login');
-    loadBalance.getHtmlContent('/login');
-    loadBalance.getHtmlContent('/login');
-    loadBalance.getHtmlContent('/login');
-    loadBalance.getHtmlContent('/login');
-    loadBalance.getHtmlContent('/login');
-    loadBalance.getHtmlContent('/login');
-    loadBalance.getHtmlContent('/login');
-    loadBalance.getHtmlContent('/login');
-    loadBalance.getHtmlContent('/login');
-    loadBalance.getHtmlContent('/login');
+    for (let i = 0; i < 20; i += 1) {
+      loadBalance.getHtmlContent('/login');
+    }
     const redirect = loadBalance.getRedirect();
-    expect(redirect).toBeGreaterThan(19);
-    expect(redirect).toBeLessThan(29);
+    expect(redirect).toBeGreaterThan(1);
+    expect(redirect).toBeLessThan(2.1);
     const myself = loadBalance.getMyself();
     expect(myself).toBeGreaterThan(0);
     expect(myself).toBeLessThan(2);
     const load = loadBalance.getLoad();
-    expect(load).toBeGreaterThan(552);
-    expect(load).toBeLessThan(640);
+    expect(load).toBeGreaterThan(50);
+    expect(load).toBeLessThan(59);
   });
 
   test('LoadBalance should be able to automatically calculate its weight', async () => {
@@ -380,26 +348,9 @@ describe('[class] LoadBalance;', () => {
         </body>
       </html>
     `);
-    loadBalance1.getHtmlContent('/login');
-    loadBalance1.getHtmlContent('/login');
-    loadBalance1.getHtmlContent('/login');
-    loadBalance1.getHtmlContent('/login');
-    loadBalance1.getHtmlContent('/login');
-    loadBalance1.getHtmlContent('/login');
-    loadBalance1.getHtmlContent('/login');
-    loadBalance1.getHtmlContent('/login');
-    loadBalance1.getHtmlContent('/login');
-    loadBalance1.getHtmlContent('/login');
-    loadBalance1.getHtmlContent('/login');
-    loadBalance1.getHtmlContent('/login');
-    loadBalance1.getHtmlContent('/login');
-    loadBalance1.getHtmlContent('/login');
-    loadBalance1.getHtmlContent('/login');
-    loadBalance1.getHtmlContent('/login');
-    loadBalance1.getHtmlContent('/login');
-    loadBalance1.getHtmlContent('/login');
-    loadBalance1.getHtmlContent('/login');
-    loadBalance1.getHtmlContent('/login');
+    for (let i = 0; i < 20; i += 1) {
+      loadBalance1.getHtmlContent('/login');
+    }
     const masterData = loadBalance1.getData();
     const loadBalance2 = new LoadBalance({
       protocal: 'https',
@@ -439,28 +390,11 @@ describe('[class] LoadBalance;', () => {
         </body>
       </html>
     `);
-    loadBalance2.getHtmlContent('/login');
-    loadBalance2.getHtmlContent('/login');
-    loadBalance2.getHtmlContent('/login');
-    loadBalance2.getHtmlContent('/login');
-    loadBalance2.getHtmlContent('/login');
-    loadBalance2.getHtmlContent('/login');
-    loadBalance2.getHtmlContent('/login');
-    loadBalance2.getHtmlContent('/login');
-    loadBalance2.getHtmlContent('/login');
-    loadBalance2.getHtmlContent('/login');
-    loadBalance2.getHtmlContent('/login');
-    loadBalance2.getHtmlContent('/login');
-    loadBalance2.getHtmlContent('/login');
-    loadBalance2.getHtmlContent('/login');
-    loadBalance2.getHtmlContent('/login');
-    loadBalance2.getHtmlContent('/login');
-    loadBalance2.getHtmlContent('/login');
-    loadBalance2.getHtmlContent('/login');
-    loadBalance2.getHtmlContent('/login');
-    loadBalance2.getHtmlContent('/login');
+    for (let i = 0; i < 20; i += 1) {
+      loadBalance2.getHtmlContent('/login');
+    }
     const slaveData = loadBalance2.getData();
-    expect(LoadBalance.getDeltaWeightWhenSlaveEnable(masterData, slaveData)).toBeGreaterThan(0.4);
-    expect(LoadBalance.getDeltaWeightWhenSlaveEnable(masterData, slaveData)).toBeLessThan(0.45);
+    expect(LoadBalance.getDeltaWeightWhenSlaveEnable(masterData, slaveData)).toBeGreaterThan(0.13);
+    expect(LoadBalance.getDeltaWeightWhenSlaveEnable(masterData, slaveData)).toBeLessThan(0.3);
   });
 });

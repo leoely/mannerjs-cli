@@ -2,6 +2,7 @@ import { URL, } from 'url';
 import net from 'net';
 import dns from 'dns';
 import { performance, } from 'perf_hooks';
+import ejs from 'ejs';
 import { HostRouter, } from 'advising.js';
 import {
   getAddress,
@@ -15,7 +16,7 @@ function getVirtualHost(hostname) {
   return hostname.split('.')[0];
 }
 
-function minifyHtml(html) {
+function minifyHTML(html) {
   return htmlMinifier.minify(html, {
     minifyJS: true,
     collapseWhitespace: true,
@@ -96,6 +97,29 @@ function checkMasterAndSlaveData(masterData, slaveData) {
   }
 }
 
+function getTemplateString(html) {
+  const dom = htmlParser.parse(html);
+  const redirectNode = htmlParser.parse(`
+    <script>
+      const parsedUrl = new URL(window.location);
+      const loadBalanceTimeValue = parsedUrl.searchParams.get('loadBalanceTime')
+      const loadBalanceTime = parseInt(loadBalanceTimeValue);
+      if (Number.isNaN(loadBalanceTime) || (loadBalanceTime <= <%= loadBalanceTime %>)) {
+        window.location = '<%= location %>';
+      }
+    </script>
+  `);
+  const scriptNode = dom.querySelector('script');
+  scriptNode.before(redirectNode);
+  const allLinkNode = dom.querySelectorAll('link');
+  allLinkNode.forEach((linkNode) => {
+    linkNode.remove();
+  });
+  const bodyNode = dom.querySelector('body');
+  bodyNode.innerHTML = '';
+  return dom.toString();
+}
+
 class LoadBalance {
   constructor(options = {}, port, httpHandles) {
     options = transformOptions(options);
@@ -111,6 +135,7 @@ class LoadBalance {
       logLevel: 0,
     };
     this.options = Object.assign(defaultOptions, options);
+    this.loadBalanceTime = Date.now();
     this.dealOptions();
     this.dealParams(port, httpHandles);
     this.setInitIndex();
@@ -130,13 +155,11 @@ class LoadBalance {
     this.count = new HostRouter({ logLevel: 0, debug: false, hideError: true, });
   }
 
-  static hostnameHash = null;
-
-  static getHostnameHash() {
+  getHostnameHash() {
     const {
       hostnameHash,
-    } = LoadBalance;
-    if (hostnameHash === null) {
+    } = this;
+    if (hostnameHash === undefined) {
       throw new Error('[Error] Please first call the `this.startUp` method.');
     }
     return hostnameHash
@@ -198,7 +221,7 @@ class LoadBalance {
   }
 
   static generateNewMaster(httpHandle, loadBalances) {
-    const hostnameHash = LoadBalance.getHostnameHash();
+    const hostnameHash = this.getHostnameHash();
     const loadBalance = loadBalances[0];
     const { type, } = loadBalance;
     const [address, port] = httpHandle;
@@ -259,18 +282,11 @@ class LoadBalance {
     this.ipv6 = ipv6;
     if (type === 2) {
       const { httpHandles, } = this;
-      let flag = false;
-      if (LoadBalance.hostnameHash === null) {
-        LoadBalance.hostnameHash = {};
-        flag = true;
-      }
+      this.hostnameHash = {};
       for await (const httpHandle of httpHandles) {
         const [hostname, port] = httpHandle;
         const ip = await this.lookupHostname(hostname);
-        if (flag === true) {
-          const hostnameHash = LoadBalance.hostnameHash;
-          hostnameHash[hostname] = ip;
-        }
+        this.hostnameHash[hostname] = ip;
         const {
           options: {
             mode,
@@ -607,7 +623,15 @@ class LoadBalance {
       throw new Error('[Error] The parameter html should be a string.');
     }
     this.html = html;
-    this.dom = htmlParser.parse(html);
+    const templateString = getTemplateString(html);
+    this.template = ejs.compile(templateString);
+  }
+
+  setLoadBalanceTime(loadBalanceTime) {
+    if (!Number.isInteger(loadBalanceTime)) {
+      throw new Error('[Error] The parameter loadBalanceTime should be of integer type.');
+    }
+    this.loadBalanceTime = loadBalanceTime;
   }
 
   setEnable(enable) {
@@ -786,7 +810,7 @@ class LoadBalance {
         }
       }
       case 2: {
-        const hostnameHash = LoadBalance.getHostnameHash();
+        const hostnameHash = this.getHostnameHash();
         const {
           port: myselfPort,
         } = this;
@@ -819,7 +843,7 @@ class LoadBalance {
       },
     } = this;
     if (minify === true) {
-      return minifyHtml(html);
+      return minifyHTML(html);
     } else {
       return html;
     }
@@ -952,11 +976,11 @@ class LoadBalance {
       location = this.getLocation(url, true);
     }
     const {
-      dom,
+      template,
       loadBalanceTime,
     } = this;
-    if (dom === undefined) {
-      throw new Error('[Error] Please first set the load balancing related HTML content use the setHtml method.');
+    if (template === undefined) {
+      throw new Error('[Error] Please first set the load balancing related HTML content use the `setHtml` method.');
     }
     const {
       options: {
@@ -974,34 +998,24 @@ class LoadBalance {
       } else {
         this.situation = 1;
         number.redirect += 1;
-        const redirectNode = htmlParser.parse(`
-          <script>
-            const parsedUrl = new URL(window.location);
-            const loadBalanceTimeValue = parsedUrl.searchParams.get('loadBalanceTime')
-            const loadBalanceTime = parseInt(loadBalanceTimeValue);
-            if (Number.isNaN(loadBalanceTime) || (loadBalanceTime <= ${loadBalanceTime})) {
-              window.location = '${location}';
-            }
-          </script>
-        `);
-        const scriptNode = dom.querySelector('script');
-        scriptNode.before(redirectNode);
-        const allLinkNode = dom.querySelectorAll('link');
-        allLinkNode.forEach((linkNode) => {
-          linkNode.remove();
-        });
-        const bodyNode = dom.querySelector('body');
-        bodyNode.innerHTML = '';
         const {
           options: {
             mode,
           },
         } = this;
         switch (mode) {
-          case 1:
-            const compressedHtml = minifyHtml(dom.toString());
+          case 1: {
+            const {
+              template,
+              loadBalanceTime,
+            } = this;
+            const compressedHtml = minifyHTML(template({
+              location,
+              loadBalanceTime,
+            }));
             this.updateTwoSituationAverage();
             return compressedHtml;
+          }
           case 0: {
             const {
               options: {
@@ -1009,11 +1023,25 @@ class LoadBalance {
               },
             } = this;
             if (minify === true) {
-              const compressedHtml = minifyHtml(dom.toString());
+              const {
+                template,
+                loadBalanceTime,
+              } = this;
+              const compressedHtml = minifyHTML(template({
+                location,
+                loadBalanceTime,
+              }));
               this.updateTwoSituationAverage();
               return compressedHtml;
             } else {
-              const newHtml = dom.toString();
+              const {
+                template,
+                loadBalanceTime,
+              } = this;
+              const compressedHtml = minifyHTML(template({
+                location,
+                loadBalanceTime,
+              }));
               this.updateTwoSituationAverage();
               return newHtml;
             }
