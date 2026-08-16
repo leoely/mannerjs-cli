@@ -58,14 +58,15 @@ function transformOptions(options) {
   return options;
 }
 
-function handleWeightBoundary(weight) {
+function handleWeightBoundary(w1, w2) {
+  const weight = w1 + w2;
   if (weight < 1 && weight > 0) {
     return weight;
   }
   if (weight >= 1) {
     return 1;
   }
-  if (weigth <= 0) {
+  if (weight <= 0) {
     return 0;
   }
 }
@@ -78,19 +79,19 @@ function getAverage(average) {
   }
 }
 
-function masterAndSlaveData(masterData, slaveData) {
-  if (!(masterData instanceof LoadBalancee)) {
-    throw new Error('[Error] The parameter masterData should be of type LoadBalance.');
+function checkMasterAndSlaveData(masterData, slaveData) {
+  if (typeof masterData !== 'object') {
+    throw new Error('[Error] The parameter masterData should be an object type.');
   }
   const { master: master1, } = masterData;
   if (master1 !== true) {
     throw Error('[Error] The parameter master data should the master flag is true.');
   }
-  if (!(slaveData2 instanceof LoadBalancee)) {
-    throw new Error('[Error] The parameter slaveData2 should be of type LoadBalance.');
+  if (typeof slaveData !== 'object') {
+    throw new Error('[Error] The parameter slaveData should be an object type..');
   }
   const { master: master2, } = slaveData;
-  if (master2 !== true) {
+  if (master2 !== false) {
     throw Error('[Error] The parameter slave data should the master flag is false.');
   }
 }
@@ -143,27 +144,27 @@ class LoadBalance {
 
   static getDeltaWeightWhenSlaveEnable(masterData, slaveData) {
     checkMasterAndSlaveData(masterData, slaveData);
-    const m2 = slaveData.getMyself();
-    const r2 = slaveData.getRedirect();
+    const m2 = slaveData.myself
+    const r2 = slaveData.redirect;
     const f = LoadBalance.getLoadFactor(masterData, slaveData);
-    const w = masterData.getWeight();
+    const w = masterData.weight;
     const newWeight = (m2 + w * r2 - f * m2 - f * w * r2) / (1 - r2);
-    return handleWeightBoundary(newWeight);
+    return handleWeightBoundary(w, newWeight);
   }
 
   static getDeltaWeightWhenSlaveDisable(masterData, slaveData) {
     checkMasterAndSlaveData(masterData, slaveData);
-    const r1 = masterData.getRedirect();
-    const m2 = slaveData.getMyself();
+    const r1 = masterData.redirect;
+    const m2 = slaveData.myself;
     const f = LoadBalance.getLoadFactor(masterData, slaveData);
     const newWeight = (m2 * (1 - f)) / r1;
-    return handleWeightBoundary(newWeight);
+    return handleWeightBoundary(w, newWeight);
   }
 
   static getLoadFactor(masterData, slaveData) {
     checkMasterAndSlaveData(masterData, slaveData);
-    const l1 = masterData.getLoad();
-    const l2 = slaveData.getLoad();
+    const l1 = masterData.load;
+    const l2 = slaveData.load;
     return l1 / l2;
   }
 
@@ -598,6 +599,7 @@ class LoadBalance {
     }
     this.options.weight = weight;
     this.loadBlance = Date.now();
+    this.emptyLoadValue();
   }
 
   setHtml(html) {
@@ -872,7 +874,7 @@ class LoadBalance {
     return number.myself + number.redirect * ratio;
   }
 
-  clearLoadValue() {
+  emptyLoadValue() {
     this.number = {};
     const { number, } = this;
     number.digit = 0;
