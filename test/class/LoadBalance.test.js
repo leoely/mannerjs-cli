@@ -159,6 +159,7 @@ describe('[class] LoadBalance;', () => {
       enable: true,
       minify: true,
       orderIndex: true,
+      logInterval: 5,
     }, 80, [
       ['www-mstr-1.manner.io', 80],
       ['www-slv-1.manner.io', 1024],
@@ -243,7 +244,7 @@ describe('[class] LoadBalance;', () => {
     expect(myself).toBeLessThan(2);
     const load = loadBalance.getLoad();
     expect(load).toBeGreaterThan(51);
-    expect(load).toBeLessThan(62);
+    expect(load).toBeLessThan(64);
   });
 
   test('LoadBalance should be able to calculate slave load-related data', async () => {

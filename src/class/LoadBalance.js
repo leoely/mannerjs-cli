@@ -805,13 +805,13 @@ class LoadBalance {
         count,
       } = this;
       const address = getAddress(hostname, port);
-      let number = count.gain(address);
-      if (number === undefined) {
-        number = 1;
+      let figure = count.gain(address);
+      if (figure === undefined) {
+        figure = 1;
       } else {
-        number += 1;
+        figure += 1;
       }
-      count.attach(address, number);
+      count.attach(address, figure);
     } else {
       number.digit += 1;
     }
