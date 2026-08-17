@@ -279,6 +279,8 @@ class LoadBalance {
             httpHandle[1] = port;
           }
           break;
+        default:
+          throw new Error('[Error] An error occurred with the internal type data.');
       }
     });
     loadBalances.forEach((loadBalance) => {
@@ -790,8 +792,10 @@ class LoadBalance {
     } = this;
     const redirectUrl = new URL(protocol + '://' + hostname + ':' + port + url);
     if (timestamp === true) {
-      const time = Date.now();
-      redirectUrl.searchParams.set('loadBalanceTime', time);
+      const {
+        loadBalanceTime,
+      } = this;
+      redirectUrl.searchParams.set('loadBalanceTime', loadBalanceTime);
     }
     const {
       options: {

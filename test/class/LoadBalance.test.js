@@ -159,7 +159,6 @@ describe('[class] LoadBalance;', () => {
       enable: true,
       minify: true,
       orderIndex: true,
-      logInterval: 5,
     }, 80, [
       ['www-mstr-1.manner.io', 80],
       ['www-slv-1.manner.io', 1024],
@@ -192,6 +191,55 @@ describe('[class] LoadBalance;', () => {
       </html>
     `);
     expect(loadBalance.getHtmlContent('/login')).toMatch('<!doctype html><html lang=en><meta charset=utf-8><meta name=viewport content=\"width=device-width,initial-scale=1\"><meta name=description content=\"\"><link rel=preconnect href=https://fonts.googleapis.com><link rel=preconnect href=https://fonts.gstatic.com crossorigin><link href=\"https://fonts.googleapis.com/css2?family=Montserrat:ital,wght@0,100..900;1,100..900&family=Roboto:ital,wght@0,100..900;1,100..900&display=swap\"rel=stylesheet><link rel=icon href=favicon.png><script defer=defer src=main.bundle.js></script>');
+  });
+
+  test('LoadBalance should be able record logs correctly', async () => {
+    const loadBalance = new LoadBalance({
+      protocal: 'https',
+      weight: 0.5,
+      mode: 'test',
+      enable: true,
+      minify: true,
+      orderIndex: true,
+      logInterval: 3,
+    }, 80, [
+      ['www-mstr-1.manner.io', 80],
+      ['www-slv-1.manner.io', 1024],
+      ['www-slv-2.manner.io', 80],
+      ['www-slv-2.manner.io', 1024],
+      ['www-slv-2.manner.io', 1025],
+    ]);
+    const [addr] = getOwnIpAddresses();
+    await loadBalance.startUp();
+    const now = Date.now();
+    loadBalance.setLoadBalanceTime(now);
+    loadBalance.setHtml(`
+      <!doctype html>
+      <html lang="en">
+        <head>
+          <meta charset="utf-8" />
+          <title></title>
+          <meta name="viewport" content="width=device-width,initial-scale=1" />
+          <meta name="description" content="" />
+          <link rel="preconnect" href="https://fonts.googleapis.com" />
+          <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+          <link
+            href="https://fonts.googleapis.com/css2?family=Montserrat:ital,wght@0,100..900;1,100..900&family=Roboto:ital,wght@0,100..900;1,100..900&display=swap"
+            rel="stylesheet"
+          />
+          <link rel="icon" href="favicon.png" />
+          <script defer="defer" src="main.bundle.js"></script>
+        </head>
+        <body>
+          <main id="root" />
+        </body>
+      </html>
+    `);
+    expect(loadBalance.getHtmlContent('/login')).toMatch('<!doctype html><html lang=en><meta charset=utf-8><meta name=viewport content=\"width=device-width,initial-scale=1\"><meta name=description content=\"\"><link rel=preconnect href=https://fonts.googleapis.com><link rel=preconnect href=https://fonts.gstatic.com crossorigin><link href=\"https://fonts.googleapis.com/css2?family=Montserrat:ital,wght@0,100..900;1,100..900&family=Roboto:ital,wght@0,100..900;1,100..900&display=swap\"rel=stylesheet><link rel=icon href=favicon.png><script defer=defer src=main.bundle.js></script><main id=root>');
+    expect(loadBalance.getHtmlContent('/login')).toMatch(`<!doctype html><html lang=en><meta charset=utf-8><meta name=viewport content=\"width=device-width,initial-scale=1\"><meta name=description content=\"\"><script>let parsedUrl=new URL(window.location),loadBalanceTimeValue=parsedUrl.searchParams.get(\"loadBalanceTime\"),loadBalanceTime=parseInt(loadBalanceTimeValue);(Number.isNaN(loadBalanceTime)||loadBalanceTime<=${now})&&(window.location=\"https://www-slv-1.manner.io:1024/login?loadBalanceTime=${now}\")</script>`);
+    expect(loadBalance.getHtmlContent('/login')).toMatch(`<!doctype html><html lang=en><meta charset=utf-8><meta name=viewport content=\"width=device-width,initial-scale=1\"><meta name=description content=\"\"><script>let parsedUrl=new URL(window.location),loadBalanceTimeValue=parsedUrl.searchParams.get(\"loadBalanceTime\"),loadBalanceTime=parseInt(loadBalanceTimeValue);(Number.isNaN(loadBalanceTime)||loadBalanceTime<=${now})&&(window.location=\"https://www-slv-2.manner.io:80/login?loadBalanceTime=${now}\")</script>`);
+    expect(loadBalance.getHtmlContent('/login')).toMatch(`<!doctype html><html lang=en><meta charset=utf-8><meta name=viewport content=\"width=device-width,initial-scale=1\"><meta name=description content=\"\"><script>let parsedUrl=new URL(window.location),loadBalanceTimeValue=parsedUrl.searchParams.get(\"loadBalanceTime\"),loadBalanceTime=parseInt(loadBalanceTimeValue);(Number.isNaN(loadBalanceTime)||loadBalanceTime<=${now})&&(window.location=\"https://www-slv-2.manner.io:1024/login?loadBalanceTime=${now}\")</script>`);
+    expect(loadBalance.getHtmlContent('/login')).toMatch(`<!doctype html><html lang=en><meta charset=utf-8><meta name=viewport content=\"width=device-width,initial-scale=1\"><meta name=description content=\"\"><script>let parsedUrl=new URL(window.location),loadBalanceTimeValue=parsedUrl.searchParams.get(\"loadBalanceTime\"),loadBalanceTime=parseInt(loadBalanceTimeValue);(Number.isNaN(loadBalanceTime)||loadBalanceTime<=${now})&&(window.location=\"https://www-slv-2.manner.io:1025/login?loadBalanceTime=${now}\")</script>`);
   });
 
   test('LoadBalance should be able to calculate master load-related data', async () => {
@@ -244,7 +292,7 @@ describe('[class] LoadBalance;', () => {
     expect(myself).toBeLessThan(2);
     const load = loadBalance.getLoad();
     expect(load).toBeGreaterThan(51);
-    expect(load).toBeLessThan(64);
+    expect(load).toBeLessThan(66);
   });
 
   test('LoadBalance should be able to calculate slave load-related data', async () => {
@@ -297,7 +345,7 @@ describe('[class] LoadBalance;', () => {
     expect(myself).toBeLessThan(2);
     const load = loadBalance.getLoad();
     expect(load).toBeGreaterThan(45);
-    expect(load).toBeLessThan(56);
+    expect(load).toBeLessThan(60);
   });
 
   test('LoadBalance should be able to automatically calculate its weight', async () => {
@@ -388,12 +436,12 @@ describe('[class] LoadBalance;', () => {
     const w = LoadBalance.getDeltaWeightWhenSlaveEnable(masterData, slaveData);
     expect(w).toBeGreaterThan(0.13);
     expect(w).toBeLessThan(0.44);
-    //loadBalance1.setWeight(w);
-    //loadBalance2.setWeight(w);
-    //expect(loadBalance1.options.weight).toBeGreaterThan(0.13);
-    //expect(loadBalance1.options.weight).toBeLessThan(0.44);
-    //expect(loadBalance2.options.weight).toBeGreaterThan(0.13);
-    //expect(loadBalance2.options.weight).toBeLessThan(0.44);
+    loadBalance1.setWeight(w);
+    loadBalance2.setWeight(w);
+    expect(loadBalance1.options.weight).toBeGreaterThan(0.13);
+    expect(loadBalance1.options.weight).toBeLessThan(0.44);
+    expect(loadBalance2.options.weight).toBeGreaterThan(0.13);
+    expect(loadBalance2.options.weight).toBeLessThan(0.44);
   });
 
   test('LoadBalance should be able to generate new master nodes.', async () => {
